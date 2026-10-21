@@ -1,9 +1,9 @@
 # 学练agent-应试学习,学习ai,题库搜索,练习反馈
 
-> 2026-10-21 主体源码更新：横版「知识矿境」替换旧俯视知识大陆，常规/游戏刷词共用词条、判分与复习记录；新增可调刷怪节奏、平 A / 防御动作轮播、每日题量、悬浮球引路灯、安静学习来信及视频截图/悬浮还原。知境保持独立，新怪物提醒下线，对战转为彩蛋。网站与公共安装包通道未发布本批改动，源码同步不等于公开发版。[知识矿境契约](docs/KNOWLEDGE-MINES-SPEC.md) · [动作轮播 QA](docs/MINING-COMBAT-QA.md) · [每日任务 QA](docs/DAILY-STUDY-TASK-QA.md) · [引路灯/视频 QA](docs/FLOAT-GUIDE-VIDEO-QA.md)。
+> 2026-10-21 发布更新：网站 v0.2.187、Windows 桌面 0.2.208。横版「知识矿境」替换旧俯视知识大陆，常规/游戏刷词共用词条、判分与复习记录；新增可调刷怪节奏、平 A / 防御动作轮播与每日题量。桌面另含悬浮球引路灯、安静学习来信及实时视频截图。知境保持独立，新怪物提醒下线，对战转为彩蛋。[知识矿境契约](docs/KNOWLEDGE-MINES-SPEC.md) · [动作轮播 QA](docs/MINING-COMBAT-QA.md) · [每日任务 QA](docs/DAILY-STUDY-TASK-QA.md) · [引路灯/视频 QA](docs/FLOAT-GUIDE-VIDEO-QA.md)。
 
 ![release](https://img.shields.io/github/v/release/llwand1/xuelian-agent)
-![version](https://img.shields.io/badge/version-0.2.186-orange)
+![version](https://img.shields.io/badge/version-0.2.187-orange)
 
 **StudentBuddy：开源 AI 学习 Agent，把资料、练习、思考、反馈和复习接在一起。**
 
@@ -231,7 +231,7 @@ TinyFish 内置接入支持官方 API Key 认证、搜索/页面提取与异步�
 ![deps](https://img.shields.io/badge/external%20runtime%20deps-8-blue)
 ![stack](https://img.shields.io/badge/stack-React%2018%20%C2%B7%20Express%20%C2%B7%20SQLite-8a63f6)
 
-当前测试基线 **483 文件 / 4972 例**。Windows 安装包见[桌面更新通道](https://github.com/llwand1/xuelian-agent/releases/tag/desktop-stable)；在线体验**已上线到 v0.2.186**。
+当前测试基线 **483 文件 / 4972 例**。Windows 安装包见[桌面更新通道](https://github.com/llwand1/xuelian-agent/releases/tag/desktop-stable)；在线体验**已上线到 v0.2.187**。
 
 代码结构、开发约定与复验方式见 [工程文档](docs/ENGINEERING.md)。
 

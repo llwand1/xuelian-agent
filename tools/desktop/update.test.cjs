@@ -32,6 +32,8 @@ test('release floor avoids shipping below locally tested versions while preservi
   assert.equal(selectDesktopVersion('0.2.186','0.2.199',{version:'0.2.199',sourceCommit:'old'},'new'),'0.2.200');
   assert.equal(selectDesktopVersion('0.2.186','0.2.199',{version:'0.2.199',sourceCommit:'same'},'same'),'0.2.199');
   assert.equal(selectDesktopVersion('0.3.0','0.2.199',null,'new'),'0.3.0');
+  assert.equal(selectDesktopVersion('0.2.187','0.2.208',{version:'0.2.201',sourceCommit:'old'},'new'),'0.2.208');
+  assert.equal(selectDesktopVersion('0.2.187','0.2.208',{version:'0.2.208',sourceCommit:'same'},'same'),'0.2.208');
   assert.throws(()=>selectDesktopVersion('0.2.186','../../command',null,'new'));
 });
 function fixture(extra = {}) {

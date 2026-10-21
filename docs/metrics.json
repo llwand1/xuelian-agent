@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T12:40:40.827Z",
+  "generatedAt": "2026-10-21T13:12:41.267Z",
   "code": {
     "rows": [
       {
@@ -20,13 +20,13 @@
         "pkg": "web",
         "srcFiles": 437,
         "testFiles": 190,
-        "srcLines": 45903,
+        "srcLines": 45906,
         "testLines": 21281
       }
     ],
     "srcFiles": 881,
     "testFiles": 483,
-    "srcLines": 101168,
+    "srcLines": 101171,
     "testLines": 67753,
     "tsxTestFiles": 104
   },
@@ -87,11 +87,11 @@
     "probes": 19
   },
   "repo": {
-    "head": "0bf4fa9",
-    "headDate": "2026-10-14",
-    "commitsLast14d": 38,
-    "branch": "chore/sync-local-20261021",
-    "dirtyFiles": 230
+    "head": "49b25b7",
+    "headDate": "2026-10-21",
+    "commitsLast14d": 39,
+    "branch": "chore/release-web187-desktop208",
+    "dirtyFiles": 12
   },
   "tests": {
     "available": true,
@@ -147,14 +147,14 @@
     },
     {
       "label": "badge 版本",
-      "claimed": "0.2.186",
-      "measured": "0.2.186",
+      "claimed": "0.2.187",
+      "measured": "0.2.187",
       "ok": true
     },
     {
       "label": "线上现况版本",
-      "claimed": "v0.2.186",
-      "measured": "v0.2.186",
+      "claimed": "v0.2.187",
+      "measured": "v0.2.187",
       "ok": true
     },
     {
