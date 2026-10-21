@@ -23,7 +23,7 @@ node tools/metrics.mjs --check            # README/首屏手抄数字与实测�
 
 <!-- metrics:begin —— 以下由 tools/metrics.mjs --write-docs 回填，勿手改 -->
 
-> 采集：2026-10-21 20:40:41（本机时区）｜ 基准 `0bf4fa9` ｜ 复现：`node tools/metrics.mjs --tests --coverage`
+> 采集：2026-10-21 21:12:41（本机时区）｜ 基准 `49b25b7` ｜ 复现：`node tools/metrics.mjs --tests --coverage`
 
 ## 工程规模（源码 / 测试行数，按包）
 
@@ -31,8 +31,8 @@ node tools/metrics.mjs --check            # README/首屏手抄数字与实测�
 |---|---|---|---|---|---|
 | shared | 81 | 10,705 | 50 | 5,839 | 55% |
 | server | 363 | 44,560 | 243 | 40,633 | 91% |
-| web | 437 | 45,903 | 190 | 21,281 | 46% |
-| **合计** | **881** | **101,168** | **483** | **67,753** | **67%** |
+| web | 437 | 45,906 | 190 | 21,281 | 46% |
+| **合计** | **881** | **101,171** | **483** | **67,753** | **67%** |
 
 ## 接口与契约
 
@@ -53,7 +53,7 @@ node tools/metrics.mjs --check            # README/首屏手抄数字与实测�
 
 ## 文档与仓库
 - docs/：SPEC 契约 73 份 · md 共 99 份 · 真机探针 19 个
-- git：chore/sync-local-20261021 @ `0bf4fa9`（2026-10-14）· 近 14 天 38 commits · 工作区未提交 230 文件
+- git：chore/release-web187-desktop208 @ `49b25b7`（2026-10-21）· 近 14 天 39 commits · 工作区未提交 12 文件
 
 <!-- metrics:end -->
 
