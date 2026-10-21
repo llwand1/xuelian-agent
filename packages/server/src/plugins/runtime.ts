@@ -1,4 +1,4 @@
-import { objectValue, type PluginView } from '@sb/shared';
+import { objectValue, PLUGIN_CAPABILITIES, type PluginView } from '@sb/shared';
 import type { ToolContext, ToolResult } from '../chat/tools/registry.js';
 import { validateToolArgs } from '../chat/tools/schema.js';
 import { requestConfirmation } from '../chat/tools/confirm.js';
@@ -29,6 +29,7 @@ function sameConnection(owner: string | null, id: string, revision: number): voi
 }
 export async function testPlugin(owner: string | null, id: string, signal?: AbortSignal): Promise<PluginView> {
   const old = connection(owner,id);
+  if (old.manifest.auth && old.manifest.auth !== 'none' && !old.token) throw new Error('请先保存此插件的专用密钥，再测试连接');
   if (id === 'github' && ((!old.token && old.authMode !== 'browser') || !old.repositories.length)) throw new Error('请先连接 GitHub 并选择仓库范围');
   if (active.get(keyOf(owner,id))?.size) throw new Error('该插件仍有进行中的任务，请先停用再测试');
   updatePlugin(owner,id,{enabled:false});
@@ -81,8 +82,10 @@ export async function invokePlugin(id: string, tool: string, rawArgs: unknown, c
       // Never truncate permission material: the user must see exactly what will leave the host.
       if (preview.length > 4000) throw new Error('自定义插件参数超过确认展示上限（4k 字），请缩小请求');
       ctx.onStep('plugin_call','running',`等待批准：${c.manifest.name} · ${tool}`);
+      const permission = c.manifest.permissions?.[tool];
+      const effect = permission ? PLUGIN_CAPABILITIES[permission] : '不保证只读';
       const verdict = await requestConfirmation({sessionId:ctx.sessionId,tool:'plugin_call',source:'mcp',
-        server:c.manifest.name,actionSummary:`调用第三方插件 ${tool}（不保证只读，仅许可这一次）`,
+        server:c.manifest.name,actionSummary:`${c.manifest.network === 'loopback' ? '本地 Agent' : '第三方插件'} ${tool} · 声明：${effect}（不保证只读，仅许可这一次）`,
         affected:1,items:[new URL(c.manifest.endpoint).origin,preview],onceOnly:true},work.signal);
       if (verdict !== 'allow_once') {
         status = work.signal.aborted ? 'cancelled' : 'denied';

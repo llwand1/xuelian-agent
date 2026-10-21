@@ -1,4 +1,5 @@
 import type { PluginManifest } from '@sb/shared';
+import { TINYFISH_PLUGIN } from '@sb/shared';
 /** Maintained allowlist, not server-provided annotations. */
 export const GITHUB_TOOLS = [
   'get_file_contents', 'list_branches', 'list_commits', 'get_commit',
@@ -16,6 +17,6 @@ export const BILIBILI_PLUGIN: PluginManifest = {
   tools: ['recommend_videos', 'select_video', 'quiz_from_video'],
 };
 export const BUILTIN_PLUGINS: Readonly<Record<string, PluginManifest>> = Object.freeze(
-  Object.assign(Object.create(null) as Record<string, PluginManifest>, { github: GITHUB_PLUGIN, bilibili: BILIBILI_PLUGIN }),
+  Object.assign(Object.create(null) as Record<string, PluginManifest>, { github: GITHUB_PLUGIN, bilibili: BILIBILI_PLUGIN, tinyfish: TINYFISH_PLUGIN }),
 );
 

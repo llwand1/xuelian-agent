@@ -244,11 +244,29 @@ describe('删除自有 provider：兜底改绑**只动自己的**', () => {
     // A 的绑定被兜底改到平台 provider；B 的绑定原封不动
     expect(bindingRow(await userIdOf(cookieA), 'explain')).toEqual({
       provider_id: PLATFORM_PROVIDER,
-      model: 'model-a',
+      model: '',
     });
     expect(bindingRow(await userIdOf(cookieB), 'explain')).toEqual({ provider_id: pB, model: 'model-b' });
     // 平台那条也不受影响
     expect(bindingRow(null, 'explain')).toBeDefined();
+  });
+});
+
+describe('本机 NULL 归属服务商的管理权限', () => {
+  it('本机新增服务商可编辑可删除，删除后清除旧模型绑定；系统默认行明确不可删除', async () => {
+    const made = await request(app).post('/api/providers').set('Origin',origin)
+      .send({name:'本地自建',baseUrl:'https://local-provider.example/v1',apiKey:'sk-local-test'}).expect(201);
+    const id = made.body.id as string;
+    const rows = (await request(app).get('/api/providers')).body as Array<{id:string;editable:boolean;deletable:boolean}>;
+    expect(rows.find(p=>p.id===id)).toMatchObject({editable:true,deletable:true});
+    expect(rows.find(p=>p.id===PLATFORM_PROVIDER)).toMatchObject({editable:true,deletable:false});
+    const remote = (await listProviders(cookieA)).body as Array<{id:string;editable:boolean;deletable:boolean}>;
+    expect(remote.find(p=>p.id===id)).toMatchObject({editable:false,deletable:false});
+    await request(app).put('/api/providers/roles/explain').set('Origin',origin).send({providerId:id,model:'custom-only'}).expect(200);
+    await request(app).delete('/api/providers/'+id).set('Origin',origin).expect(200);
+    expect(getDb().prepare('SELECT id FROM providers WHERE id=?').get(id)).toBeUndefined();
+    expect(bindingRow(null,'explain')).toEqual({provider_id:PLATFORM_PROVIDER,model:''});
+    await request(app).delete('/api/providers/'+PLATFORM_PROVIDER).set('Origin',origin).expect(403);
   });
 });
 

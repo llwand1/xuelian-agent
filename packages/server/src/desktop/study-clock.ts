@@ -1,4 +1,4 @@
-import type { CampfireOpener, DesktopStudySettings, DesktopStudyState } from '@sb/shared';
+import { DEFAULT_STUDY_SNOOZE_MINUTES, type CampfireOpener, type DesktopStudySettings, type DesktopStudyState } from '@sb/shared';
 type Generate = (exclude: string[], signal: AbortSignal) => Promise<CampfireOpener>;
 /** Host ticks wake throttled WebViews. Wall-clock deadlines never queue missed intervals. */
 export class StudyClock {
@@ -38,7 +38,7 @@ export class StudyClock {
   dismiss(action: 'done' | 'skip' | 'snooze'): void {
     if (this.question) this.exclude = [...this.exclude, this.question.question.question].slice(-12);
     this.cancel(); this.question = null; this.awaiting = false; this.error = ''; this.retryAt = 0;
-    this.nextAt = this.settings.enabled ? this.now() + (action === 'snooze' ? 120_000 : this.interval()) : null;
+    this.nextAt = this.settings.enabled ? this.now() + (action === 'snooze' ? (this.settings.snoozeMinutes ?? DEFAULT_STUDY_SNOOZE_MINUTES) * 60_000 : this.interval()) : null;
   }
   state(): DesktopStudyState {
     return { settings: { ...this.settings }, nextAt: this.nextAt, preparing: !!this.controller,

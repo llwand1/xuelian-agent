@@ -31,9 +31,8 @@ export type NavKey = View | 'pk';
  * 标签跟着它走最直观，也免了 `shell-copy ↔ nav` 的循环 import。
  */
 export const NAV: Array<{ key: NavKey; label: Bi; icon: typeof VsIcon }> = [
-  { key: 'pk', label: { zh: '对战', en: 'Vs AI' }, icon: VsIcon },
   { key: 'terms', label: { zh: '词条', en: 'Terms' }, icon: CardsIcon },
-  { key: 'continent', label: { zh: '知识大陆', en: 'Continent' }, icon: GraphIcon },
+  { key: 'continent', label: { zh: '知识矿境', en: 'Knowledge Mines' }, icon: GraphIcon },
   { key: 'settings', label: { zh: '设置', en: 'Settings' }, icon: SettingsIcon },
 ];
 

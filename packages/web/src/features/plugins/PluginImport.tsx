@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { parsePluginManifest } from '@sb/shared';
 import { pluginApi } from './plugin-api';
-const SAMPLE = JSON.stringify({schemaVersion:1,id:'my-plugin',name:'我的远程插件',version:'1.0.0',
-  description:'我明确选择的 MCP 服务',transport:'streamable-http',endpoint:'https://mcp.example.com/mcp',tools:['lookup']},null,2);
+const SAMPLE = JSON.stringify({schemaVersion:2,id:'my-plugin',name:'我的远程插件',version:'1.0.0',
+  publisher:{name:'插件发布者',url:'https://example.com'},kind:'service',network:'public',auth:'bearer',
+  description:'我明确选择的 MCP 服务',transport:'streamable-http',endpoint:'https://mcp.example.com/mcp',tools:['lookup'],permissions:{lookup:'web:read'}},null,2);
 export function PluginImport({onChange}: {onChange:()=>Promise<void>}) {
   const [text,setText] = useState(''), [ack,setAck] = useState(false), [busy,setBusy] = useState(false), [error,setError] = useState('');
   const submit = async() => {
@@ -16,7 +17,7 @@ export function PluginImport({onChange}: {onChange:()=>Promise<void>}) {
   };
   return <details className="plugin-import">
     <summary>添加第三方插件（导入 JSON 声明）</summary>
-    <p className="settings-hint">本版支持公网 HTTPS Streamable HTTP，不安装或运行第三方脚本。声明只列出你允许调用的工具；连接测试不执行工具，实际调用逐次确认。</p>
+    <p className="settings-hint">推荐使用统一 v2 声明（兼容 v1）。远程服务使用公网 HTTPS；桌面 Agent 可显式声明 loopback。不会安装或运行第三方脚本，连接测试不执行工具，实际调用逐次确认。</p>
     <details><summary>查看声明格式示例</summary><pre>{SAMPLE}</pre></details>
     <label className="plugin-label">插件 JSON
       <textarea rows={8} value={text} disabled={busy} onChange={e=>setText(e.target.value)} aria-label="插件 JSON 声明" spellCheck={false} />

@@ -75,7 +75,11 @@ function guardEditable(res: Response, id: string, owner: string | null): boolean
 providersRouter.get('/', (req: Request, res: Response) => {
   seedIfEmpty();
   // 内部已显式挑选出站字段（无 api_key），不必再 map 一层；归属过滤在 getProviders 里
-  res.json(getProviders(ownerIdOf(req)));
+  const owner = ownerIdOf(req);
+  res.json(getProviders(owner).map(p => ({ ...p,
+    editable: editableProvider(p.id, owner) === 'ok',
+    deletable: p.id !== 'openai-default' && editableProvider(p.id, owner) === 'ok',
+  })));
 });
 
 providersRouter.post('/', (req: Request, res: Response) => {
@@ -128,12 +132,19 @@ providersRouter.delete('/:id', (req: Request, res: Response) => {
   const id = req.params.id ?? '';
   const owner = ownerIdOf(req);
   if (!guardEditable(res, id, owner)) return;
-  getDb().prepare('DELETE FROM providers WHERE id = ?').run(id);
-  // ★ 兜底改绑**必须限定同一归属**：不加 `owner_id IS ?` 会跨用户改别人的绑定
-  //   （删自己一个 provider，顺手把别人的模型指向 openai-default）。
-  getDb()
-    .prepare(`UPDATE role_bindings SET provider_id = 'openai-default' WHERE provider_id = ? AND owner_id IS ?`)
-    .run(id, owner);
+  // 种子会在空库自动补回；不提供“删除成功却原样重现”的假动作。
+  if (id === 'openai-default') { res.status(403).json({error:'系统默认通道不可删除，可在本机模式修改或停用'}); return; }
+  const db = getDb();
+  db.transaction(() => {
+    const fallback = firstPlatformProviderId();
+    if (fallback && fallback !== id) {
+      // 服务商变了，旧的自定义模型名也必须清除，恢复默认模型。
+      db.prepare("UPDATE role_bindings SET provider_id=?, model='' WHERE provider_id=? AND owner_id IS ?").run(fallback,id,owner);
+    } else {
+      db.prepare('DELETE FROM role_bindings WHERE provider_id=? AND owner_id IS ?').run(id,owner);
+    }
+    db.prepare('DELETE FROM providers WHERE id=?').run(id);
+  })();
   res.json({ ok: true });
 });
 

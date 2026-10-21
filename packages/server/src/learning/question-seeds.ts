@@ -71,9 +71,21 @@ export function selectSeed(ownerId: string | null, topic: string, types: SeedTyp
   if (material?.trim() || freshSearch || wantsFreshResearch(topic)) return null;
   const query = ['综合', '根据当前对话内容出题'].includes(topic.trim()) ? '' : normalize(topic);
   const exam = loadExamContext(ownerId), now = Date.now();
+  const relevance = (r: StoredSeed): number => {
+    if (!query) return 1;
+    const name = normalize(r.seed.topic);
+    if (name === query) return 1000;
+    return Math.max(0, ...[r.seed.topic, ...r.seed.tags].map(t => {
+      const tag = normalize(t), broad = /^(数学|英语|物理|化学|计算机|math|english|java|python)$/i.test(tag);
+      if (tag.length < 2) return 0;
+      if (query === tag) return 800;
+      if (tag.includes(query)) return 300;
+      return !broad && tag.length >= 4 && query.includes(tag) ? 100 : 0;
+    }));
+  };
   return listSeeds(ownerId).filter(r => seedEligibility(r.seed, ownerId, now, exam).eligible && types.every(t => r.seed.types.includes(t))
-    && (!query || [r.seed.topic, ...r.seed.tags].some(t => { const tag = normalize(t); const broad = /^(数学|英语|物理|化学|计算机|math|english|java|python)$/i.test(tag); return tag.length >= 2 && (query === tag || tag.includes(query) || (!broad && tag.length >= 4 && query.includes(tag))); })))
-    .sort((a, b) => (a.lastUsedAt ?? 0) - (b.lastUsedAt ?? 0) || a.uses - b.uses || a.id.localeCompare(b.id))[0] ?? null;
+    && relevance(r) > 0)
+    .sort((a, b) => relevance(b) - relevance(a) || (a.lastUsedAt ?? 0) - (b.lastUsedAt ?? 0) || a.uses - b.uses || a.id.localeCompare(b.id))[0] ?? null;
 }
 export function preparation(r: StoredSeed, mode: QuestionPreparation['mode']): QuestionPreparation {
   return { seedId: r.id, topic: r.seed.topic, mode, source: 'external-agent', skipped: mode === 'compiled' ? ['research', 'planning', 'model-generation', 'model-check'] : ['research', 'planning'] };

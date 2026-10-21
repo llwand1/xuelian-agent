@@ -9,11 +9,19 @@
  */
 import { Router } from 'express';
 import type { Request, Response } from 'express';
-import { pomodoroFocus } from '@sb/shared';
+import { pomodoroFocus, parseDailyStudyTask } from '@sb/shared';
+import { dailyStudyProgress, saveDailyTask } from '../learning/daily-study-task.js';
 import { ownerIdOf } from '../auth/ownership.js';
 import { clearPomodoro, loadPomodoro, logPomodoroRound, pomodoroStats, savePomodoro } from '../storage/pomodoro.js';
 
 export const pomodoroRouter = Router();
+pomodoroRouter.get('/task', (req, res) => res.json(dailyStudyProgress(ownerIdOf(req))));
+pomodoroRouter.put('/task', (req, res) => {
+  const task = parseDailyStudyTask(req.body);
+  if (!task) { res.status(400).json({ error: '每日题量为 1–1000，提醒间隔为 5–180 分钟，请检查任务时间段和时区。' }); return; }
+  saveDailyTask(ownerIdOf(req), task);
+  res.json(dailyStudyProgress(ownerIdOf(req)));
+});
 
 pomodoroRouter.get('/', (req: Request, res: Response) => {
   const session = loadPomodoro(ownerIdOf(req));

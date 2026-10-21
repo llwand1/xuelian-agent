@@ -90,3 +90,14 @@ it('persists opt-in interval settings and supplies fresh webpage material to tim
   await request(app).post('/api/desktop/study').set('Origin', origin).send({ enabled: false, intervalMinutes: 3, scope: 'browser' }).expect(200);
   await request(app).post('/api/desktop/study').set('Origin', origin).send({ enabled: true, intervalMinutes: 0, scope: 'browser' }).expect(400);
 });
+it('persists custom mail delay through a database reopen and rejects malformed delays', async () => {
+  const settings = { enabled: true, intervalMinutes: 13, snoozeMinutes: 17, scope: 'learning' };
+  const result = await request(app).post('/api/desktop/study').set('Origin', origin).send(settings).expect(200);
+  expect(result.body.settings).toEqual(settings);
+  closeDb();
+  expect(JSON.parse((getDb().prepare('SELECT value FROM app_settings WHERE key = ?').get('desktop.study') as {value: string}).value)).toEqual(settings);
+  for (const snoozeMinutes of [0, 61, 1.5, '17', null]) {
+    await request(app).post('/api/desktop/study').set('Origin', origin).send({ ...settings, snoozeMinutes }).expect(400);
+  }
+  expect((await request(app).get('/api/desktop/study').expect(200)).body.settings).toEqual(settings);
+});

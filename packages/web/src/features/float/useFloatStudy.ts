@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DesktopStudyState, DesktopStudySettings, DesktopBrowserState } from '@sb/shared';
-import { desktopApi } from '../desktop/desktop-api';
+import { desktopApi, STUDY_SETTINGS_UPDATED } from '../desktop/desktop-api';
 import { hasHost, onHostMessage } from './float-view';
 export function useFloatStudy(eligible: boolean) {
   const [state, setState] = useState<DesktopStudyState | null>(null);
@@ -19,9 +19,11 @@ export function useFloatStudy(eligible: boolean) {
       }).catch(() => { if (live) { setBrowser(null); setError('本机服务暂时断开，正在重连'); } }).finally(() => { polling = false; });
     };
     tick();
+    const updated = (event: Event) => { mutation.current++; setState((event as CustomEvent<DesktopStudyState>).detail); };
+    window.addEventListener(STUDY_SETTINGS_UPDATED, updated);
     const off = onHostMessage(message => { if (message === 'sb-float:tick') tick(); });
     const timer = hasHost() ? null : window.setInterval(tick, 2000);
-    return () => { live = false; off(); if (timer !== null) window.clearInterval(timer); };
+    return () => { live = false; off(); window.removeEventListener(STUDY_SETTINGS_UPDATED, updated); if (timer !== null) window.clearInterval(timer); };
   }, []);
   const configure = useCallback(async (settings: DesktopStudySettings) => { mutation.current++; const next = await desktopApi.settings(settings); setState(next); }, []);
   const dismiss = useCallback(async (action: 'done' | 'skip' | 'snooze') => { mutation.current++; const next = await desktopApi.dismiss(action); setState(next); }, []);

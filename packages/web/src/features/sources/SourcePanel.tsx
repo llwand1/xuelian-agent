@@ -24,6 +24,7 @@ import { orderSources, videoEmbedUrl, type SourceItem } from '@sb/shared';
 import { getPreview, subscribePreview } from '../../lib/preview-store';
 import { closeSources, readerUrl, reopenSources, removeSource, selectSource, useSources } from '../../lib/sources-store';
 import { closeVideoRoute, openVideoRoute, useVideoRoute } from '../../lib/video-route-store';
+import { VideoPlayer } from './VideoPlayer';
 import { ReaderFrame } from './ReaderFrame';
 import { ReaderView } from './ReaderView';
 import { SaveAsDocButton } from './SaveAsDocButton';
@@ -40,17 +41,7 @@ const KIND_LABEL: Record<SourceItem['kind'], string> = { page: '网页', video: 
 function SourceFrame({ sessionId, item }: { sessionId: string; item: SourceItem }) {
   const embed = item.kind === 'video' ? videoEmbedUrl(item.url) : null;
   if (embed) {
-    return (
-      <iframe
-        key={embed}
-        className="sb-browser-frame src-frame"
-        src={embed}
-        title={item.title}
-        sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
-        allow="fullscreen; picture-in-picture; encrypted-media"
-        referrerPolicy="strict-origin-when-cross-origin"
-      />
-    );
+    return <VideoPlayer key={embed} embed={embed} title={item.title} onClose={closeSources} />;
   }
   if (item.kind === 'pdf') {
     const src = readerUrl(sessionId, item);

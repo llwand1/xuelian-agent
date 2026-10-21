@@ -37,6 +37,8 @@ export type ProviderRow = {
    * 故这里据此把「回答形态」下拉与「删除」按钮禁掉：让用户看见限制，而不是点下去撞一个错误。
    */
   ownerId?: string | null;
+  editable?: boolean;
+  deletable?: boolean;
 };
 
 /**

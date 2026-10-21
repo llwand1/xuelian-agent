@@ -24,7 +24,7 @@ if (!$SkipBuild) {
 $stage = Join-Path $repoRoot ('.runtime\desktop-stage-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force -Path $stage | Out-Null
 Copy-Item -LiteralPath package.json,package-lock.json,LICENSE -Destination $stage
-foreach ($workspace in @('server', 'web', 'shared')) {
+foreach ($workspace in @('server', 'web', 'shared', 'open-engine')) {
     $target = Join-Path $stage "packages\$workspace"
     New-Item -ItemType Directory -Force -Path $target | Out-Null
     Copy-Item -LiteralPath "packages\$workspace\package.json" -Destination $target
@@ -35,6 +35,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Production dependency installation failed.' }
 } finally { Pop-Location }
 Copy-Item -LiteralPath packages\server\dist -Destination (Join-Path $stage 'packages\server') -Recurse
+Copy-Item -LiteralPath packages\open-engine\src,packages\open-engine\protocols -Destination (Join-Path $stage 'packages\open-engine') -Recurse
 Copy-Item -LiteralPath packages\web\dist -Destination (Join-Path $stage 'web') -Recurse
 New-Item -ItemType Directory -Path (Join-Path $stage 'runtime') | Out-Null
 $nodeBinary = (Get-Command node.exe).Source
@@ -104,7 +105,7 @@ $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 New-Item -ItemType Directory -Force -Path (Join-Path $githubTarget 'browser-launch') | Out-Null
 & $compiler /nologo /target:winexe /platform:x64 /optimize+ /codepage:65001 /r:System.Web.dll "/out:$githubTarget\browser-launch\rundll32.exe" tools\desktop\GithubBrowserLauncher.cs
 if ($LASTEXITCODE -ne 0) { throw 'GitHub browser adapter compilation failed.' }
-& $compiler /nologo /target:winexe /platform:x64 /optimize+ /codepage:65001 "/win32manifest:`"$launcherManifest`"" "/win32icon:`"$appIcon`"" /r:System.Web.Extensions.dll /r:"`"$webView2Core`"" /r:"`"$webView2WinForms`"" "/out:$stage\StudentBuddy.exe" tools\desktop\Launcher.cs tools\desktop\CompanionTrail.cs tools\desktop\DesktopRecovery.cs tools\desktop\DesktopFilesHost.cs tools\desktop\DesktopQuickMenu.cs tools\desktop\DesktopCaptureSelector.cs tools\desktop\DesktopScreenCapture.cs tools\desktop\DesktopNativeReader.cs tools\desktop\DesktopStudyInvite.cs
+& $compiler /nologo /target:winexe /platform:x64 /optimize+ /codepage:65001 "/win32manifest:`"$launcherManifest`"" "/win32icon:`"$appIcon`"" /r:System.Web.Extensions.dll /r:"`"$webView2Core`"" /r:"`"$webView2WinForms`"" "/out:$stage\StudentBuddy.exe" tools\desktop\Launcher.cs tools\desktop\CompanionTrail.cs tools\desktop\DesktopRecovery.cs tools\desktop\DesktopFilesHost.cs tools\desktop\DesktopQuickMenu.cs tools\desktop\DesktopCaptureSelector.cs tools\desktop\DesktopScreenCapture.cs tools\desktop\DesktopNativeReader.cs tools\desktop\DesktopStudyInvite.cs tools\desktop\DesktopVideo.cs
 if ($LASTEXITCODE -ne 0) { throw 'Launcher compilation failed.' }
 
 $innoDir = Join-Path $repoRoot '.runtime\inno-7.1.0'

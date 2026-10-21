@@ -1,5 +1,7 @@
 # 等待时刷词（Wait Drill）
 
+> 2026-10-20：常规/游戏两种表现形式共用题库、状态机、判分和记账；新增判断轮换，与主体横版知识矿境打通。新契约优先于下文旧题型数量描述，见 [KNOWLEDGE-MINES-SPEC.md](KNOWLEDGE-MINES-SPEC.md)。
+
 > v0.2.178：收录/斩词使用独立反馈；收录等待、防重复、失败重试与迟到结果隔离见 [DRILL-ACTIONS-SPEC.md](DRILL-ACTIONS-SPEC.md)。
 
 状态：v1（issue #120）。发出问题后 AI 还在想的那段空档，弹一张百词斩式词卡让你刷；回复到了答完这张自动切回。

@@ -231,12 +231,12 @@ describe('落地页双语 — 冒险录各章跟着换语言', () => {
   it('EN 侧：知识大陆与伙伴章的标题、按钮都是英文；切回中文后换成中文', () => {
     store('en');
     const { container, getByText } = renderLanding();
-    expect(container.querySelector('.wf-ch-continent .wf-h2')?.textContent).toBe('The continent grows one term at a time');
-    expect(getByText('Learn a new term')).toBeTruthy();
+    expect(container.querySelector('.wf-ch-continent .wf-h2')?.textContent).toBe('Knowledge Mines: one learning core, a new world');
+    expect(getByText('One answer, one action: arrange attacks and defenses while the world keeps moving.')).toBeTruthy();
     expect(container.querySelector('.wf-ch-npc .wf-h2')?.textContent).toBe('Recruit your AI companions');
     fireEvent.click(screen.getByRole('button', { name: '中文' }));
-    expect(container.querySelector('.wf-ch-continent .wf-h2')?.textContent).toBe('知识大陆，是你一块块学出来的');
-    expect(getByText('学会一个新词条')).toBeTruthy();
+    expect(container.querySelector('.wf-ch-continent .wf-h2')?.textContent).toBe('知识矿境，同一理念，横版探索');
+    expect(getByText('一题一步，编排平A与防御轮播；作答时世界继续。')).toBeTruthy();
   });
 });
 

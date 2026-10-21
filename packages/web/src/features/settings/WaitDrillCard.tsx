@@ -20,10 +20,12 @@ export function WaitDrillCard() {
     <section className="settings-sec">
       <h3>等待时刷词</h3>
       <p className="settings-hint">
-        发出问题后 AI 还在想，{secs} 秒没回完就弹一张词卡让你刷（百词斩式四选一 / 释义选词 / 拼写）；
+        发出问题后 AI 还在想，{secs} 秒没回完就弹出练习（选择 / 判断 / 拼写）；常规卡片与横版挖矿游戏共用题目、手感和复习记账。
         回复到了答完这张自动切回。到期词条答对算一次复习打卡，其余只记战绩。
       </p>
       <div className="quiz-mix-presets">
+        {(['normal', 'game'] as const).map(mode => <button type="button" key={mode} className={`quiz-mix-chip${(prefs.mode ?? 'normal') === mode ? ' active' : ''}`}
+          aria-pressed={(prefs.mode ?? 'normal') === mode} onClick={() => setPrefs(saveDrillPrefs({ mode }))}>{mode === 'normal' ? '常规模式' : '游戏模式 · 知识矿境'}</button>)}
         <button
           type="button"
           className={prefs.enabled ? 'quiz-mix-chip active' : 'quiz-mix-chip'}

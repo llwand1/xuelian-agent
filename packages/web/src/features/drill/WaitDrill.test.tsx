@@ -49,7 +49,7 @@ describe('WaitDrill：弹与回', () => {
     expect(document.querySelector('.drill-opt.right')).not.toBeNull();
     expect(document.querySelector('.drill-fx-slash')).not.toBeNull(); // 第一次答对 = 斩击特效
     await flush();
-    expect(screen.getByText(/已打卡——大陆上那只怪消失了/)).toBeTruthy();
+    expect(screen.getByText(/已打卡——与常规复习共用学习记录/)).toBeTruthy();
     await act(async () => {
       vi.advanceTimersByTime(800);
     });

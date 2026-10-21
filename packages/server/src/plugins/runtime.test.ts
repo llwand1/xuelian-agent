@@ -44,6 +44,14 @@ it('test discovers only declarations and never calls remote tools; enable needs 
   expect(connection('alice','github')).toMatchObject({enabled:false,testedAt:null,tools:[]});
   expect(()=>updatePlugin('alice','github',{enabled:true})).toThrow();
 });
+it('never silently sends an old custom plugin credential to a newly introduced builtin endpoint',()=>{
+  getDb().prepare('INSERT INTO plugin_connection(owner_id,plugin_id,manifest,token,enabled,tools,tested_at) VALUES(?,?,?,?,1,?,?)')
+    .run('alice','tinyfish',JSON.stringify({schemaVersion:1,id:'tinyfish',name:'Old custom',version:'1',description:'old',transport:'streamable-http',endpoint:'https://old.example.com/mcp',tools:['lookup']}),'old-plaintext-token',JSON.stringify([stub.schema]),Date.now());
+  expect(connection('alice','tinyfish')).toMatchObject({enabled:false,hasToken:false,token:'',tools:[],testedAt:null});
+  expect(listPlugins('alice').filter(p=>p.manifest.id==='tinyfish')).toHaveLength(1);
+  updatePlugin('alice','tinyfish',{token:'tf_new_explicit_key'});
+  expect(connection('alice','tinyfish')).toMatchObject({token:'tf_new_explicit_key',enabled:false});
+});
 it('calls a real runtime adapter only after repository and tool checks; redacts response and keeps bounded audit',async()=>{
   await configured();
   await expect(invokePlugin('github','create_issue',args,ctx)).rejects.toThrow('白名单');
@@ -99,7 +107,7 @@ it('imports extensibly without code changes, denies overwrite and enforces one-c
     if(frame?.type==='tool-confirm-request') requestId=frame.requestId;
   });
   resolveConfirmation(requestId,'allow_once');await allowed;expect(stub.calls).toHaveLength(1);
-  deletePlugin('alice','custom-reader');expect(listPlugins('alice').map(p=>p.manifest.id)).toEqual(['github','bilibili']);
+  deletePlugin('alice','custom-reader');expect(listPlugins('alice').map(p=>p.manifest.id)).toEqual(['github','bilibili','tinyfish']);
 });
 it('advertises only owner-enabled capabilities and returns one bounded schema on demand',async()=>{
   expect(pluginChatDefinitions('alice')).toEqual([]);await configured();

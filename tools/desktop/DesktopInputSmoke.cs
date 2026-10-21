@@ -17,7 +17,7 @@ internal static class DesktopInputSmoke
             Assembly asm=Assembly.LoadFrom(args[0]); BindingFlags flags=BindingFlags.Static|BindingFlags.NonPublic;
             Type menu=asm.GetType("DesktopQuickMenu",true),selector=asm.GetType("DesktopCaptureSelector",true),encoding=asm.GetType("DesktopCaptureEncoding",true);
             MethodInfo place=menu.GetMethod("Place",flags),normalize=selector.GetMethod("Normalize",flags),crop=encoding.GetMethod("Crop",flags),fit=encoding.GetMethod("Fit",flags),encode=encoding.GetMethod("Encode",flags);
-            Rectangle work=new Rectangle(-1920,0,1920,1080);Size size=new Size(218,38);
+            Rectangle work=new Rectangle(-1920,0,1920,1080);Size size=new Size(324,38);
             foreach(Rectangle anchor in new[]{new Rectangle(-1920,0,64,64),new Rectangle(-64,1016,64,64),new Rectangle(-900,500,64,64)})
             {
                 Rectangle r=(Rectangle)place.Invoke(null,new object[]{anchor,size,work,4});Check(work.Contains(r),"Hover menu stays within a negative-coordinate monitor");
@@ -54,8 +54,8 @@ internal static class DesktopInputSmoke
                 object[] call=new object[]{noise,new Size()};string data=(string)encode.Invoke(null,call);Check(data.StartsWith("data:image/jpeg;base64,"),"Noisy large captures use bounded JPEG fallback");Check(data.Length<5000000,"JPEG fallback remains below input cap");
                 using(MemoryStream stream=new MemoryStream(Convert.FromBase64String(data.Substring(data.IndexOf(',')+1))))using(Image decoded=Image.FromStream(stream))Check(decoded.Size==(Size)call[1],"Fallback payload is a valid decodable image");
             }
-            using(Form ball=new Form())using(Form strip=(Form)Activator.CreateInstance(menu,BindingFlags.Instance|BindingFlags.NonPublic,null,new object[]{ball,new Func<bool>(()=>false),new Action(()=>{}),new Action(()=>{}),1f},null))
-            {Check(strip.Controls.Count==2,"Hover strip contains exactly input and screenshot actions");Check(!strip.ShowInTaskbar&&strip.TopMost,"Hover strip avoids an extra taskbar item");}
+            using(Form ball=new Form())using(Form strip=(Form)Activator.CreateInstance(menu,BindingFlags.Instance|BindingFlags.NonPublic,null,new object[]{ball,new Func<bool>(()=>false),new Action(()=>{}),new Action(()=>{}),new Action(()=>{}),1f},null))
+            {Check(strip.Controls.Count==3&&strip.Controls[2].AccessibleName=="学习来信","Hover strip contains input, screenshot and manual learning mail actions");Check(!strip.ShowInTaskbar&&strip.TopMost,"Hover strip avoids an extra taskbar item");}
             Console.WriteLine("Native desktop input smoke: "+checks+" assertions passed; synthetic pixels only, no screens or personal files read.");return 0;
         }
         catch(Exception error){Console.Error.WriteLine(error);return 1;}

@@ -8,6 +8,7 @@
     "build": "tsc --noEmit -p . && vite build"
   },
   "dependencies": {
+    "@sb/open-engine": "0.1.0",
     "@sb/shared": "*",
     "katex": "0.19.0",
     "mermaid": "12.1.0",

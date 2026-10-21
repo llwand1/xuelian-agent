@@ -48,6 +48,7 @@ export const AI_PURPOSES = {
   'quiz.adapt': { label: '按评价再出题', role: 'quiz-generator', version: 2, upstream: 'main', timeoutMs: 120_000 },
   'scenario.generate': { label: '情景任务', role: 'quiz-generator', version: 1, upstream: 'main', timeoutMs: 180_000 },
   'collect.draft': { label: '现场搜集出题', role: 'quiz-generator', version: 2, upstream: 'main', timeoutMs: 180_000 },
+  'coach.task': { label: '每日任务督促', role: 'coach', version: 1, upstream: 'background', timeoutMs: 15_000 },
   'coach.message': { label: '复习督促', role: 'coach', version: 1, upstream: 'background', timeoutMs: 60_000 },
   'npc.genesis': { label: '伙伴诞生', role: 'npc', version: 1, upstream: 'main', timeoutMs: 60_000 },
   'npc.talk': { label: '伙伴对话', role: 'npc', version: 2, upstream: 'main', timeoutMs: 60_000 },

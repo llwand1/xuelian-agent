@@ -28,7 +28,7 @@ import { useDrillTrigger } from './useDrillTrigger';
 /** 回复到了之后最多再等几秒（不答也切回去） */
 export const READY_GRACE_S = 8;
 
-export function WaitDrill({ busySessionId, active }: { busySessionId: string | null; active: boolean }) {
+export function WaitDrill({ busySessionId, active, suspended = false, identity = 'local' }: { busySessionId: string | null; active: boolean; suspended?: boolean; identity?: string }) {
   const narrow = useNarrow();
   const [prefs, setPrefs] = useState(loadDrillPrefs);
   useEffect(() => {
@@ -63,6 +63,7 @@ export function WaitDrill({ busySessionId, active }: { busySessionId: string | n
   leaveRef.current = trigger.replyReady && !stay;
 
   const { close } = trigger;
+  useEffect(() => { if (suspended) { close(); setAlive(false); } }, [suspended, close]);
   const leave = useCallback(() => {
     setStay(false);
     close();
@@ -88,7 +89,7 @@ export function WaitDrill({ busySessionId, active }: { busySessionId: string | n
     return () => window.removeEventListener(DRILL_END_EVENT, onEnd);
   }, [leave]);
 
-  const s = useDrillSession({ open: alive, sessionId: trigger.openSession, dayKey, audio, onCardResolved });
+  const s = useDrillSession({ open: alive, sessionId: trigger.openSession, dayKey, audio, onCardResolved, manualAdvance: prefs.mode === 'game' });
 
   // 给输入框上方的小签：收起了才 parked；数字随局走
   useEffect(() => {
@@ -137,7 +138,7 @@ export function WaitDrill({ busySessionId, active }: { busySessionId: string | n
     }
   }, [s]);
 
-  useDrillKeys(trigger.open, {
+  useDrillKeys(trigger.open && !suspended && prefs.mode !== 'game', {
     onDigit: (i) => {
       audio.resume();
       s.answer(i);
@@ -149,9 +150,12 @@ export function WaitDrill({ busySessionId, active }: { busySessionId: string | n
     onClose: leave,
   });
 
-  if (!trigger.open) return null;
+  if (!trigger.open || suspended) return null;
   return (
     <DrillOverlay
+      mode={prefs.mode ?? 'normal'}
+      onMode={mode => setPrefs(saveDrillPrefs({ mode }))}
+      storageKey={`sb:mining:${identity}:v1`}
       busy={busySessionId !== null}
       practice={busySessionId === null && !trigger.replyReady}
       replyReady={trigger.replyReady && !stay}
@@ -180,7 +184,7 @@ export function WaitDrill({ busySessionId, active }: { busySessionId: string | n
       onDontKnow={s.dontKnow}
       onNext={s.next}
       onLearned={s.learned}
-      onSlay={s.slay}
+      onSlay={prefs.mode === 'game' ? s.pass : s.slay}
       onKeep={s.keep}
       onDismiss={s.dismiss}
       windowPos={prefs.pos ?? null}

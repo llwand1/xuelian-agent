@@ -244,11 +244,11 @@ export function pomodoroReminder(i: PomodoroReminderInput): PomodoroReminder {
   return { kind: 'setup', line: '还没定番茄钟——先说接下来半小时学什么，对话、出题、刷词都会往那边靠。' };
 }
 
-/** 胶囊上的短标签：`🍅 数学 24:59` / `☕ 休息 04:10`；没开钟 null */
+/** 胶囊上的短标签：`数学 24:59` / `休息 04:10`；没开钟 null */
 export function pomodoroCapsuleLabel(s: PomodoroSession | null, now: Date): string | null {
   if (!s) return null;
   const clock = formatPomodoroClock(pomodoroRemainingMs(s, now));
-  return s.phase === 'work' ? `🍅 ${s.subject} ${clock}` : `☕ 休息 ${clock}`;
+  return s.phase === 'work' ? `${s.subject} ${clock}` : `休息 ${clock}`;
 }
 
 // ── 专注统计（督促小窗的学习可视化，契约 §10）────────────────────────────

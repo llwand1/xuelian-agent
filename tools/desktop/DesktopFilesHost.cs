@@ -6,6 +6,7 @@ internal static partial class Launcher
 {
     private static void HandleDesktopMessage(WebView2 view, string message)
     {
+        if (message != null && message.StartsWith("sb-video:capture:",StringComparison.Ordinal)) { CaptureVideoFrame(view,message.Substring("sb-video:capture:".Length));return; }
         if (message != null && message.StartsWith("sb-desktop:reader:", StringComparison.Ordinal)) { OpenNativeReader(message); return; }
         if (message == "sb-desktop:extension") OpenExtensionFolder();
         else if (message == "sb-desktop:choose-workspace") ChooseDesktopWorkspace(view);

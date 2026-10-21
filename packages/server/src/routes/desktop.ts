@@ -1,3 +1,5 @@
+import { publishFloatGuide, floatGuideTick, dismissFloatGuide, floatGuideEnabled, setFloatGuideEnabled } from '../desktop/guide-nudge.js';
+import { dailyTaskTick, dismissDailyTask } from '../desktop/daily-task-nudge.js';
 import { asyncHandler } from '../http/async-handler.js';
 import { Router, json, type Request, type Response, type NextFunction } from 'express';
 import { parseDesktopStudySettings } from '@sb/shared';
@@ -65,6 +67,27 @@ desktopBridgeRouter.delete('/connection', (_req, res) => {
 
 export const desktopRouter = Router();
 desktopRouter.use(desktopGuard);
+desktopRouter.get('/guide/settings', (req, res) => res.json({ enabled: floatGuideEnabled(ownerIdOf(req)) }));
+desktopRouter.put('/guide/settings', (req, res) => {
+  if (typeof req.body?.enabled !== 'boolean') { res.status(400).json({ error: '提醒开关需为布尔值' }); return; }
+  setFloatGuideEnabled(ownerIdOf(req), req.body.enabled); res.json({ enabled: floatGuideEnabled(ownerIdOf(req)) });
+});
+desktopRouter.put('/guide', (req, res) => {
+  if (!publishFloatGuide(ownerIdOf(req), req.body)) { res.status(400).json({ error: '引路灯现场无效或会话不可访问' }); return; }
+  res.json({ ok: true });
+});
+desktopRouter.post('/guide/tick', (req, res) => res.json({ guide: floatGuideTick(ownerIdOf(req), req.body?.eligible === true) }));
+desktopRouter.post('/guide/dismiss', (req, res) => {
+  const { id, action } = req.body ?? {};
+  if (typeof id !== 'string' || !['open','snooze'].includes(action)) { res.status(400).json({ error: '引路灯操作无效' }); return; }
+  res.json({ guide: dismissFloatGuide(ownerIdOf(req), id, action) });
+});
+desktopRouter.post('/task/tick', (req, res) => res.json({ nudge: dailyTaskTick(ownerIdOf(req), req.body?.eligible === true) }));
+desktopRouter.post('/task/dismiss', (req, res) => {
+  const { id, action } = req.body ?? {};
+  if (typeof id !== 'string' || (action !== 'open' && action !== 'snooze')) { res.status(400).json({ error: '提醒操作无效' }); return; }
+  res.json({ ok: dismissDailyTask(ownerIdOf(req), id, action) });
+});
 desktopRouter.use('/workbench', desktopWorkbenchRouter);
 desktopRouter.get('/browser/preference', (req, res) => res.json(browserPreference(ownerIdOf(req))));
 desktopRouter.post('/browser/preference', (req, res) => {
@@ -92,7 +115,7 @@ desktopRouter.post('/workspace', (req, res) => {
 desktopRouter.get('/study', (req, res) => res.json(studyClock(ownerIdOf(req)).state()));
 desktopRouter.post('/study', (req, res) => {
   const settings = parseDesktopStudySettings(req.body);
-  if (!settings) { res.status(400).json({ error: '间隔需为 1–60 分钟，并选择出题范围' }); return; }
+  if (!settings) { res.status(400).json({ error: '出题间隔和来信延后时间需为 1–60 的整数分钟，并选择出题范围' }); return; }
   saveStudySettings(ownerIdOf(req), settings); res.json(studyClock(ownerIdOf(req)).state());
 });
 desktopRouter.post('/study/tick', (req, res) => res.json(studyClock(ownerIdOf(req)).tick(req.body?.eligible === true)));

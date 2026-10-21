@@ -1,6 +1,7 @@
 import type { DesktopBrowserState, DesktopStudySettings, DesktopStudyState } from '@sb/shared';
 import { request } from '../../lib/api-request';
 const base = '/api/desktop';
+export const STUDY_SETTINGS_UPDATED = 'sb:study-settings-updated';
 const post = <T,>(path: string, body: unknown) => request<T>(base + path, { method: 'POST', body: JSON.stringify(body), timeoutMs: 8000 });
 export const desktopApi = {
   browserPreference: () => request<{selected:'chrome'|'edge';available:Array<'chrome'|'edge'>}>(base + '/browser/preference'),

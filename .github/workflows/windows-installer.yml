@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   installer:
-    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository)
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository && !contains(github.event.workflow_run.head_commit.message, '[skip desktop release]'))
     runs-on: windows-latest
     timeout-minutes: 40
     defaults:
@@ -104,7 +104,7 @@ jobs:
             .runtime/update-smoke-*/updates/**/install.log
           if-no-files-found: ignore
   publish:
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && !contains(github.event.workflow_run.head_commit.message, '[skip desktop release]')
     needs: installer
     runs-on: ubuntu-latest
     permissions:

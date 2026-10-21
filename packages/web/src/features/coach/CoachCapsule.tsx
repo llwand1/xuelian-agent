@@ -8,6 +8,7 @@
  *    而"颜色变了"本身就是提示；
  *  - 折叠态**不显示 AI 说的话**——那是展开态的事，胶囊负责的只有"该不该现在点开"。
  */
+import { PixelPomodoroIcon } from '../pomodoro/PixelPomodoroIcon';
 import { capsuleLine, pomodoroCapsuleLabel, type CoachSnapshot } from '@sb/shared';
 import { capsuleTone } from './coach-cards';
 import { CardsIcon } from '../../components/icons';
@@ -47,7 +48,7 @@ export function CoachCapsule({
       <span className="coach-cap-icon">
         <CardsIcon size={15} />
       </span>
-      {pomoLabel && <span className={`coach-cap-pomo${pomo?.phase === 'break' ? ' is-break' : ''}`}>{pomoLabel}</span>}
+      {pomoLabel && <span className={`coach-cap-pomo${pomo?.phase === 'break' ? ' is-break' : ''}`}><PixelPomodoroIcon rest={pomo?.phase === 'break'} />{pomoLabel}</span>}
       <span className="coach-cap-text">{narrow ? '复习' : line}</span>
       {fresh && <span className="coach-cap-new" title="有新的学习趋势">新</span>}
       {nudge && snapshot !== null && snapshot.due > 0 && <span className="coach-cap-dot" />}

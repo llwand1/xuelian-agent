@@ -10,6 +10,8 @@
  */
 
 export interface DrillPrefs {
+  /** Same session and learning core, alternate presentation only. */
+  mode?: 'normal' | 'game';
   /** 发送后等回复时自动弹（默认开） */
   enabled: boolean;
   /** 音乐与音效（默认开；浏览器自动播放策略下首个点击后才会真的响） */
@@ -69,6 +71,7 @@ export function loadDrillPrefs(): DrillPrefs {
   const v = readJson<Partial<DrillPrefs>>(PREFS_KEY);
   const pos = v?.pos;
   return {
+    ...(v?.mode === 'normal' || v?.mode === 'game' ? { mode: v.mode } : {}),
     enabled: typeof v?.enabled === 'boolean' ? v.enabled : DEFAULT_PREFS.enabled,
     sound: typeof v?.sound === 'boolean' ? v.sound : DEFAULT_PREFS.sound,
     ...(pos && Number.isFinite(pos.x) && Number.isFinite(pos.y) ? { pos: { x: pos.x, y: pos.y } } : {}),

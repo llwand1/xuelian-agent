@@ -139,8 +139,8 @@ describe('方向与偏向文案', () => {
     expect(formatPomodoroClock(61_000)).toBe('01:01');
     expect(formatPomodoroClock(3_600_000 + 5_000)).toBe('1:00:05');
     expect(formatPomodoroClock(-5)).toBe('00:00');
-    expect(pomodoroCapsuleLabel(s, at(5))).toBe('🍅 数学 25:00');
-    expect(pomodoroCapsuleLabel(nextPomodoroPhase(s, at(30)), at(31))).toBe('☕ 休息 04:00');
+    expect(pomodoroCapsuleLabel(s, at(5))).toBe('数学 25:00');
+    expect(pomodoroCapsuleLabel(nextPomodoroPhase(s, at(30)), at(31))).toBe('休息 04:00');
     expect(pomodoroCapsuleLabel(null, T0)).toBeNull();
   });
 });

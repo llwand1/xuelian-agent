@@ -44,11 +44,12 @@ function gradeRequest(round: QuizRound, response: QuizRoundResponse): GradeReque
 function record(round: QuizRound, response: QuizRoundResponse, owner: string | null): void {
   if (!response.result) return;
   recordQuizAttempt(round.quizId, { questionIndex: response.index, verdict: response.result.verdict, answer: response.result.answer }, owner);
-  if (response.grade) applyGradeEffects(gradeRequest(round, response), response.grade, owner);
+  const answerMeta = { attemptKey: `round:${round.id}:${response.index}`, answered: response.result.answer !== '未作答' };
+  if (response.grade) applyGradeEffects(gradeRequest(round, response), response.grade, owner, answerMeta);
   else if (response.result.verdict !== 'review') {
     const t = round.questions[response.index]!.type;
     const qtype = round.origin === 'scenario' ? 'scene' : ({ single: 'choice', multiple: 'multi', judge: 'judge', fill: 'fill', essay: 'essay' } as const)[t];
-    publishEvent({ type: 'quiz_answered', quizId: round.quizId, correct: response.result.verdict === 'correct', ownerId: owner, qtype, source: round.origin === 'scenario' ? 'scenario' : 'chat-quiz' });
+    publishEvent({ type: 'quiz_answered', quizId: round.quizId, correct: response.result.verdict === 'correct', ownerId: owner, qtype, source: round.origin === 'scenario' ? 'scenario' : 'chat-quiz', ...answerMeta });
   }
 }
 async function runQuestion(task: Task): Promise<void> {

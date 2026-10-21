@@ -12,7 +12,7 @@ export type StudyPortalControls = {
 };
 export const STUDY_PORTALS = {
   terms: { title: '魔法图书馆', destination: '词条库', art: library, Icon: CardsIcon },
-  continent: { title: '遗迹入口', destination: '知识大陆', art: ruins, Icon: GraphIcon },
+  continent: { title: '矿洞入口', destination: '知识矿境', art: ruins, Icon: GraphIcon },
 };
 
 export function StudyPortalLink({ destination, onEnter, travelling, compact = false }: {

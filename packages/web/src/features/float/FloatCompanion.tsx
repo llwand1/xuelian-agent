@@ -43,7 +43,7 @@ export function CompanionArt({ mood, hovered = false, gaze = 0, native = false, 
   </svg>;
 }
 
-export function FloatCompanion({ mood, onOpen, onSettings }: { mood: CompanionMood; onOpen: () => void; onSettings: () => void }) {
+export function FloatCompanion({ mood, onOpen, onSettings, onMail, hasMail = false }: { mood: CompanionMood; onOpen: () => void; onSettings: () => void; onMail?: () => void; hasMail?: boolean }) {
   const [hovered, setHovered] = useState(false);
   const [gaze, setGaze] = useState(0);
   const [playUntil, setPlayUntil] = useState(0);
@@ -63,16 +63,21 @@ export function FloatCompanion({ mood, onOpen, onSettings }: { mood: CompanionMo
   }), [onOpen]);
   const play = () => { setSpell((['hex', 'rift', 'ember', 'soul'] as const)[castCounter.current++ % 4] ?? 'hex'); setPlayUntil(Date.now() + 2200); };
   const visibleMood = dragging ? 'dragging' : playing ? 'play' : mood;
-  return <button type="button" className="sb-ball" data-mood={visibleMood}
-    title={COMPANION_LABELS[mood] + ' · 点击打开 · 拖动换位置 · 滚轮 / Shift 点击施法 · 右键设置'}
+  return <div className="sb-companion" onPointerEnter={() => setHovered(true)} onPointerLeave={() => { setHovered(false); setGaze(0); }}>
+    <button type="button" className="sb-ball" data-mood={visibleMood}
+    title={COMPANION_LABELS[mood] + ' · 点击打开 · 停留查看学习来信 · 拖动换位置 · 右键设置'}
     aria-label={'打开 StudentBuddy · ' + COMPANION_LABELS[mood]}
-    onPointerEnter={() => setHovered(true)} onPointerLeave={() => { setHovered(false); setGaze(0); }}
     onPointerMove={e => { const bounds = e.currentTarget.getBoundingClientRect(); setGaze(e.clientX < bounds.left + bounds.width / 2 ? -0.5 : 0.5); }}
     onWheel={play}
     onContextMenu={e => { e.preventDefault(); onSettings(); }}
     onPointerDown={e => { if (e.button === 0 && !e.shiftKey) postToHost(HOST_DRAG); }}
     onClick={e => { if (e.shiftKey) play(); else if (!hasHost() || e.detail === 0) onOpen(); }}>
     <CompanionArt mood={visibleMood} hovered={hovered} gaze={gaze} spell={spell} native />
-  </button>;
+  </button>
+    {!hasHost() && onMail && <nav className="sb-companion-menu" aria-label="悬浮球选项">
+      <button type="button" onClick={onMail}>学习来信{hasMail ? ' · 未读' : ''}</button>
+      <button type="button" onClick={onSettings}>学习设置</button>
+    </nav>}
+  </div>;
 }
 

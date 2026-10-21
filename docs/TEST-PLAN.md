@@ -1,9 +1,12 @@
 工具指标验证：`node --test tools/metrics-contracts.test.mjs` 排除兼容转导出造成的类型虚增；桌面 Node 测试同时核对真实源码差异、未忽略新文件与 LF/CRLF 状态噪声。
 
+`tools/desktop/npm-package.test.mjs` 同时锁定仅源码提交的桌面发布选择：`[skip desktop release]` 不绕过主分支 CI 或 PR 安装验证，只跳过该提交后续的桌面自动构建与发布。
+
 > 2026-10-14 HTTP 可靠性与模块门禁：严格未处理拒绝模式的真实进程、生产判分路由故障注入、统一错误边界、云端请求预算与路由类型审计；不增加模型评测或读取个人数据库。
 
 | 测试文件 | 回归范围 |
 |---|---|
+| `packages/web/src/features/mining/MiningPage.test.tsx` | 矿境接入、常规/游戏同题同草稿、判断、话题优先、主线跳转、同帧防重与重复巩固；内核另由 `packages/open-engine/tests/mining.test.mjs` 验证真实地形/怪物/物理/存档/Tween 时间轴 |
 | `packages/server/src/http/error-boundary.test.ts` | 安全 400/413/500、请求标识、非 Error 拒绝、关闭/流式响应 |
 | `packages/server/src/http/process-survival.test.ts` | 严格拒绝模式、真实失败请求、断流后相同进程存活 |
 | `packages/server/src/http/api-rate-limit.test.ts` | 键隔离、窗口恢复、容量、代理、重试头和本地模式 |
@@ -23,13 +26,15 @@ Python 工具回归：`python tools/selftest-restore.py` 验证新目标、WAL�
 
 | 测试文件 | 回归范围 |
 |---|---|
-| `packages/shared/src/desktop-study.test.ts` | 默认关闭、间隔与范围边界 |
+| `packages/shared/src/desktop-study.test.ts` | 默认关闭、间隔与范围边界、旧设置兼容、自定义来信延后时间校验 |
+| `packages/web/src/features/pomodoro/StudyMailSettings.test.tsx` | 番茄钟学习来信设置：任意整数分钟、保存同步、非法值不改计时、失败重试与桌面能力边界 |
+| `packages/web/src/features/mining/CombatSettings.test.tsx` | 刷怪/动作/怪物攻击节奏边界，AB/ABB/BAA 编排、移动与删除、非法设置拒绝、账号隔离与坏存档恢复 |
 | `packages/server/src/desktop/study-clock.test.ts` | 提前备题、到点投递、不堆题、延后、取消与失败退避 |
 | `packages/server/src/desktop/browser-store.test.ts` | 一次配对、用户/会话隔离、过期清理、乱序与跳转、预算 |
 | `packages/server/src/routes/desktop.test.ts` | 本机边界、Origin、作用域令牌、临时 RAG 接线、网页出题；悬浮会话落库/重开数据库恢复/删除清除/引用校验 |
 | `packages/web/src/features/desktop/browser-extract.test.ts` | 动态正文/选区/视野、输入与隐藏内容排除、长度限制 |
 | `packages/web/src/features/float/FloatQuiz.test.tsx` | 题卡独立作答、反馈、延后与失败保留 |
-| `packages/web/src/features/float/FloatApp.test.tsx` | Native 后台时钟完整投递与直接作答、App 不挂载；首次展开后收起不卸载、草稿与会话状态保留 |
+| `packages/web/src/features/float/FloatApp.test.tsx` | Native 后台时钟静默投递、仅菜单主动打开来信、旧回信不自动出题、同一来信关闭再打开、自定义延后及空状态；首次展开后收起不卸载、草稿与会话状态保留 |
 | `packages/web/src/app/useWorkspaceSession.test.ts` | 悬浮窗会话恢复、主窗隔离、迟到恢复不覆盖导航、写入串行、失败仍可操作 |
 | `packages/server/src/desktop/files.test.ts` | 区外只读/区内写、备份、敏感路径与正文单次许可、归属/拒绝/超时/取消、手动保护、联接逃逸/设备路径、截断/二进制与云端关闭 |
 | `packages/server/src/desktop/agent-runner.test.ts` | 独立上下文与真文件产物、权限继承/禁止再派生、并发三任务/排队/父子取消、许可前不提交内容、重启不重放 |
@@ -1289,12 +1294,16 @@ node node_modules\vitest\vitest.mjs run --reporter=dot   # npx 不可用时的�
 
 | 测试文件 | 回归范围 |
 |---|---|
+| `packages/web/src/features/settings/SettingsView.test.tsx` | 七分类十六独立子页、仅挂载当前叶子、组内记忆/重新进入恢复、移动分类导航、无效存储回落、插件跳转与滚动复位 |
+| `packages/web/src/features/settings/ModelSettings.test.tsx` | NULL 本机服务商可删、确认与取消、进行中防重复、错误反馈、系统/平台不可删说明、供应商/角色/默认通道分开渲染与按页请求 |
+| `packages/server/src/plugins/agent-bridge.test.ts` | 真实 HTTP MCP + 外部 worker 双向资料/任务领取/结果回传、幂等、密钥/Origin/Host/参数上限 |
 | `packages/shared/src/plugin-ecosystem.test.ts` | manifest 版本/字段/工具边界、禁止脚本/密钥/危险端点、仓库声明 |
 | `packages/server/src/plugins/github-policy.test.ts` | 仓库精确范围、只读工具/method 双闸、分页校验 |
 | `packages/server/src/plugins/runtime.test.ts` | Token 密文/归属/重启、连接不调用工具、确认前零外呼、逐次许可、停用中止、审计与按需 schema |
 | `packages/server/src/plugins/mcp-http.test.ts` | JSON/SSE/session/协议/分页/白名单、非文本忽略、脱敏、报文上限、HTTP错误/取消/DNS固定/禁止重定向 |
 | `packages/server/src/routes/plugins.test.ts` | Origin、防裸调用接口、用户/未登录隔离、测试/启用/断开/删除、导入配置 |
 | `packages/server/src/chat/plugin-flow.test.ts` | 原生 AI 工具循环、真实适配器调用、绕过强制网页搜索、SSE/工具回灌/答案落库 |
+| `packages/web/src/features/plugins/LocalAgentConnect.test.tsx` | 桌面能力探测、回环地址与显式知情、默认停用导入、网页版不显示可用本机连接 |
 | `packages/web/src/features/plugins/PluginsCard.test.tsx` | 配置/测试/启用、Token不回显、导入确认、断开确认、独立审计与错误可见 |
 | `packages/server/src/plugins/bilibili.test.ts` | 内置 adapter、方向证据、真实元信息/过大响应、用户笔记不可伪造、多用户、重启、停用取消、旧题拒绝 |
 | `packages/web/src/features/plugins/BilibiliLearningCard.test.tsx` | 免 Token 显式启用、视频/资料推荐、用户笔记专用提交、题卡交付、材料不足如实报错 |
@@ -1322,3 +1331,36 @@ node node_modules\vitest\vitest.mjs run --reporter=dot   # npx 不可用时的�
 | `packages/web/src/features/desktop/BrowserControls.test.tsx` | 首层直接下载扩展、无原生桥可用、原生文件夹入口不藏高级设置 |
 
 既有 quiz-round-store/QuizCard 覆盖部分和空白交卷、完整快照、空情景记录及乐观锁；exam-scope-action 覆盖发现先于写入及零候选不强制写。`tools/desktop/reader-smoke.ps1` 用合成 URL 验证原生只读窗口导航边界，不读用户网页。
+
+## 不定式引擎补充（2026-10-16，独立 Node test runner）
+
+`npm run test:open-engine` 在 CI 独立执行，不计入现有 Vitest 指标分母：
+
+| 测试文件 | 范围 |
+|---|---|
+| `packages/open-engine/tests/agent.test.mjs` | 提案不生效、差异、宿主确认、版本冲突、回滚追加历史、能力授予上限、broker、存档链与容量 |
+| `packages/open-engine/tests/room.test.mjs` | 无宿主依赖、玩家学习隔离、输入租约、幂等最近回执、顺序校验、空闲回收与 Schema 同步 |
+
+独立矿境 MVP 的地图/物理/学习/保存/HTTP 双客户端测试随原型交付，不冒充主体端到端联机验收；阶段边界见 `docs/OPEN-LEARNING-ENGINE.md`。
+
+补充内核测试：`packages/open-engine/tests/companion.test.mjs`（连续/幂等意图、250ms 真实时钟租约、过期会话与人类/Agent 相同房间输入路径），由既有 `npm run test:open-engine` 执行，不加入 Vitest 指标分母。
+
+### 每日任务 × 矿境（2026-10-20）
+- `packages/shared/src/daily-study-task.test.ts`：任务校验、时区日界、提醒时段。
+- `packages/server/src/routes/daily-study-task.test.ts`：真实 HTTP/DB、归属隔离、幂等计数、UTC 日界、悬浮球延后。
+- `packages/web/src/features/pomodoro/DailyTaskCard.test.tsx`：保存任务、真实进度、像素图标、进入矿境。
+- `packages/web/src/features/drill/drill-answer-report.test.ts`：稳定作答键、重试不重计、判断题映射。
+
+- `packages/web/src/features/float/DailyTaskInvitation.test.tsx`：主动点击才展开、任务原生气泡协议、活动优先级。
+
+- `packages/server/src/storage/migrations-v64.test.ts`：真实桌面旧事件结构无损归档、兼容结构重建、幂等索引。
+
+- `packages/server/src/desktop/daily-task-nudge.test.ts`：督促模型真实网关编排、冷却、完成清除、失效任务拒绝回填。
+
+### 0.2.205 · 悬浮球引路灯与实时视频
+- `packages/web/src/app/useDuelEgg.test.tsx`：导航下线、完整彩蛋序列、输入保护。
+- `packages/server/src/desktop/guide-nudge.test.ts`：本人引路灯现场、冷却/延后/失效/乱序/归属隔离。
+- `packages/web/src/features/sources/VideoPlayer.test.tsx`：不换 iframe 的悬浮/放大/还原、外层关闭、真实截图。
+- `packages/web/src/features/sources/video-capture.test.ts`：本机截图关联 ID、超时/取消资源清理。
+- `packages/web/src/features/float/FloatGuideInvitation.test.tsx`：沿用引路灯、不自动执行、还原现场、活动优先级。
+- `packages/web/src/features/float/FloatGuideSwitch.test.tsx`：读取本人偏好、显式开关/打开、保存失败保留原值并可重试。

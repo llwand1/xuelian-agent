@@ -1,3 +1,4 @@
+import { VideoPlayer } from './VideoPlayer';
 /**
  * VideoRouteView —— 资料架里的「视频线路」（契约 docs/SOURCE-TRACE-SPEC.md §12.3）。
  *
@@ -92,15 +93,7 @@ export function VideoRouteView({ st }: { st: VideoRouteState }) {
         </button>
       </form>
       {embed && st.playing && (
-        <iframe
-          key={embed}
-          className="sb-browser-frame src-frame vr-player"
-          src={embed}
-          title={st.playing.title}
-          sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
-          allow="fullscreen; picture-in-picture; encrypted-media"
-          referrerPolicy="strict-origin-when-cross-origin"
-        />
+        <VideoPlayer key={embed} embed={embed} title={st.playing.title} onClose={() => playVideo(null)} route />
       )}
       <div className={`vr-body${embed ? ' with-player' : ''}`}>
         {st.phase === 'idle' && <p className="vr-hint">{st.query ? `按「搜」在${meta.label}找「${st.query}」` : `输入知识点，去${meta.label}找讲解视频 · ${meta.hint}`}</p>}

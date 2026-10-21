@@ -89,8 +89,8 @@ export const CH_NPC = {
   title: { zh: '招募你的', en: 'Recruit your ' },
   accent: { zh: 'AI 学习伙伴', en: 'AI companions' },
   lead: {
-    zh: '在大陆上点一块地，安置一位伙伴。他由 AI 起名、定人设，守着一条词条：会就这条词条考你、给线索；遇到怪物会发来求救单；还能拿你的一张卡，换一条同领域你没见过的新词条。',
-    en: 'Pick a tile and settle a companion there. AI gives them a name and a persona, and they guard one term: they quiz you on it and drop hints, send a rescue request when monsters come, and trade one of your cards for a new term from the same field.',
+    zh: '在知识矿境的伙伴名册选择守护词条、招募伙伴。连接模型后他会起名、定人设，就词条提问和给线索；已有对话历史、求救单与卡牌信物仍沿用正式服务，不需要回到旧俯视地图。',
+    en: 'Choose a guarded term in the mine companion roster. With a configured model, companions get names, personas and contextual replies. Existing conversations, rescue requests and card tokens stay on the same service; the old top-down map is no longer needed.',
   },
   jobLabel: { zh: '职业', en: 'Class' },
   moodLabel: { zh: '性格', en: 'Persona' },

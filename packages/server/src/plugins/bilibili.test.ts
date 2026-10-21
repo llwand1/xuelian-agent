@@ -33,7 +33,7 @@ afterEach(()=>{browserStore.clear('alice');closeDb();fs.rmSync(directory,{recurs
 async function enable(){await testPlugin('alice','bilibili');updatePlugin('alice','bilibili',{enabled:true});}
 const use=(tool:string,args:Record<string,unknown>={})=>invokePlugin('bilibili',tool,args,ctx);
 it('is a disabled native builtin, cannot be overridden or given an account token, and discovery performs no remote requests',async()=>{
-  expect(listPlugins('alice').map(p=>p.manifest.id)).toEqual(['github','bilibili']);
+  expect(listPlugins('alice').map(p=>p.manifest.id)).toEqual(['github','bilibili','tinyfish']);
   expect(connection('alice','bilibili')).toMatchObject({enabled:false,hasToken:false,policy:'bilibili_public_learning'});
   expect(()=>updatePlugin('alice','bilibili',{enabled:true})).toThrow();
   expect(()=>updatePlugin('alice','bilibili',{token:'secret12345'})).toThrow('不需要');

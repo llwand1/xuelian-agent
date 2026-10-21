@@ -48,7 +48,7 @@ const STAGE_KINDS: Record<GuideStage, readonly GuideKind[]> = {
 
 export function eligibleKinds(f: GuideFacts, stage: GuideStage = guideStage(f)): GuideKind[] {
   const can = new Set<string>(f.can);
-  return STAGE_KINDS[stage].filter((k) => can.has(k) && k !== `nav.${f.view}`);
+  return STAGE_KINDS[stage].filter((k) => k !== 'nav.pk' && can.has(k) && k !== `nav.${f.view}`);
 }
 
 /**

@@ -42,7 +42,7 @@ export const WAVES: HeroWave[] = [
 
 /** 序章字幕：逐句打字，电影式黑边内播放 */
 export const PROLOGUE: Bi[] = [
-  { zh: '遗忘的潮水，漫过了知识大陆。', en: 'The tide of forgetting swept over the continent.' },
+  { zh: '遗忘的迷雾，漫进了知识矿境。', en: 'The fog of forgetting drifted into the knowledge mines.' },
   { zh: '被忘记的知识，化作了怪物。', en: 'Knowledge left behind turned into monsters.' },
   { zh: '而你——能把词条化为力量。', en: 'But you can turn what you learn into power.' },
 ];
@@ -54,7 +54,7 @@ export const HERO_UI = {
   handAria: { zh: '你的词条卡（按 1–4 打出）', en: 'Your term cards (press 1–4)' },
   handHint: { zh: '读懂谜题，打出对应的词条卡', en: 'Read the riddle, play the matching term' },
   wait: { zh: '……', en: '…' },
-  hudLand: { zh: '知识大陆', en: 'Knowledge continent' },
+  hudLand: { zh: '知识矿境', en: 'Knowledge Mines' },
   hudCards: { zh: '卡牌', en: 'Cards' },
   pops: {
     crit: { zh: '理解！暴击', en: 'Understood! Critical' },
@@ -64,9 +64,9 @@ export const HERO_UI = {
   },
   victoryTitle: { zh: '领地已收复', en: 'Territory reclaimed' },
   victoryText: {
-    zh: '这只是序章。在知识大陆，你和 AI 聊懂的每一个问题都会变成词条——它们就是你的武器。',
-    en: 'This was only the prologue. On the continent, every question you work through with AI becomes a term — and terms are your weapons.',
+    zh: '这只是序章。把和 AI 聊懂的词条带进知识矿境，挖掘与怪物遭遇继续复习——答题之后，也能回到对话追问。',
+    en: 'This was only the prologue. Take terms from AI conversations into the Knowledge Mines, then return to chat with new questions.',
   },
   stageAria: { zh: '可交互序章演示：打出词条卡击败遗忘怪物（玩法示意，不代表真实数值）', en: 'Interactive prologue: play term cards to defeat monsters of forgetting (illustration only)' },
-  note: { zh: '玩法示意 · 你的大陆由自己的词条构成', en: 'Illustrated · your continent is made of your own terms' },
+  note: { zh: '序章战斗示意 · 正式矿境使用自己的词条复习', en: 'Battle illustration · the actual mines review your own terms' },
 } satisfies Record<string, Bi | Record<string, Bi>>;

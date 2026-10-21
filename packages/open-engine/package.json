@@ -1,0 +1,8 @@
+{
+  "name": "@sb/open-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { "./agent": "./src/agent-kernel.mjs", "./room": "./src/room-kernel.mjs", "./companion": "./src/companion-kernel.mjs", "./mining": { "types": "./src/mining/runtime.d.mts", "import": "./src/mining/runtime.mjs" } },
+  "scripts": { "test": "node --test tests/*.test.mjs" }
+}
