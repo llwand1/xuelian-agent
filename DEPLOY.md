@@ -116,7 +116,7 @@ journalctl -u studentbuddy -n 100 -f   # 跟日志
 		file_server
 	}
 	handle {
-		try_files {path} /index.html
+		try_files {path} {path}/index.html /index.html
 		file_server
 	}
 }
@@ -126,7 +126,7 @@ journalctl -u studentbuddy -n 100 -f   # 跟日志
 
 - **TLS 全自动**：Caddy 自己申请与续期证书，不需要 certbot、不需要手工续期任务。
 - **`handle` 的顺序有意义**：`/api/*`、`/stats*`、`/reports/*` 必须排在兜底 `handle` 之前，否则全被 SPA 回退吃掉。
-- **SPA 路由**靠 `try_files {path} /index.html`（`#/pk` 这类前端路由刷新不会 404）。
+- **静态页优先，SPA 最后兜底**：使用 `try_files {path} {path}/index.html /index.html`。中间一项让 `/changelog/` 等目录页直接返回构建出的正文；省略它会把更新记录误回退为应用首页。只有不存在的静态路径才回退到 SPA。
 - **`/reports/*` 走 basicauth**：访问报告里有真实 UA / 路径，不公开。
 - ★ **`SB_TRUST_PROXY=1` 与 Caddy 下发 `X-Forwarded-For` 是同一件事的两处**：Caddy 默认会加 XFF，但 Express 侧必须开 `trust proxy` 才会去读。漏配的症状是 `req.ip` 恒为反代地址 ⇒ **全站共用一个 IP 桶**，发码限流退化成全站上限（详见 README §部署形态 的表）。
 
