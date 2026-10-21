@@ -13,7 +13,7 @@
 import { Router } from 'express';
 import { ANSWER_QTYPES, ANSWER_SOURCES, type JobView } from '@sb/shared';
 import { ownerIdOf } from '../auth/ownership.js';
-import { publishEvent } from '../events/bus.js';
+import { reportAnswerOnce } from '../learning/answer-report.js';
 import { aiCallStats } from '../ai/call-log.js';
 import { learningSummary, termTimeline } from '../learning/learning-events.js';
 import { jobCounts, listJobs, retryJob } from '../jobs/queue.js';
@@ -47,7 +47,7 @@ learningRouter.get('/terms/:id/timeline', (req, res) => {
 learningRouter.post('/answers', (req, res) => {
   const b = (req.body ?? {}) as Record<string, unknown>;
   const items = Array.isArray(b.items) ? b.items.slice(0, 50) : [b];
-  let accepted = 0;
+  let accepted = 0, duplicates = 0;
   for (const raw of items as Array<Record<string, unknown>>) {
     if (typeof raw?.correct !== 'boolean') continue;
     const qtype = typeof raw.qtype === 'string' && (ANSWER_QTYPES as readonly string[]).includes(raw.qtype) ? raw.qtype : undefined;
@@ -55,14 +55,16 @@ learningRouter.post('/answers', (req, res) => {
     const ms = typeof raw.ms === 'number' && Number.isFinite(raw.ms) ? Math.min(Math.max(Math.round(raw.ms), 0), 1_800_000) : undefined;
     const quizId = typeof raw.quizId === 'string' ? raw.quizId.slice(0, 80) : '';
     const termId = typeof raw.termId === 'string' ? raw.termId.slice(0, 80) : undefined;
-    publishEvent({ type: 'quiz_answered', quizId, correct: raw.correct, ownerId: ownerIdOf(req), qtype, ms, termId, source });
-    accepted += 1;
+    if (raw.attemptKey !== undefined && (typeof raw.attemptKey !== 'string' || !/^[a-zA-Z0-9:_-]{8,128}$/.test(raw.attemptKey))) continue;
+    const attemptKey = typeof raw.attemptKey === 'string' ? raw.attemptKey : undefined;
+    if (reportAnswerOnce({ type: 'quiz_answered', quizId, correct: raw.correct, ownerId: ownerIdOf(req), qtype, ms, termId, source, attemptKey })) accepted += 1;
+    else duplicates += 1;
   }
-  if (accepted === 0) {
+  if (accepted + duplicates === 0) {
     res.status(400).json({ error: '没有可记录的作答（correct 必须是 true/false）' });
     return;
   }
-  res.json({ accepted });
+  res.json({ accepted, ...(duplicates ? { duplicates } : {}) });
 });
 
 export const jobsRouter = Router();

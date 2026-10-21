@@ -1,5 +1,7 @@
 # 插件生态 v1 — 2026-10-14
 
+> 2026-10-15：本文保留 v1 的兼容与 GitHub 权限背景。当前增量实现见 [设置与插件 v2](SETTINGS-PLUGINS-V2.md)，统一字段和可运行本地 Agent 桥接见[接入指南](../packages/web/public/plugin-development.md)。v2 显式 loopback + agent + bearer 是桌面限定的新边界，不放宽 v1 公网 MCP。
+
 ## 交付范围
 插件管理页 + 声明式远程 MCP 插件底座 + GitHub 官方只读插件 + 主对话真实工具调用。
 不是插件商店，不加载第三方 JavaScript，不接受自定义 stdio/本机命令；子 Agent 插件授权和 GitHub 写入后置。

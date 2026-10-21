@@ -4,8 +4,7 @@
  * 侧栏改版：功能列表从上到下、历史列表可展开收起、
  * 底部用户框为 PK 昵称登录入口（模拟登录；真微信授权后续接入）；「对话」不再占导航项——logo 与新对话即入口。
  * 会话搜索框保留，收进历史对话区内。
- * 功能列表补「对战」一项（实测「找不到入口」）——PK 页仍是独立页，
- * 这一项只负责把 hash 改成 `#/pk`，见下方 NAV 注释。卡牌系统并入词条视图，不再单设导航项。
+ * 对战移为隐藏彩蛋，不占导航或引路灯目录；新怪物不再主动弹横幅。卡牌并入词条视图。
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Session } from '@sb/shared';
@@ -35,13 +34,15 @@ import { WaitDrill } from '../features/drill/WaitDrill';
 import { LookupPopup } from '../features/lookup/LookupPopup';
 import { useQuizWait } from '../features/drill/quiz-wait';
 import { loadPomodoroState } from '../features/pomodoro/pomodoro-store';
-import { HuntAlert } from '../features/hunt/HuntAlert';
+import { FLOAT_GUIDE_OPEN } from '../features/guide/float-guide-api';
+import { useDuelEgg } from './useDuelEgg';
 import { GuideBeacon } from '../features/guide/GuideBeacon';
 import { guideMainClass } from '../features/guide/guide-layout';
 import { TrialNotice } from '../components/TrialNotice';
 import { ReadingToolbar } from './ReadingToolbar';
 import { useReadingLayout } from './useReadingLayout';
 import { ReadingSplit } from './ReadingSplit';
+import { STUDY_TASK_OPEN } from '../features/pomodoro/daily-task-api';
 import './app.css';
 import './reading-workspace.css';
 
@@ -50,11 +51,22 @@ export function App({ desktopFloat = false }: { desktopFloat?: boolean }) {
   const { lang } = useLandingLang();
   const reading = useReadingLayout();
   const [view, setView] = useState<View>('chat');
+  useEffect(() => {
+    const open = () => setView('continent');
+    window.addEventListener(STUDY_TASK_OPEN, open);
+    return () => window.removeEventListener(STUDY_TASK_OPEN, open);
+  }, []);
+  const [learningIdentity, setLearningIdentity] = useState('local');
+  const [guideOpenRequest, setGuideOpenRequest] = useState(0);
   useEffect(() => watchDesktopInput(value => { if (value.focus || value.capture || value.error) setView('chat'); }), []);
-  /** 回答收口的轮次计数（`HuntAlert` 据此重取地图看有没有刷出话题怪；契约 KNOWLEDGE-CONTINENT-SPEC §「话题怪」） */
-  const [roundTick, setRoundTick] = useState(0);
+  /** 对战仅作为隐藏彩蛋，不再主动提示或占导航项。 */
+  useDuelEgg();
   const [sessions, setSessions] = useState<Session[]>([]);
   const { currentId, setCurrentId, restoring } = useWorkspaceSession(desktopFloat);
+  useEffect(() => {
+    const open = (e: Event) => { setGuideOpenRequest(n => n + 1); const d = (e as CustomEvent).detail as { sessionId?: string | null; view?: View } | undefined; if (d && 'sessionId' in d) setCurrentId(d.sessionId ?? null); if (d?.view && ['chat','terms','continent','settings'].includes(d.view)) setView(d.view); };
+    window.addEventListener(FLOAT_GUIDE_OPEN, open); return () => window.removeEventListener(FLOAT_GUIDE_OPEN, open);
+  }, [setCurrentId]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawerToggle = useRef<HTMLButtonElement>(null);
   const drawer = { open: drawerOpen, onChange: setDrawerOpen, toggle: drawerToggle };
@@ -246,7 +258,7 @@ export function App({ desktopFloat = false }: { desktopFloat?: boolean }) {
           PK 对战昵称不再在此处入口——PK 房间自带登录（features/pk/usePkIdentity），
           两套身份刻意不互相冒充，后续才合并（AUTH-SPEC §0）。
         */}
-        <AccountBox onAuthChange={() => void reloadSessions()} /><TrialNotice />
+        <AccountBox onAuthChange={user => { setLearningIdentity(user?.id ?? 'local'); void reloadSessions(); }} /><TrialNotice />
         {/* 全局语言切换（2026-09-28）：侧栏最底一行，任何视图下都在。样式复用 .landing-lang*（见 landing-lang 头注的命名债） */}
         <span className="sb-lang-bar"><LangToggle /></span>
       </PixelSidebar>
@@ -254,7 +266,7 @@ export function App({ desktopFloat = false }: { desktopFloat?: boolean }) {
         <ReadingToolbar layout={reading} sessionId={currentId}
           title={view === 'chat' ? sessions.find((s) => s.id === currentId)?.title || SHELL.newChat[lang] : NAV.find((n) => n.key === view)?.label[lang]}>
           {desktopFloat && <SidebarMenuButton drawer={drawer} />}
-          <GuideBeacon
+          <GuideBeacon openRequest={guideOpenRequest}
             lang={lang}
             view={view}
             sessionId={currentId}
@@ -265,16 +277,15 @@ export function App({ desktopFloat = false }: { desktopFloat?: boolean }) {
               setCurrentId(null);
             }}
           />
-          <CoachDock />
+          <CoachDock key={learningIdentity} />
           <DesktopWorkbench onOpenSession={id => { openSession(id); void reloadSessions(); }} />
           {view === 'chat' && <DesktopBrowserEntry hidden sessionId={currentId} onOpenSession={id => { openSession(id); void reloadSessions(); }} />}
-          <HuntAlert active={view === 'chat'} roundTick={roundTick} onGoContinent={() => goView('continent')} />
         </ReadingToolbar>
         <div className="sb-reading-content">
           <main className={guideMainClass(view)}>
-            <StudyWorkspaceScenes view={view} currentId={currentId} sessions={sessions} termsKeyword={termsKeyword}
+            <StudyWorkspaceScenes identity={learningIdentity} view={view} currentId={currentId} sessions={sessions} termsKeyword={termsKeyword}
               travelling={portal.travel?.destination ?? null} onEnter={portal.enter}
-              onNewSession={() => void newSession()} onRoundDone={() => { void reloadSessions(); setRoundTick(n => n + 1); }}
+              onNewSession={() => void newSession()} onRoundDone={() => { void reloadSessions(); }}
               onBusyChange={handleBusyChange} onOpenTerms={openTerms} onFollowUp={followUp} onGoContinent={() => goView('continent')} />
             <StudyPortalTravel travel={portal.travel} onFinish={portal.finish} />
           </main>
@@ -288,7 +299,7 @@ export function App({ desktopFloat = false }: { desktopFloat?: boolean }) {
         等待时刷词（docs/WAIT-DRILL-SPEC.md）：全局常驻，手机只手动开，桌面等待 2 秒后按许可弹出；
         而弹窗、配乐与本局战绩不该因为切页被重置；`active` 只管"自动弹"是否允许（不在对话页不弹）。
       */}
-      <WaitDrill busySessionId={localBusySid ?? quizWaitSid} active={view === 'chat' && !reading.focused} />
+      <WaitDrill key={learningIdentity} identity={learningIdentity} suspended={view === 'continent'} busySessionId={localBusySid ?? quizWaitSid} active={view === 'chat' && !reading.focused} />
       {/* 划词速查小窗：常驻壳层，一次只开一个（LOOKUP-SPEC §5） */}
       <LookupPopup />
     </div>

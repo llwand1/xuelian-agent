@@ -26,7 +26,7 @@ export interface LearningEventInput {
 export function recordLearningEvent(ev: LearningEventInput): void {
   const at = ev.at ?? new Date();
   getDb()
-    .prepare('INSERT INTO learning_event (owner_id, kind, subject_id, payload, day) VALUES (?, ?, ?, ?, ?)')
+    .prepare('INSERT OR IGNORE INTO learning_event (owner_id, kind, subject_id, payload, day) VALUES (?, ?, ?, ?, ?)')
     .run(ownerForWrite(ev.ownerId), ev.kind, ev.subjectId ?? null, ev.payload ? JSON.stringify(ev.payload) : null, localDayKey(at));
 }
 
@@ -45,7 +45,7 @@ export function toLearningEvents(ev: DomainEvent): LearningEventInput[] {
     case 'quiz_answered':
       return [{
         ownerId: ev.ownerId, kind: 'quiz.answered', subjectId: ev.termId ?? null,
-        payload: { quizId: ev.quizId, correct: ev.correct, qtype: ev.qtype ?? null, ms: ev.ms ?? null, source: ev.source ?? null },
+        payload: { quizId: ev.quizId, correct: ev.correct, qtype: ev.qtype ?? null, ms: ev.ms ?? null, source: ev.source ?? null, ...(ev.attemptKey ? { attemptKey: ev.attemptKey } : {}), ...(ev.answered === false ? { answered: false } : {}) },
       }];
     case 'quiz_generated':
       return [{ ownerId: ev.ownerId, kind: 'quiz.generated', subjectId: ev.quizId }];

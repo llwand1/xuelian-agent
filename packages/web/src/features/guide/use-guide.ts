@@ -183,7 +183,8 @@ export function useGuide({ lang, view, sessionId }: { lang: GuideLang; view: Gui
   const rules = useMemo<GuideResult>(() => ruleGuide(facts, seed), [facts, seed]);
   const current = shown && shown.key === f.key ? shown.res : null;
   const source: GuideSource = current ? current.mode : f.loading ? 'loading' : 'rules';
-  const result: GuideResult = current ?? rules;
+  const rawResult: GuideResult = current ?? rules;
+  const result = useMemo(() => ({ ...rawResult, items: rawResult.items.filter(i => i.kind !== 'nav.pk') }), [rawResult]);
   const reason: GuideReason | 'failed' | undefined = current?.reason ?? (f.failed && !current ? 'failed' : undefined);
 
   return {
@@ -191,6 +192,7 @@ export function useGuide({ lang, view, sessionId }: { lang: GuideLang; view: Gui
     stage,
     open,
     toggle,
+    show: openPanel,
     close,
     done,
     lit: litStage,

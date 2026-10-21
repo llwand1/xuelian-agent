@@ -49,7 +49,7 @@ function apply(el: HTMLElement, pos: WindowPos): void {
 
 export function useDragWindow(
   ref: RefObject<HTMLElement | null>,
-  opts: { handle: string; initial: WindowPos | null; onSettle: (pos: WindowPos) => void },
+  opts: { handle: string; initial: WindowPos | null; onSettle: (pos: WindowPos) => void; layoutKey?: string },
 ): void {
   const optsRef = useRef(opts);
   optsRef.current = opts;
@@ -61,6 +61,7 @@ export function useDragWindow(
     const view = () => ({ w: window.innerWidth, h: window.innerHeight });
     const size = () => ({ w: el.offsetWidth, h: el.offsetHeight });
     let pos = opts.initial ? clampWindowPos(opts.initial, size(), view()) : centeredPos(size(), view());
+    if (opts.layoutKey) pos = { x: Math.max(0, Math.min(pos.x, view().w - size().w)), y: Math.max(0, Math.min(pos.y, view().h - size().h)) };
     apply(el, pos);
 
     let drag: { id: number; dx: number; dy: number } | null = null;
@@ -99,6 +100,6 @@ export function useDragWindow(
       el.removeEventListener('pointercancel', onUp);
       window.removeEventListener('resize', onResize);
     };
-    // 只在挂载时装一次（依赖只有 ref）：initial 只用于首帧，之后位置由拖动决定；onSettle 经 optsRef 读最新值
-  }, [ref, optsRef]);
+    // Mode changes refit the window; ordinary rerenders preserve the learner's dragged position.
+  }, [ref, optsRef, opts.layoutKey]);
 }

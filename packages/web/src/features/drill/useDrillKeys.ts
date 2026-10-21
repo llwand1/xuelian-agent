@@ -27,10 +27,12 @@ export function useDrillKeys(enabled: boolean, handlers: DrillKeyHandlers): void
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
       const el = e.target instanceof Element ? e.target : null;
-      const inDrill = el?.closest('.drill-overlay') !== null;
+      if (e.isComposing || e.repeat || el?.closest('.mining-stage')) return;
+      const inDrill = !!el?.closest('.drill-overlay, .mining-inline');
       const isField = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || (el instanceof HTMLElement && el.isContentEditable);
       // 小窗外的输入框：整个不管（含 Esc——那是聊天框自己的「停止生成」）
       if (isField && !inDrill) return;
+      if (e.key !== 'Escape' && document.querySelector('.drill-overlay .is-game, .mining-inline .is-game') && !document.querySelector('.mining-encounter')) return;
       if (e.key === 'Escape') {
         e.preventDefault();
         ref.current.onClose();

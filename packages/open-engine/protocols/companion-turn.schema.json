@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StudentBuddy companion player turn v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "apiVersion", "sessionId", "worldId", "sequence"],
+  "anyOf": [{ "required": ["input"] }, { "required": ["message"] }],
+  "properties": {
+    "schema": { "const": "studentbuddy.companion-turn" }, "apiVersion": { "const": 1 },
+    "sessionId": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "worldId": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "sequence": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "input": { "type": "object", "additionalProperties": false, "properties": { "left": { "type": "boolean" }, "right": { "type": "boolean" }, "down": { "type": "boolean" }, "jump": { "type": "boolean" }, "jumpPressed": { "type": "boolean" } } },
+    "message": { "type": "string", "minLength": 1, "maxLength": 2000 }
+  },
+  "$comment": "Host binds session/world identity; exact latest retry is idempotent; controls expire after 250ms wall-clock. No coordinates, arbitrary code, mining attribution or grading."
+}

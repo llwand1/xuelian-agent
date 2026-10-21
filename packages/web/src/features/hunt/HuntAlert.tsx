@@ -74,7 +74,7 @@ export function HuntAlert({ active, roundTick, onGoContinent }: Props) {
       {!narrow && <span className="hunt-alert-text">
         <b>刷新了新的怪物</b>
         刚聊到的{listed}
-        {more}在知识大陆上冒出了话题怪——趁热打一场，答对就算复习一次。
+        {more}在知识矿境里形成了话题遭遇——接着刚才的理解，答题复习。
       </span>}
       <button
         type="button"

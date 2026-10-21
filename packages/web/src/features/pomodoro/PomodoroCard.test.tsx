@@ -75,7 +75,7 @@ describe('① ② 未开钟', () => {
     expect(s.phase).toBe('work');
     expect(Date.parse(s.phaseEndsAt) - Date.parse(s.phaseStartedAt)).toBe(45 * 60_000);
     // 开钟后卡片切到运行态
-    expect(screen.getByText('🍅 数学')).toBeTruthy();
+    expect(screen.getByText('数学')).toBeTruthy();
   });
 
   it('自己敲的时长超界按 shared 钳位（9999 ⇒ 180）', async () => {
@@ -113,7 +113,7 @@ describe('③ ④ 开着钟', () => {
       fireEvent.click(screen.getByRole('button', { name: '开始休息' }));
     });
     expect((api.put.mock.calls[0]?.[0] as PomodoroSession).phase).toBe('break');
-    expect(screen.getByText('☕ 休息中')).toBeTruthy();
+    expect(screen.getByText('休息中')).toBeTruthy();
   });
 
   it('休息段：「开始第 2 轮」⇒ 工作 round 2；「结束番茄钟」⇒ DELETE 并回到开钟表单', async () => {

@@ -47,3 +47,6 @@
   .sb-companion-art *, .sb-companion-art .mascot-px-lid { animation: none; }
 }
 
+.sb-companion-menu { position: fixed; left: 50%; top: calc(50% - 88px); transform: translateX(-50%); z-index: 4; display: flex; gap: 4px; visibility: hidden; background: #21151f; padding: 4px; border: 1px solid #7d5c27; white-space: nowrap; }
+.sb-companion:hover .sb-companion-menu, .sb-companion:focus-within .sb-companion-menu, .sb-companion-menu:hover { visibility: visible; }
+.sb-companion-menu button { background: #21151f; color: #e7d4a7; padding: 6px 10px; border: 1px solid #7d5c27; cursor: pointer; }

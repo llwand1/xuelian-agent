@@ -8,6 +8,7 @@ vi.mock('node:https',()=>({default:{request:wire.request}}));
 vi.mock('../search/ssrf-guard.js',()=>({resolveSafeAddress:wire.resolve}));
 import { McpHttpClient, pluginAddress } from './mcp-http.js';
 import { GITHUB_PLUGIN } from './catalog.js';
+import { TINYFISH_PLUGIN, localAgentManifest } from '@sb/shared';
 const token='github_pat_private_token_1234567890';
 beforeEach(()=>{
   wire.mode='json';wire.status=200;wire.hold=false;wire.calls=[];wire.resolve.mockReset().mockResolvedValue('140.82.112.6');
@@ -74,5 +75,22 @@ it('honors cancellation during DNS resolution before opening any TLS connection'
   const ctrl=new AbortController(),client=new McpHttpClient(GITHUB_PLUGIN,token,ctrl.signal);
   const pending=client.initialize().catch(e=>e as Error);ctrl.abort();
   expect(await pending).toBeInstanceOf(Error);expect(wire.calls).toEqual([]);
+});
+it('uses TinyFish X-API-Key for initialization, calls and cleanup without a Bearer header',async()=>{
+  const client=new McpHttpClient(TINYFISH_PLUGIN,token,AbortSignal.timeout(3000));
+  await client.initialize();await client.call('search',{query:'physics'});await client.close();
+  for(const request of wire.calls) {
+    expect(request.options.headers).toMatchObject({'X-API-Key':token});
+    expect(request.options.headers).not.toHaveProperty('Authorization');
+  }
+});
+it('allows only desktop loopback destinations with no DNS resolution, not hosted server loopback',async()=>{
+  const manifest=localAgentManifest('http://127.0.0.1:4011/mcp');
+  vi.stubEnv('SB_DESKTOP','0');await expect(pluginAddress(manifest.endpoint,'loopback')).rejects.toThrow('桌面');
+  vi.stubEnv('SB_DESKTOP','1');vi.stubEnv('SB_HOST','127.0.0.1');
+  try {
+    wire.resolve.mockClear();expect(await pluginAddress(manifest.endpoint,'loopback')).toBe('127.0.0.1');expect(wire.resolve).not.toHaveBeenCalled();
+    await expect(pluginAddress('http://192.168.1.2:4011/mcp','loopback')).rejects.toThrow();
+  } finally {vi.unstubAllEnvs();}
 });
 

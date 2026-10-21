@@ -6,6 +6,7 @@ import type { TermRelationView, GradeRequest, GradeResult, LearnerModel, AiCallS
 import { request } from './api-request.js';
 
 export interface AnswerReport {
+  attemptKey?: string;
   correct: boolean;
   qtype?: AnswerQType;
   ms?: number;

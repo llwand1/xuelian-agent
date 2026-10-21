@@ -106,14 +106,14 @@ export const GuidePopover = forwardRef<HTMLDivElement, Props>(function GuidePopo
         </p>
       )}
       <button type="button" className="guide-all-toggle" aria-expanded={allOpen} aria-controls={`${p.id}-all`} onClick={() => setAllOpen((v) => !v)}>
-        <span aria-hidden="true">{allOpen ? '▾' : '▸'}</span> {T.allFeatures[lang]}（{GUIDE_KINDS.length}）
+        <span aria-hidden="true">{allOpen ? '▾' : '▸'}</span> {T.allFeatures[lang]}（{GUIDE_KINDS.filter(k => k !== 'nav.pk').length}）
       </button>
       {allOpen && (
         <div className="guide-all" id={`${p.id}-all`}>
           {GROUP_ORDER.map((g) => (
             <section key={g} className="guide-group" aria-label={GUIDE_GROUPS[g][lang]}>
               <h3 className="guide-group-title">{GUIDE_GROUPS[g][lang]}</h3>
-              {GUIDE_KINDS.filter((k) => GUIDE_CATALOG[k].group === g).map((k) => {
+              {GUIDE_KINDS.filter((k) => k !== 'nav.pk' && GUIDE_CATALOG[k].group === g).map((k) => {
                 const info = GUIDE_CATALOG[k];
                 const on = can.has(k);
                 return (

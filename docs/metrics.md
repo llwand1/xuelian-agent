@@ -23,37 +23,37 @@ node tools/metrics.mjs --check            # README/首屏手抄数字与实测�
 
 <!-- metrics:begin —— 以下由 tools/metrics.mjs --write-docs 回填，勿手改 -->
 
-> 采集：2026-10-14 20:33:54（本机时区）｜ 基准 `b3b05b2` ｜ 复现：`node tools/metrics.mjs --tests --coverage`
+> 采集：2026-10-21 20:40:41（本机时区）｜ 基准 `0bf4fa9` ｜ 复现：`node tools/metrics.mjs --tests --coverage`
 
 ## 工程规模（源码 / 测试行数，按包）
 
 | 包 | 源码文件 | 源码行 | 测试文件 | 测试行 | 测试/源码 |
 |---|---|---|---|---|---|
-| shared | 77 | 10,532 | 49 | 5,781 | 55% |
-| server | 356 | 44,014 | 237 | 40,136 | 91% |
-| web | 410 | 44,869 | 174 | 20,562 | 46% |
-| **合计** | **843** | **99,415** | **460** | **66,479** | **67%** |
+| shared | 81 | 10,705 | 50 | 5,839 | 55% |
+| server | 363 | 44,560 | 243 | 40,633 | 91% |
+| web | 437 | 45,903 | 190 | 21,281 | 46% |
+| **合计** | **881** | **101,168** | **483** | **67,753** | **67%** |
 
 ## 接口与契约
 
-- REST 路由注册：**240**（get 97 / post 103 / delete 18 / put 20 / patch 2）· 另 /api 挂载点 47 个
-- shared 契约类型：**310**（export interface 215 + export type 95）
+- REST 路由注册：**254**（get 101 / post 110 / delete 18 / put 23 / patch 2）· 另 /api 挂载点 47 个
+- shared 契约类型：**320**（export interface 224 + export type 96）
 - 外部运行时依赖：**8** 个 —— better-sqlite3, cors, express, katex, mermaid, pino, react, react-dom
-- 迁移水位：代码侧 **v63**（63 个 version 条目，非连续号 0 处）
+- 迁移水位：代码侧 **v64**（64 个 version 条目，非连续号 0 处）
 
 ## 测试基线（vitest 实跑）
 
-- **460 文件 / 4873 例**（4870 passed + 3 skipped + 0 failed）⇒ 全绿
+- **483 文件 / 4972 例**（4969 passed + 3 skipped + 0 failed）⇒ 全绿
 - ⚠️ 本次未重跑 vitest，读的是 今日的 test-results 产物——要新鲜数字加 `--tests`
-- jsdom 交互测试文件（`.test.tsx`）90 个
+- jsdom 交互测试文件（`.test.tsx`）104 个
 
 ## 覆盖率（v8，按包加权 covered/total，非百分比平均）
 
 - ⬜ 无覆盖率产物（跑 `node tools/metrics.mjs --tests --coverage` 生成，**不编数**）
 
 ## 文档与仓库
-- docs/：SPEC 契约 69 份 · md 共 87 份 · 真机探针 16 个
-- git：feat/http-reliability-product-docs @ `b3b05b2`（2026-10-14）· 近 14 天 131 commits · 工作区未提交 56 文件
+- docs/：SPEC 契约 73 份 · md 共 99 份 · 真机探针 19 个
+- git：chore/sync-local-20261021 @ `0bf4fa9`（2026-10-14）· 近 14 天 38 commits · 工作区未提交 230 文件
 
 <!-- metrics:end -->
 

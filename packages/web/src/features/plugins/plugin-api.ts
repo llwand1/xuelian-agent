@@ -2,6 +2,7 @@ import type { PluginManifest, PluginView, PluginCallLog, GithubLoginState, Bilib
 import { request } from '../../lib/api-request';
 const base = '/api/plugins';
 export const pluginApi = {
+  localSupport: () => request<{supported:boolean}>(base+'/local-agent/support',{timeoutMs:5000}),
   bilibiliState: () => request<{video:BilibiliLearningVideo|null}>(base+'/bilibili/learning'),
   bilibiliNotes: (url:string,notes:string) => request<BilibiliLearningVideo>(base+'/bilibili/notes',{method:'POST',body:JSON.stringify({url,notes})}),
   bilibiliOpen: () => request<{ok:boolean}>(base+'/bilibili/open',{method:'POST',body:'{}'}),

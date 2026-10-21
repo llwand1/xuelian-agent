@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StudentBuddy authoritative room command v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "apiVersion", "sequence", "type", "payload"],
+  "properties": {
+    "schema": { "const": "studentbuddy.room.command" }, "apiVersion": { "const": 1 },
+    "sequence": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "type": { "enum": ["input", "recall", "torch", "answer"] }, "payload": { "type": "object" }
+  },
+  "oneOf": [
+    { "properties": { "type": { "const": "input" }, "payload": { "type": "object", "additionalProperties": false, "properties": {
+      "left": { "type": "boolean" }, "right": { "type": "boolean" }, "down": { "type": "boolean" }, "jump": { "type": "boolean" }, "jumpPressed": { "type": "boolean" }, "mine": { "type": "boolean" }, "paused": { "type": "boolean" },
+      "target": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/tile" }] }
+    } } } },
+    { "properties": { "type": { "const": "recall" }, "payload": { "type": "object", "maxProperties": 0 } } },
+    { "properties": { "type": { "const": "torch" }, "payload": { "$ref": "#/$defs/tile" } } },
+    { "properties": { "type": { "const": "answer" }, "payload": { "type": "object", "additionalProperties": false, "required": ["encounterId", "value"], "properties": {
+      "encounterId": { "type": "string", "maxLength": 160 }, "value": { "oneOf": [{ "type": "boolean" }, { "type": "integer" }, { "type": "string", "maxLength": 500 }] }
+    } } } }
+  ],
+  "$defs": { "tile": { "type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": { "x": { "type": "integer", "minimum": 0, "maximum": 199 }, "y": { "type": "integer", "minimum": 0, "maximum": 149 } } } },
+  "$comment": "Only the host assigns session identity. Sequence must be next or an exact retry of the most recent command. Clients never submit final position, terrain changes or correctness."
+}

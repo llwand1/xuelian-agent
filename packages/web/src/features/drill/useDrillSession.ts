@@ -37,6 +37,7 @@ import { fxKindFor, type DrillFxState } from './DrillFx';
 import { loadDrillStats, saveDrillStats } from './drill-prefs';
 import { buildDrillQueue, drillFocusNotice, needsFocusRefill } from './drill-focus';
 import { readPomodoro } from '../pomodoro/pomodoro-store';
+import { reportDrillAnswer } from './drill-answer-report';
 import { useDrillKeep } from './useDrillKeep';
 
 /** 方向内排空后「现场出题」最多补几次：补不到就如实说空，不无限打网络 */
@@ -76,6 +77,9 @@ const NEW_TERM_GAP = 4;
 const errText = (e: unknown, fallback: string): string => (e instanceof Error && e.message ? e.message : fallback);
 
 export interface UseDrillSessionOptions {
+  /** Game cadence owns advancement; normal drill keeps its existing timers. */
+  manualAdvance?: boolean;
+  priorityIds?: readonly string[];
   open: boolean;
   sessionId: string | null;
   dayKey: string;
@@ -84,7 +88,11 @@ export interface UseDrillSessionOptions {
   onCardResolved?: () => boolean | void;
 }
 
-export function useDrillSession({ open, sessionId, dayKey, audio, onCardResolved }: UseDrillSessionOptions) {
+export function useDrillSession({ open, sessionId, dayKey, audio, onCardResolved, priorityIds, manualAdvance = false }: UseDrillSessionOptions) {
+  const manual = useRef(manualAdvance); manual.current = manualAdvance;
+  const priority = useRef(priorityIds);
+  const epoch = useRef(0);
+  const reviewing = useRef(new Set<string>());
   const [phase, setPhase] = useState<DrillPhase>('loading');
   const [entry, setEntry] = useState<DrillEntry | null>(null);
   const [card, setCard] = useState<DrillCard | null>(null);
@@ -102,6 +110,7 @@ export function useDrillSession({ open, sessionId, dayKey, audio, onCardResolved
   const library = useRef<readonly DrillQueueTerm[]>([]);
   const slain = useRef<Set<string>>(new Set());
   const served = useRef(0);
+  const runId = useRef(crypto.randomUUID());
   const fxKey = useRef(0);
   const advance = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resolvedRef = useRef(onCardResolved);
@@ -124,6 +133,7 @@ export function useDrillSession({ open, sessionId, dayKey, audio, onCardResolved
     if (advance.current) clearTimeout(advance.current);
     advance.current = null;
   };
+  useEffect(() => { if (manualAdvance) clearAdvance(); }, [manualAdvance]);
 
   useEffect(() => {
     if (!open) { setFx(null); return; }
@@ -158,6 +168,7 @@ export function useDrillSession({ open, sessionId, dayKey, audio, onCardResolved
    */
   const requestNewTerms = useCallback(
     (reason: 'open' | 'focus') => {
+      const generation = epoch.current;
       if (reason === 'focus') {
         if (refill.current.inFlight || refill.current.tries >= MAX_FOCUS_REFILL) return;
         refill.current.inFlight = true;
@@ -166,13 +177,14 @@ export function useDrillSession({ open, sessionId, dayKey, audio, onCardResolved
       void drillApi
         .newTerms(sessionId)
         .then((r) => {
+          if (generation !== epoch.current) return;
           if (r.fallbackReason) setNewNote(r.fallbackReason);
           if (r.items.length > 0) {
             injectNew(r.items);
             if (phaseRef.current === 'empty') serveRef.current();
           }
         })
-        .catch((e: unknown) => setNewNote(errText(e, '这次没要到新词')))
+        .catch((e: unknown) => { if (generation === epoch.current) setNewNote(errText(e, '这次没要到新词')); })
         .finally(() => {
           if (reason === 'focus') refill.current.inFlight = false;
         });
@@ -194,6 +206,12 @@ export function useDrillSession({ open, sessionId, dayKey, audio, onCardResolved
       const subject = pomo && pomo.phase === 'work' ? pomo.subject : null;
       const built = buildDrillQueue({ terms: library.current, dayKey: `${dayKey}|r${served.current}`, exclude: slain.current, subject });
       queue.current = built.items.map((q) => ({ term: q.term, origin: q.origin }));
+      if (priority.current?.length) {
+        const ids = priority.current;
+        queue.current.sort((a, b) => (ids.includes(a.term.id) ? ids.indexOf(a.term.id) : ids.length) - (ids.includes(b.term.id) ? ids.indexOf(b.term.id) : ids.length));
+        queue.current = queue.current.map(q => ids.includes(q.term.id) && library.current.find(t => t.id === q.term.id)?.inScope ? { ...q, origin: 'due' } : q);
+        priority.current = undefined;
+      }
       const line = drillFocusNotice(built.outcome, subject);
       if (line) setNotice(line);
       if (needsFocusRefill(built.outcome)) requestNewTermsRef.current('focus');
@@ -228,7 +246,9 @@ export function useDrillSession({ open, sessionId, dayKey, audio, onCardResolved
     setNewNote('');
     setFx(null);
     served.current = 0;
+    runId.current = crypto.randomUUID();
     queue.current = [];
+    reviewing.current.clear();
     setPhase('loading');
     void termsContinentApi
       .map()
@@ -251,6 +271,7 @@ export function useDrillSession({ open, sessionId, dayKey, audio, onCardResolved
         setPhase('empty');
       });
     return () => {
+      epoch.current++;
       alive = false;
       clearAdvance();
     };
@@ -284,12 +305,12 @@ export function useDrillSession({ open, sessionId, dayKey, audio, onCardResolved
   const onKept = useCallback((term: string) => {
     fxKey.current += 1;
     setFx({ kind: 'keep', key: fxKey.current, term });
-    advance.current = setTimeout(finishCard, DRILL_KEEP_ADVANCE_MS);
+    if (!manual.current) advance.current = setTimeout(finishCard, DRILL_KEEP_ADVANCE_MS);
   }, [finishCard]);
   const keeper = useDrillKeep({ open, entry, phase, onSaved: onKept, onNotice: setNotice, audio });
 
   const next = useCallback(() => {
-    if (keeper.isLocked() || (phase !== 'reveal' && phase !== 'learn')) return;
+    if (keeper.isLocked() && keeper.state !== 'saved' || (phase !== 'reveal' && phase !== 'learn')) return;
     audio?.play('flip');
     finishCard();
   }, [phase, audio, finishCard, keeper]);
@@ -302,8 +323,11 @@ export function useDrillSession({ open, sessionId, dayKey, audio, onCardResolved
 
   const answer = useCallback(
     (a: number | string | null) => {
-      if (phase !== 'question' || !card || !entry) return;
+      if (phaseRef.current !== 'question' || phase !== 'question' || !card || !entry) return;
+      if (a !== null && (card.kind === 'spell' ? typeof a !== 'string' || !a.trim() : typeof a !== 'number' || !Number.isInteger(a) || a < 0 || a >= card.options.length)) return;
+      phaseRef.current = 'reveal';
       const ok = a !== null && gradeDrill(card, a, entry.term.aliases ?? []);
+      if (a !== null) void reportDrillAnswer(`drill:${runId.current}:${served.current}`, card, ok).catch((e: unknown) => setNotice(`每日任务进度未同步：${errText(e, '请检查连接')}`));
       setResult({ correct: ok, answer: a });
       setPhase('reveal');
       fxKey.current += 1;
@@ -313,16 +337,19 @@ export function useDrillSession({ open, sessionId, dayKey, audio, onCardResolved
         setStats((s) => ({ ...s, correct: s.correct + 1, combo, bestCombo: Math.max(s.bestCombo, combo) }));
         setFx({ kind: fxKindFor(stats.correct + 1), key: fxKey.current, combo: milestone ? combo : undefined });
         audio?.play(milestone ? 'combo' : 'correct');
-        if (entry.origin === 'due') {
+        if (entry.origin === 'due' && !reviewing.current.has(entry.term.id)) {
+          reviewing.current.add(entry.term.id);
           void termsReviewApi
             .mark(entry.term.id, true)
             .then(() => {
+              library.current = library.current.map(t => t.id === entry.term.id ? { ...t, status: 'upcoming' } : t);
+              queue.current = queue.current.map(q => q.term.id === entry.term.id ? { ...q, origin: 'library' } : q);
               setStats((s) => ({ ...s, reviewed: s.reviewed + 1 }));
-              setNotice(`「${entry.term.term}」已打卡——大陆上那只怪消失了`);
+              setNotice(`「${entry.term.term}」已打卡——与常规复习共用学习记录`);
             })
-            .catch((e: unknown) => setNotice(`「${entry.term.term}」打卡没成：${errText(e, '稍后到大陆再打一次')}`));
+            .catch((e: unknown) => { reviewing.current.delete(entry.term.id); setNotice(`「${entry.term.term}」打卡没成：${errText(e, '请稍后重试')}`); });
         }
-        if (entry.origin !== 'new') advance.current = setTimeout(finishCard, DRILL_ADVANCE_MS);
+        if (entry.origin !== 'new' && !manual.current) advance.current = setTimeout(finishCard, DRILL_ADVANCE_MS);
       } else {
         setStats((s) => ({ ...s, wrong: s.wrong + 1, combo: 0 }));
         setFx({ kind: 'wrong', key: fxKey.current });
@@ -335,6 +362,12 @@ export function useDrillSession({ open, sessionId, dayKey, audio, onCardResolved
   );
 
   const dontKnow = useCallback(() => answer(null), [answer]);
+  const pass = useCallback(() => {
+    if (phaseRef.current !== 'question') return;
+    phaseRef.current = 'reveal'; clearAdvance();
+    setPhase('reveal'); setResult({ correct: false, answer: null, slain: true });
+    setFx({ kind: 'slay', key: ++fxKey.current });
+  }, []);
 
   /** 斩：今天不再出这条（本机记 id）；新词没有"斩"（它还不在库里） */
   const slay = useCallback(() => {
@@ -359,5 +392,5 @@ export function useDrillSession({ open, sessionId, dayKey, audio, onCardResolved
     finishCard();
   }, [entry, phase, finishCard, keeper]);
 
-  return { phase, entry, card, result, fx, notice, newNote, stats, queueLeft, draft, setDraft, answer, dontKnow, next, learned, slay, keep: keeper.keep, keepState: keeper.state, dismiss };
+  return { phase, entry, card, result, fx, notice, newNote, stats, queueLeft, draft, setDraft, answer, dontKnow, next, learned, slay, pass, keep: keeper.keep, keepState: keeper.state, dismiss };
 }

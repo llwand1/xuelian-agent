@@ -66,7 +66,7 @@ export interface LearningTimelineItem {
 /** 前端可以上报的答题事件（`POST /api/learning/answers`） */
 export const ANSWER_QTYPES = ['choice', 'judge', 'fill', 'match', 'scene', 'short', 'multi'] as const;
 export type AnswerQType = (typeof ANSWER_QTYPES)[number];
-export const ANSWER_SOURCES = ['chat-quiz', 'scenario', 'continent', 'pk', 'review'] as const;
+export const ANSWER_SOURCES = ['chat-quiz', 'scenario', 'continent', 'pk', 'review', 'wait-drill'] as const;
 export type AnswerSource = (typeof ANSWER_SOURCES)[number];
 
 // ── 后台任务（`GET /api/jobs`）──

@@ -72,6 +72,9 @@ export interface Provider {
    *   把所有 provider 都画成可编辑，用户点下去必然撞一个服务端拒绝。
    */
   ownerId: string | null;
+  /** 请求者的实际权限；本机单人模式的 NULL 归属不等于只读。 */
+  editable?: boolean;
+  deletable?: boolean;
 }
 
 /** 词条库条目（忆域 v2：AI 自动词条库；废弃 MemorizeItem/SRS 翻卡，2026-09-01 契约） */

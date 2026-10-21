@@ -2,6 +2,8 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useEffect, useState } from 'react';
+vi.mock('../pomodoro/daily-task-api', () => ({ dailyTaskApi: { tick: async () => ({nudge:null}) }, STUDY_TASK_OPEN: 'sb:study-task-open' }));
+vi.mock('../guide/float-guide-api', () => ({ floatGuideApi: { tick: async () => ({guide:null}) }, FLOAT_GUIDE_OPEN: 'sb:float-guide-open' }));
 import type { DesktopStudyState } from '@sb/shared';
 import { StudyClock } from '../../../../server/src/desktop/study-clock';
 import { resetRoundMocks } from '../quiz/quiz-round.testkit';
@@ -16,13 +18,14 @@ vi.mock('../../app/App', () => ({ App: () => {
   useEffect(() => { probe.mounts++; return () => { probe.unmounts++; }; }, []);
   return <div>APP_MUST_NOT_OPEN<input aria-label="测试草稿" value={draft} onChange={e => setDraft(e.target.value)} /></div>;
 } }));
-vi.mock('../desktop/desktop-api', () => ({ desktopApi: {
+vi.mock('../desktop/desktop-api', () => ({ STUDY_SETTINGS_UPDATED: 'sb:study-settings-updated', desktopApi: {
   browser: async () => ({ page: null }),
   tick: async (eligible: boolean) => server.clock!.tick(eligible),
   dismiss: async (action: 'done' | 'skip' | 'snooze') => { server.clock!.dismiss(action); return server.clock!.state(); },
   settings: async (settings: DesktopStudyState['settings']) => { server.clock!.configure(settings); return server.clock!.state(); },
 } }));
 const { FloatApp } = await import('./FloatApp');
+const emit = async (data: string) => { await act(async () => { host.handlers.forEach(fn => fn({ data })); }); };
 afterEach(() => { cleanup(); discardDesktopCapture(); vi.useRealTimers(); delete (window as unknown as { chrome?: unknown }).chrome; host.handlers = []; host.sent = []; });
 it('native ticks invite without expanding; only the current challenge opens a quiz, then answering returns to the mascot', async () => {
   resetRoundMocks(); localStorage.clear();
@@ -40,7 +43,10 @@ it('native ticks invite without expanding; only the current challenge opens a qu
   vi.setSystemTime(new Date('2026-10-11T05:03:00Z'));
   await act(async () => { host.handlers.forEach(fn => fn({ data: 'sb-float:tick' })); });
   expect(screen.queryByText('APP_MUST_NOT_OPEN')).toBeNull(); expect(screen.queryByText('2 加 3 是多少？')).toBeNull();
-  expect(document.documentElement.dataset.float).toBe('ball');expect(host.sent.some(message=>message.startsWith('sb-float:invite:')&&message.includes('q1'))).toBe(true);
+  expect(document.documentElement.dataset.float).toBe('ball');expect(host.sent.some(message=>message.startsWith('sb-float:invite:'))).toBe(false);
+  expect(screen.getByRole('button', { name: /打开 StudentBuddy/ }).dataset.mood).toBe('question');
+  await act(async()=>{host.handlers.forEach(fn=>fn({data:'sb-float:mail-open'}));});
+  expect(host.sent.some(message=>message.startsWith('sb-float:invite:')&&message.includes('q1'))).toBe(true);
   expect(host.sent).not.toContain('sb-float:quiz');
   await act(async()=>{host.handlers.forEach(fn=>fn({data:'sb-float:challenge:stale'}));});expect(document.documentElement.dataset.float).toBe('ball');
   await act(async()=>{host.handlers.forEach(fn=>fn({data:'sb-float:challenge:q1'}));});expect(screen.getByText('2 加 3 是多少？')).toBeTruthy();
@@ -59,6 +65,7 @@ it('a companion invitation can be snoozed without opening the app or a quiz',asy
   server.clock=new StudyClock({enabled:true,intervalMinutes:1,scope:'learning'},async()=>({id:'snooze-q',scope:'',question:{topic:'闭包',question:'哪项？',options:['A','B'],answer:0,explanation:'环境'}}),()=> 'learning');
   await act(async()=>{render(<FloatApp/>);});vi.setSystemTime(new Date('2026-10-11T05:01:00Z'));
   await act(async()=>{host.handlers.forEach(fn=>fn({data:'sb-float:tick'}));});
+  await act(async()=>{host.handlers.forEach(fn=>fn({data:'sb-float:mail-open'}));});
   await act(async()=>{host.handlers.forEach(fn=>fn({data:'sb-float:snooze:snooze-q'}));});
   expect(server.clock.state().nextAt).toBe(Date.now()+120000);expect(document.documentElement.dataset.float).toBe('ball');
   expect(host.sent).not.toContain('sb-float:quiz');expect(screen.queryByText('APP_MUST_NOT_OPEN')).toBeNull();
@@ -86,4 +93,29 @@ it('quick input and a native capture reveal the existing App without recreating 
   fireEvent.change(screen.getByLabelText('测试草稿'),{target:{value:'保留现场'}});fireEvent.click(screen.getByRole('button',{name:'收成吉祥物'}));
   act(()=>receiveDesktopInput(CAPTURE_RESULT+JSON.stringify({id:'test',dataUrl:'data:image/png;base64,AAAA',name:'截图.png',width:100,height:80})));
   expect(document.documentElement.dataset.float).toBe('screen');expect((screen.getByLabelText('测试草稿') as HTMLInputElement).value).toBe('保留现场');expect(probe.mounts).toBe(1);
+});
+
+it('native mail can be closed and reopened for the same pending question without resetting its timer', async () => {
+  vi.useFakeTimers(); vi.setSystemTime(0); location.hash = '#/float';
+  (window as unknown as { chrome: unknown }).chrome = { webview: {
+    postMessage: (value: string) => host.sent.push(value),
+    addEventListener: (_t: string, fn: (e: { data: string }) => void) => host.handlers.push(fn),
+    removeEventListener: (_t: string, fn: (e: { data: string }) => void) => { host.handlers = host.handlers.filter(h => h !== fn); },
+  } };
+  server.clock = new StudyClock({enabled:true,intervalMinutes:1,snoozeMinutes:17,scope:'learning'}, async () => ({id:'mail-q',scope:'',question:{topic:'数学',question:'题干',options:['A','B'],answer:0,explanation:'解析'}}), () => 'learning');
+  await act(async () => { render(<FloatApp />); }); vi.setSystemTime(60000); await emit('sb-float:tick');
+  expect(host.sent.some(m => m.startsWith('sb-float:invite:'))).toBe(false);
+  await emit('sb-float:challenge:mail-q'); expect(host.sent).not.toContain('sb-float:quiz');
+  await emit('sb-float:mail-open'); await emit('sb-float:mail-close');
+  expect(server.clock.state().awaiting).toBe(true);expect(host.sent.at(-1)).toBe('sb-float:invite:off:mail-q');
+  await emit('sb-float:mail-open');
+  expect(host.sent.filter(m => m.startsWith('sb-float:invite:{') && m.includes('mail-q'))).toHaveLength(2);
+  await emit('sb-float:snooze:mail-q');expect(server.clock.state().nextAt).toBe(Date.now()+17*60000);
+});
+it('browser hover-menu mail opens the empty state without opening App',async()=>{
+  location.hash='#/float';server.clock=new StudyClock({enabled:false,intervalMinutes:3,scope:'learning'},async()=>{throw new Error('disabled');},()=> 'learning');
+  await act(async()=>{render(<FloatApp/>);});
+  fireEvent.click(screen.getByRole('button',{name:'学习来信'}));
+  expect(screen.getByText(/暂时没有新的学习来信/)).toBeTruthy();expect(screen.queryByText('APP_MUST_NOT_OPEN')).toBeNull();
+  fireEvent.click(screen.getByRole('button',{name:'收起学习来信'}));expect(screen.queryByText(/暂时没有新的学习来信/)).toBeNull();
 });

@@ -12,10 +12,8 @@ import { GUIDE_CATALOG, GUIDE_KINDS, GUIDE_TOPICS, type GuideKind, type GuideNex
 import { GuideBeacon } from './GuideBeacon';
 import { getGuideLive, registerGuideCap, resetGuideStore, setGuideChat, takeGuideMail } from './guide-store';
 import { resetGuidePrefs, GUIDE_SEEN_KEY } from './guide-prefs';
-
 const api = vi.hoisted(() => ({ next: vi.fn() }));
 vi.mock('../../lib/api-guide', () => ({ guideApi: api }));
-
 const AI: GuideNextResponse = {
   mode: 'ai',
   stage: 'chatted',
@@ -26,7 +24,6 @@ const AI: GuideNextResponse = {
     { kind: 'chat.topic', label: 'AI：换个话题', hint: '聊点别的', text: '讲讲黑洞的事件视界' },
   ],
 };
-
 const handlers = { onView: vi.fn(), onNewSession: vi.fn(), onFreshChat: vi.fn() };
 const show = (over: Partial<Parameters<typeof GuideBeacon>[0]> = {}) =>
   render(<GuideBeacon lang="zh" view="chat" sessionId={null} {...handlers} {...over} />);
@@ -39,7 +36,6 @@ const open = async (): Promise<void> => {
 const popover = (): HTMLElement => screen.getByRole('region', { name: '引路灯' });
 const labels = (): string[] => Array.from(popover().querySelectorAll('.guide-item-label')).map((e) => e.textContent ?? '');
 const settle = (): Promise<void> => act(async () => undefined);
-
 beforeEach(() => {
   localStorage.clear();
   localStorage.setItem(GUIDE_SEEN_KEY, '1'); // 默认「已看过」：本文件不测首次自动展开
@@ -50,7 +46,6 @@ beforeEach(() => {
   Object.values(handlers).forEach((h) => h.mockReset());
 });
 afterEach(cleanup);
-
 describe('① 先规则、再换 AI', () => {
   it('点开立刻有规则推荐（请求还没回）；回来后换成 AI 现挑；请求体形状对', async () => {
     let resolve: (r: GuideNextResponse) => void = () => undefined;
@@ -68,7 +63,7 @@ describe('① 先规则、再换 AI', () => {
       lang: 'zh',
       view: 'chat',
       sessionId: 's-1',
-      can: ['chat.topic', 'session.new', 'nav.terms', 'nav.continent', 'nav.pk', 'nav.settings'],
+      can: ['chat.topic', 'session.new', 'nav.terms', 'nav.continent', 'nav.settings'],
       busy: false,
     });
     expect(signal).toBeInstanceOf(AbortSignal);
@@ -77,7 +72,6 @@ describe('① 先规则、再换 AI', () => {
     expect(labels()).toEqual(['AI：来一套题', 'AI：追问一层', 'AI：换个话题']);
     expect(within(popover()).getByText('聊得不错，来检验一下？')).toBeTruthy();
   });
-
   it('非对话页不带 sessionId（别的页谈不上当前会话）', async () => {
     show({ view: 'terms', sessionId: 's-1' });
     await open();
@@ -194,8 +188,8 @@ describe('⑤ 壳层动作', () => {
     fireEvent.click(within(popover()).getByText('去设置'));
     expect(handlers.onView).toHaveBeenLastCalledWith('settings');
     await open();
-    fireEvent.click(within(popover()).getByText('去对战'));
-    expect(window.location.hash).toBe('#/pk');
+    expect(within(popover()).queryByText('去对战')).toBeNull();
+    expect(window.location.hash).not.toBe('#/pk');
     window.location.hash = '';
   });
 });
@@ -261,14 +255,15 @@ describe('⑥ 键盘与点外面', () => {
 });
 
 describe('⑦ 全部功能', () => {
-  it('13 种动作分三组列出；做不了的灰着并写怎么解锁；能做的一点就执行', async () => {
+  it('非彩蛋动作分三组列出；做不了的灰着并写怎么解锁；能做的一点就执行', async () => {
     const quiz = vi.fn();
     registerGuideCap('quiz.start', quiz);
     show();
     await open();
     fireEvent.click(within(popover()).getByRole('button', { name: /全部功能/ }));
     const rows = Array.from(popover().querySelectorAll<HTMLButtonElement>('.guide-row'));
-    expect(rows).toHaveLength(GUIDE_KINDS.length);
+    expect(rows).toHaveLength(GUIDE_KINDS.filter(k => k !== 'nav.pk').length);
+    expect(rows.some(r => r.dataset.kind === 'nav.pk')).toBe(false);
     expect(['对话', '练习', '去哪儿'].every((g) => within(popover()).getByRole('region', { name: g }))).toBe(true);
     const row = (kind: string): HTMLButtonElement => rows.find((r) => r.dataset.kind === kind) as HTMLButtonElement;
     // 没人登记的：灰着 + 解锁说明
@@ -314,4 +309,10 @@ describe('⑧ 成本可控', () => {
     expect((api.next.mock.calls[2]?.[0] as { can: string[] }).can).toContain('quiz.start');
     expect(getGuideLive().kinds).toContain('quiz.start');
   });
+});
+
+it('queued floating open request is honored when the guide mounts after workspace restoration', async () => {
+  show({ openRequest: 1 }); await settle();
+  expect(lantern().getAttribute('aria-expanded')).toBe('true');
+  expect(popover()).toBeTruthy();
 });

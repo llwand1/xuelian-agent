@@ -28,7 +28,7 @@ export type DomainEvent =
    * ★ 改前全仓**零发布者**——「答过题」从来不算一个学习日（见 `learning/quiz.ts` 里的在册缺口注释）。
    * `qtype`／`ms`／`termId` 可选：给之后的记忆模型当特征（题型、用时、考的是哪个词条）。
    */
-  | { type: 'quiz_answered'; quizId: string; correct: boolean; ownerId: string | null; qtype?: string; ms?: number; termId?: string; source?: string }
+  | { type: 'quiz_answered'; quizId: string; correct: boolean; ownerId: string | null; qtype?: string; ms?: number; termId?: string; source?: string; attemptKey?: string; answered?: boolean }
   /** `termIds`：本次真正新建或并入的词条 id（学习事件流按词条记，才能回答"这个词条是哪天学的"） */
   | { type: 'term_added'; count: number; ownerId: string | null; termIds?: string[] }
   /**

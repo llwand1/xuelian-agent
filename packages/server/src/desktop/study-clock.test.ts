@@ -63,3 +63,11 @@ it('waits for an eligible selected video and invalidates a prepared question whe
   expect(clock.tick(true).awaiting).toBe(false);now+=15000;clock.tick(true);await settle();
   expect(generate).toHaveBeenCalledTimes(2);expect(clock.tick(true).awaiting).toBe(true);
 });
+
+it('custom snooze controls redelivery while completed rounds keep the separate quiz interval',async()=>{
+  let now=0;const clock=new StudyClock({...settings,intervalMinutes:7,snoozeMinutes:17},async()=>question,()=> 'learning',()=>now);
+  clock.tick(true);await settle();now=7*60000;clock.tick(true);clock.dismiss('snooze');
+  expect(clock.state().nextAt).toBe(now+17*60000);
+  clock.tick(true);await settle();now+=17*60000-1;expect(clock.tick(true).awaiting).toBe(false);
+  now++;expect(clock.tick(true).awaiting).toBe(true);clock.dismiss('done');expect(clock.state().nextAt).toBe(now+7*60000);
+});

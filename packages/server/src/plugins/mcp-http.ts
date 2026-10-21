@@ -1,8 +1,9 @@
 /** Minimal bounded Streamable HTTP client. New session per operation, never shared between owners. */
 import https from 'node:https';
+import http from 'node:http';
 import net from 'node:net';
 import { randomUUID } from 'node:crypto';
-import { objectValue, type PluginManifest, type PluginTool } from '@sb/shared';
+import { objectValue, pluginEndpoint, type PluginManifest, type PluginTool } from '@sb/shared';
 import { resolveSafeAddress } from '../search/ssrf-guard.js';
 import { readMcpResponse } from './mcp-response.js';
 import { mcpTextContent } from './mcp-content.js';
@@ -10,8 +11,12 @@ const VERSIONS = ['2025-06-18', '2025-03-26', '2025-11-25'];
 export function redactPluginText(text: string, token: string): string {
   return (token ? text.split(token).join('[已隐藏密钥]') : text).replace(/(?:gh[pousr]_[A-Za-z0-9]{16,}|github_pat_[A-Za-z0-9_]{16,})/gu, '[已隐藏密钥]');
 }
-export async function pluginAddress(endpoint: string): Promise<string> {
-  const u = new URL(endpoint);
+export async function pluginAddress(endpoint: string, network: 'public' | 'loopback' = 'public'): Promise<string> {
+  const u = pluginEndpoint(endpoint, network);
+  if (network === 'loopback') {
+    if (process.env.SB_DESKTOP !== '1' || !['127.0.0.1','::1'].includes(process.env.SB_HOST ?? '127.0.0.1')) throw new Error('本地 Agent 仅可在本机桌面安装版访问');
+    return u.hostname === '[::1]' ? '::1' : '127.0.0.1';
+  }
   if (u.protocol !== 'https:' || u.username || u.password || u.search || u.hash || net.isIP(u.hostname) ||
       !u.hostname.includes('.') || /(^|\.)(localhost|local|internal|test|invalid)$/iu.test(u.hostname)) throw new Error('插件端点必须是公网 HTTPS 域名');
   const ip = await resolveSafeAddress(u.hostname);
@@ -27,20 +32,24 @@ export class McpHttpClient {
   private version = VERSIONS[0]!;
   private initialized = false;
   constructor(private manifest: PluginManifest, private token: string, private signal: AbortSignal) {}
+  private authHeaders(): Record<string,string> {
+    if (!this.token || this.manifest.auth === 'none') return {};
+    return this.manifest.auth === 'x-api-key' ? {'X-API-Key':this.token} : {Authorization:`Bearer ${this.token}`};
+  }
   private async post(method: string, params: Record<string, unknown>, notification = false): Promise<Record<string, unknown>> {
     this.signal.throwIfAborted();
     const id = notification ? null : randomUUID(), url = new URL(this.manifest.endpoint);
     const ip = await new Promise<string>((resolve,reject) => {
       const abort = () => reject(new Error('插件域名解析已停止或超时'));
       this.signal.addEventListener('abort',abort,{once:true});
-      void pluginAddress(url.href).then(resolve,reject).finally(()=>this.signal.removeEventListener('abort',abort));
+      void pluginAddress(url.href,this.manifest.network).then(resolve,reject).finally(()=>this.signal.removeEventListener('abort',abort));
       if (this.signal.aborted) abort();
     });
     this.address = ip;
     this.signal.throwIfAborted();
     const body = JSON.stringify({ jsonrpc: '2.0', ...(id ? {id} : {}), method, params });
     const headers: Record<string, string> = { 'Content-Type':'application/json', Accept:'application/json, text/event-stream' };
-    if (this.token) headers.Authorization = `Bearer ${this.token}`;
+    Object.assign(headers,this.authHeaders());
     if (this.initialized) headers['MCP-Protocol-Version'] = this.version;
     if (this.session) headers['Mcp-Session-Id'] = this.session;
     if (this.manifest.id === 'github') {
@@ -49,7 +58,8 @@ export class McpHttpClient {
       headers['X-MCP-Tools'] = this.manifest.tools.join(',');
     }
     return new Promise((resolve, reject) => {
-      const req = https.request(url, { method:'POST', headers, signal:this.signal, family:net.isIP(ip),
+      const transport = this.manifest.network === 'loopback' ? http : https;
+      const req = transport.request(url, { method:'POST', headers, signal:this.signal, family:net.isIP(ip),
         lookup: (_host, _options, cb) => cb(null, ip, net.isIP(ip)) }, res => {
         const session = res.headers['mcp-session-id'];
         if (method === 'initialize' && typeof session === 'string') {
@@ -103,9 +113,10 @@ export class McpHttpClient {
     try {
       const url = new URL(this.manifest.endpoint), ip = this.address;
       await new Promise<void>((resolve) => {
-        const req = https.request(url, {method:'DELETE', signal:AbortSignal.timeout(2000), family:net.isIP(ip),
+        const transport = this.manifest.network === 'loopback' ? http : https;
+        const req = transport.request(url, {method:'DELETE', signal:AbortSignal.timeout(2000), family:net.isIP(ip),
           headers:{'Mcp-Session-Id':this.session,'MCP-Protocol-Version':this.version,
-            ...(this.token ? {Authorization:`Bearer ${this.token}`} : {})},
+            ...this.authHeaders()},
           lookup:(_h,_o,cb)=>cb(null,ip,net.isIP(ip))}, res=>{res.destroy();resolve();});
         req.on('error',()=>resolve());req.end();
       });

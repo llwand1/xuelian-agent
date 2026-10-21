@@ -6,6 +6,7 @@
  * 而是读题面（词条或释义）反查词条，再在选项里找它的另一半。
  */
 import { vi } from 'vitest';
+vi.mock('../../lib/api-ai-ops', () => ({ aiOpsApi: { answers: vi.fn().mockResolvedValue({ accepted: 1 }) } }));
 import { act, fireEvent, screen } from '@testing-library/react';
 import { computeReviewState } from '@sb/shared';
 import type { ContinentMapTerm } from '../../lib/api-terms-continent';
@@ -76,13 +77,14 @@ export function prompt(): string {
 /** 题面反查：这张卡在考哪条词条 */
 export function askedTerm(): (typeof LIB)[number] | { term: string; definition: string } {
   const p = prompt();
-  const hit = LIB.find((t) => t.term === p || t.definition === p);
+  const hit = LIB.find((t) => t.term === p || t.definition === p || p.includes(`${t.term} ——`));
   if (hit) return hit;
   return { term: p, definition: '' };
 }
 
 export function correctIndex(): number {
   const t = askedTerm();
+  if (options().length === 2) return prompt().includes(t.definition) ? 0 : 1;
   const want = prompt() === t.term ? t.definition : t.term;
   const i = options().findIndex((b) => b.textContent?.replace(/^\d/, '') === want);
   if (i < 0) throw new Error(`没找到正确选项：题面「${prompt()}」`);

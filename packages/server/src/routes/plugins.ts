@@ -1,6 +1,6 @@
 import { Router, type Request, type Response, type RequestHandler } from 'express';
 import { asyncHandler } from '../http/async-handler.js';
-import { objectValue } from '@sb/shared';
+import { objectValue, parsePluginManifest } from '@sb/shared';
 import { ownerIdOf } from '../auth/ownership.js';
 import { connection, deletePlugin, disconnectPlugin, importPlugin, listPlugins, pluginCalls, updatePlugin } from '../plugins/store.js';
 import { invokePlugin, testPlugin } from '../plugins/runtime.js';
@@ -11,6 +11,7 @@ import { githubLoginState, startGithubLogin, stopGithubLogin, githubRepositoryCh
 export const pluginsRouter = Router();
 pluginsRouter.get('/',(req,res)=>res.json({plugins:listPlugins(ownerIdOf(req))}));
 pluginsRouter.get('/calls',(req,res)=>res.json({calls:pluginCalls(ownerIdOf(req))}));
+pluginsRouter.get('/local-agent/support',desktopGuard,(_req,res)=>res.json({supported:true}));
 type Handler = (req: Request, res: Response) => unknown;
 function handle(fn: Handler): RequestHandler {
   return asyncHandler((req,res) => Promise.resolve().then(()=>fn(req,res)).catch((e: unknown)=>{
@@ -20,7 +21,9 @@ function handle(fn: Handler): RequestHandler {
 }
 pluginsRouter.post('/import',handle((req,res)=>{
   const value = objectValue(req.body as unknown);
-  res.status(201).json(importPlugin(ownerIdOf(req),value.manifest));
+  const manifest = parsePluginManifest(value.manifest);
+  if (manifest.network === 'loopback') { let allowed = false; desktopGuard(req,res,()=>{allowed=true;}); if (!allowed) return; }
+  res.status(201).json(importPlugin(ownerIdOf(req),manifest));
 }));
 pluginsRouter.get('/github/login', desktopGuard, handle((req,res)=>res.json(githubLoginState(ownerIdOf(req)))));
 pluginsRouter.post('/github/connect', desktopGuard, handle((req,res)=>res.json(startGithubLogin(ownerIdOf(req)))));
@@ -55,6 +58,12 @@ pluginsRouter.post('/bilibili/use',handle(async(req,res)=>{
     res.json(JSON.parse(result.content.slice(result.content.indexOf('\n')+1)) as unknown);
   } finally {res.off('close',cancel);}
 }));
+// Loopback connections are never accessible via hosted / non-loopback requests, including saved configs.
+pluginsRouter.use('/:id',(req,res,next)=>{
+  try { if (connection(ownerIdOf(req),req.params.id!).manifest.network === 'loopback') return desktopGuard(req,res,next); }
+  catch { /* The handler below returns the existing not-found response. */ }
+  next();
+});
 pluginsRouter.put('/:id',handle((req,res)=>res.json(updatePlugin(ownerIdOf(req),req.params.id!,objectValue(req.body as unknown)))));
 pluginsRouter.post('/:id/test',handle(async(req,res)=>{
   const controller = new AbortController();

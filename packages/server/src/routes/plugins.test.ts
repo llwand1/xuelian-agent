@@ -61,3 +61,22 @@ it('protects the user-only video notes endpoint, isolates the selection and reje
   await request(app).post(base+'/bilibili/disconnect').set('Origin',origin).send({}).expect(200);
   expect(loadBilibiliVideo(null)).toBeNull();
 });
+it('restricts loopback imports and saved connections to the actual desktop host; tests need a pairing key',async()=>{
+  const {localAgentManifest}=await import('@sb/shared');
+  const manifest=localAgentManifest('http://127.0.0.1:4011/mcp');
+  vi.stubEnv('SB_DESKTOP','0');
+  await request(app).post(base+'/import').set('Origin',origin).send({manifest}).expect(404);
+  vi.stubEnv('SB_DESKTOP','1');vi.stubEnv('SB_HOST','127.0.0.1');
+  try {
+    await request(app).get(base+'/local-agent/support').expect(200);
+    await request(app).post(base+'/import').set('Origin',origin).set('Host','hosted.example').send({manifest}).expect(404);
+    await request(app).post(base+'/import').set('Origin',origin).send({manifest}).expect(201);
+    const tested=await request(app).post(base+'/local-agent/test').set('Origin',origin).send({}).expect(400);
+    expect(tested.body.error).toContain('专用密钥');
+    await request(app).put(base+'/local-agent').set('Origin',origin).send({enabled:true}).expect(400);
+    vi.stubEnv('SB_DESKTOP','0');
+    await request(app).put(base+'/local-agent').set('Origin',origin).send({token:'should-not-save'}).expect(404);
+    await request(app).post(base+'/local-agent/test').set('Origin',origin).send({}).expect(404);
+    await request(app).delete(base+'/local-agent').set('Origin',origin).expect(404);
+  } finally {vi.unstubAllEnvs();}
+});

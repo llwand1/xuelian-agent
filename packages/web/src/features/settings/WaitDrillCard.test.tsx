@@ -10,6 +10,14 @@ import { DRILL_OPEN_EVENT, DRILL_PREFS_EVENT, loadDrillPrefs } from '../drill/dr
 describe('WaitDrillCard', () => {
   beforeEach(() => localStorage.clear());
   afterEach(cleanup);
+  it('常规/游戏是持久化表现偏好，复用同一试一局入口', () => {
+    render(<WaitDrillCard />);
+    expect(screen.getByRole('button', { name: '常规模式' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: '游戏模式 · 知识矿境' }));
+    expect(loadDrillPrefs().mode).toBe('game');
+    fireEvent.click(screen.getByRole('button', { name: '常规模式' }));
+    expect(loadDrillPrefs().mode).toBe('normal');
+  });
 
   it('开关点选即存并广播；试一局发 sb:drill-open', () => {
     const prefsSpy = vi.fn();

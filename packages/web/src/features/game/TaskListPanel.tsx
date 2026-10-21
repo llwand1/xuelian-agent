@@ -135,12 +135,12 @@ export function TaskListPanel({
           </b>
           <span>
             {npcQuota.canCreate
-              ? `已完成 ${npcQuota.doneTasks} 单任务——现在就能去地图上再安置一位。`
+              ? `已完成 ${npcQuota.doneTasks} 单任务——可到矿境的学习伙伴名册选择守护词条。`
               : npcQuota.blockedBy}
           </span>
         </div>
         <button type="button" className="gm-btn gm-ghost gm-sm" onClick={onGoContinent}>
-          去地图上安置
+          去矿境与伙伴会合
         </button>
       </div>
 

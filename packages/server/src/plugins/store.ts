@@ -18,28 +18,34 @@ export function connection(owner: string | null, id: string): PluginConnection {
     .get(ownerForWrite(owner), id) as Row | undefined;
   if (!row && !BUILTIN_PLUGINS[id]) throw new Error('插件不存在');
   const manifest = BUILTIN_PLUGINS[id] ?? parsePluginManifest(JSON.parse(row!.manifest));
+  // A newly introduced builtin must never inherit an old custom endpoint's credentials.
+  const saved = row && BUILTIN_PLUGINS[id] ? JSON.parse(row.manifest) as Partial<typeof manifest> : null;
+  const isolated = !!saved && (saved.endpoint !== manifest.endpoint || saved.transport !== manifest.transport ||
+    (saved.auth ?? 'bearer') !== (manifest.auth ?? 'bearer') || (saved.network ?? 'public') !== (manifest.network ?? 'public'));
   return { manifest, builtin: !!BUILTIN_PLUGINS[id], policy: id === 'github' ? 'github_read_only' : id === 'bilibili' ? 'bilibili_public_learning' : 'confirm_each_call',
     authMode: row?.auth_mode ?? 'token',
-    token: row ? decryptSecret(row.token) : '', revision: row?.revision ?? 0,
-    enabled: row?.enabled === 1, hasToken: !!row?.token,
+    token: row && !isolated ? decryptSecret(row.token) : '', revision: row?.revision ?? 0,
+    enabled: !isolated && row?.enabled === 1, hasToken: !isolated && !!row?.token,
     repositories: row ? parsePluginRepositories(JSON.parse(row.repositories)) : [],
-    tools: row ? JSON.parse(row.tools) as PluginTool[] : [], testedAt: row?.tested_at ?? null, error: row?.error ?? '' };
+    tools: row && !isolated ? JSON.parse(row.tools) as PluginTool[] : [], testedAt: isolated ? null : row?.tested_at ?? null,
+    error: isolated ? '旧插件与内置接入声明不同，已隔离旧授权；请保存此内置服务的专用密钥并重新测试' : row?.error ?? '' };
 }
 export function pluginView(c: PluginConnection): PluginView {
   const { token: _token, revision: _revision, ...view } = c;
   return view;
 }
 export function listPlugins(owner: string | null): PluginView[] {
-  const ids = getDb().prepare("SELECT plugin_id FROM plugin_connection WHERE owner_id=? AND plugin_id NOT IN ('github','bilibili') ORDER BY plugin_id")
+  const ids = getDb().prepare('SELECT plugin_id FROM plugin_connection WHERE owner_id=? ORDER BY plugin_id')
     .all(ownerForWrite(owner)) as Array<{ plugin_id: string }>;
-  return [...Object.keys(BUILTIN_PLUGINS), ...ids.map(x => x.plugin_id)].map(id => pluginView(connection(owner, id)));
+  return [...Object.keys(BUILTIN_PLUGINS), ...ids.map(x => x.plugin_id).filter(id => !BUILTIN_PLUGINS[id])].map(id => pluginView(connection(owner, id)));
 }
 function ensureRow(owner: string | null, id: string): void {
-  if (BUILTIN_PLUGINS[id]) getDb().prepare('INSERT OR IGNORE INTO plugin_connection(owner_id,plugin_id,manifest) VALUES(?,?,?)')
+  if (BUILTIN_PLUGINS[id]) getDb().prepare('INSERT INTO plugin_connection(owner_id,plugin_id,manifest) VALUES(?,?,?) ON CONFLICT(owner_id,plugin_id) DO UPDATE SET manifest=excluded.manifest')
     .run(ownerForWrite(owner), id, JSON.stringify(BUILTIN_PLUGINS[id]));
 }
 export function importPlugin(owner: string | null, raw: unknown): PluginView {
   const m = parsePluginManifest(raw);
+  if (m.network === 'loopback' && process.env.SB_DESKTOP !== '1') throw new Error('本地 Agent 仅可在桌面安装版连接');
   if (BUILTIN_PLUGINS[m.id]) throw new Error('不能覆盖内置插件');
   const rows = listPlugins(owner);
   if (rows.some(p => p.manifest.id === m.id)) throw new Error('插件 id 已存在；端点不可静默更换，请先删除旧插件');
@@ -54,6 +60,7 @@ export function updatePlugin(owner: string | null, id: string, patch: Record<str
   let token = c.token, repos = c.repositories;
   const dirty = patch.token !== undefined || patch.repositories !== undefined;
   if (patch.token !== undefined) {
+    if (c.manifest.auth === 'none') throw new Error('此插件声明无需密钥');
     if (id === 'bilibili') throw new Error('B站公开学习插件不需要账号 Token');
     if (typeof patch.token !== 'string' || !/^[\x21-\x7e]{8,4096}$/u.test(patch.token) || patch.token.startsWith('enc:')) throw new Error('Token 应为 8–4096 个可见 ASCII 字符，不接受密文或空白');
     token = patch.token;
@@ -65,7 +72,7 @@ export function updatePlugin(owner: string | null, id: string, patch: Record<str
   if (patch.enabled !== undefined && typeof patch.enabled !== 'boolean') throw new Error('enabled 必须为布尔值');
   if (dirty && patch.enabled === true) throw new Error('变更配置后请先测试连接，再启用');
   const enabled = dirty ? false : typeof patch.enabled === 'boolean' ? patch.enabled : c.enabled;
-  if (enabled && (!c.testedAt || !c.tools.length || (id === 'github' && ((!token && c.authMode !== 'browser') || !repos.length)))) throw new Error('请先配置仓库范围并成功测试连接，再启用');
+  if (enabled && (!c.testedAt || !c.tools.length || (c.manifest.auth && c.manifest.auth !== 'none' && !token) || (id === 'github' && ((!token && c.authMode !== 'browser') || !repos.length)))) throw new Error('请先配置密钥 / 范围并成功测试连接，再启用');
   ensureRow(owner, id);
   if (patch.token !== undefined) getDb().prepare("UPDATE plugin_connection SET auth_mode='token' WHERE owner_id=? AND plugin_id=?").run(ownerForWrite(owner), id);
   getDb().prepare(`UPDATE plugin_connection SET token=?, repositories=?, enabled=?, tools=?, tested_at=?, error=?, revision=revision+1 WHERE owner_id=? AND plugin_id=?`)

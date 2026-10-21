@@ -38,8 +38,8 @@ export const HERO: {
   titlePre: { zh: '把词条化为力量，', en: 'Turn knowledge into power. ' },
   titleAccent: { zh: '向遗忘的怪物宣战', en: 'Face the monsters of forgetting.' },
   sub: {
-    zh: '一个游戏化知识学习 Agent。你是能把知识词条化为力量的勇者：和 AI 把问题聊明白，词条就成了你的武器；遗忘化作怪物侵占大陆，用理解击败它们、收复地块、收集卡牌。',
-    en: 'A gamified knowledge learning agent. You are a hero who turns terms into power: work through questions with AI and every term becomes a weapon; when forgetting spawns monsters on the continent, defeat them with understanding, reclaim land and collect cards.',
+    zh: '一个游戏化知识学习 Agent。和 AI 把问题聊明白，把词条带进横版知识矿境；通过挖矿和怪物遭遇复习，选择、判断、拼写延续同一套刷词手感，再把疑问带回对话。',
+    en: 'A gamified knowledge learning agent. Work through questions with AI, then take your terms into a side-view mining world. Review through mining and monster encounters, and bring new questions back to chat.',
   },
   cta: { zh: '开始使用', en: 'Get started' },
   ctaNote: { zh: '从你感兴趣的一个问题开始', en: 'Bring a question you care about' },
@@ -49,7 +49,7 @@ export const HERO: {
 /** 首屏用玩法标签说明体验，工程指标留在仓库的自动对账页。 */
 export const HERO_TAGS: Bi[] = [
   { zh: '词条即武器', en: 'Terms as weapons' },
-  { zh: '知识大陆', en: 'Knowledge continent' },
+  { zh: '知识矿境', en: 'Knowledge Mines' },
   { zh: '暗黑像素', en: 'Dark pixel art' },
 ];
 
@@ -91,8 +91,8 @@ export const INTRO: {
   h2Mid: { zh: '游戏化知识学习', en: 'gamified knowledge learning' },
   h2Tail: { zh: ' Agent', en: ' agent' },
   def: {
-    zh: '好奇心是起点，知识大陆是你反复回来的地方。AI 帮你查资料、讲原理、出练习；你在像素世界里探索、复习，把一次次理解留下来。可以在线体验，也可以自带模型 Key，在本地或自己的服务器运行。',
-    en: 'Curiosity is the starting point; your knowledge continent is a place to return to. AI helps research, explain and create practice. Explore and revisit ideas in a pixel world. Try it online, or bring your own model key and run it locally or on your server.',
+    zh: '好奇心是起点，知识矿境是复习的另一种表现形式。AI 帮你查资料、讲原理、出练习；词条、刷词、横版挖矿与追问围绕同一条学习主线。可以在线体验，也可以自带模型 Key，在本地或自己的服务器运行。',
+    en: 'Curiosity starts the journey; Knowledge Mines offers another way to review. AI research, explanations, terms, regular drills and mining all feed the same learning loop. Try it online, or bring your own model key and run it locally or on your server.',
   },
   eyebrowCore: { zh: '核心机制', en: 'Core mechanic' },
   h3TermAria: { zh: '词条是主体', en: 'Terms take center stage' },

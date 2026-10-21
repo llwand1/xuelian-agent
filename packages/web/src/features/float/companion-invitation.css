@@ -9,3 +9,4 @@
 @keyframes sb-invite-letter { from { opacity: 0; text-shadow: 0 0 10px #e8c0ff; } to { opacity: 1; text-shadow: none; } }
 @keyframes sb-invite-rune { 50% { opacity: .55; text-shadow: 0 0 5px #d5b276; } }
 @media (prefers-reduced-motion: reduce) { .sb-companion-invitation * { animation: none; } }
+.sb-companion-invitation .sb-mail-close { float: right; margin: 0; padding: 0 7px; line-height: 1.5; }

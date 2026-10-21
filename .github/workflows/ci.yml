@@ -35,6 +35,7 @@ jobs:
       #   JS／CSS 产物，放在 check 之后就永远是「没有产物」⇒ 那几例显式跳过、锁形同虚设。
       - run: npm run build
       - run: npm run check
+      - run: npm run test:open-engine
       - run: node --test tools/metrics-contracts.test.mjs
       # README/docs 里的定量数字必须与代码实测一致（漂移即红）——数字不许手抄，见 docs/metrics.md
       - run: node tools/metrics.mjs --tests --check

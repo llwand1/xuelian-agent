@@ -26,7 +26,12 @@ import { advanceFocus, skipFocusBreak, startFocus, stopFocus, usePomodoro } from
 import { usePomodoroClock } from './use-pomodoro-clock';
 import './pomodoro.css';
 
-export function PomodoroCard() {
+import { DailyTaskCard } from './DailyTaskCard';
+import { PixelPomodoroIcon } from './PixelPomodoroIcon';
+import { StudyMailSettings } from './StudyMailSettings';
+
+export function PomodoroCard() { return <><PomodoroTimerCard /><StudyMailSettings /><DailyTaskCard /></>; }
+function PomodoroTimerCard() {
   const { session } = usePomodoro();
   const { now } = usePomodoroClock();
   const [subject, setSubject] = useState('');
@@ -82,7 +87,7 @@ export function PomodoroCard() {
     return (
       <div className="pomo-card" data-testid="pomodoro-card">
         <div className="pomo-head">
-          <b>🍅 番茄钟</b>
+          <b><PixelPomodoroIcon /> 番茄钟</b>
           <span className="pomo-hint">定下接下来学什么，对话、出题、刷词、引路灯都会偏向它</span>
         </div>
         <div className="pomo-row">
@@ -178,7 +183,7 @@ export function PomodoroCard() {
   return (
     <div className={`pomo-card${working ? ' is-work' : ' is-break'}`} data-testid="pomodoro-card">
       <div className="pomo-head">
-        <b>{working ? `🍅 ${session.subject}` : '☕ 休息中'}</b>
+        <b><PixelPomodoroIcon rest={!working} />{working ? session.subject : '休息中'}</b>
         <span className="pomo-hint">
           第 {session.round} 轮 · 已完成 {session.completed} 轮{working && isLongBreakAfter(session.round) ? ' · 这轮之后长休' : ''}
         </span>

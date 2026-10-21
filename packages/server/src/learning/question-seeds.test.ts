@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { validateQuestionSeedBatch, type QuizMix, type QuestionSeed } from '@sb/shared';
 import { openIsolated, closeDb } from '../storage/db.js';
-import { importSeeds, listSeeds, selectSeed, seedEligibility } from './question-seeds.js';
+import { importSeeds, listSeeds, selectSeed, seedEligibility, writeSeed } from './question-seeds.js';
 import { compileSeed, equationQuestion } from './question-seed-compile.js';
 import { saveExamMode, saveExamScope, loadExamContext } from './exam-mode.js';
 const raw = (extra: object = {}) => ({ externalId: 'math-1', topic: '一元一次方程', domain: 'math', tags: ['数学', '一元一次方程'], objective: '求解并检验', facts: ['等式两边除以同一个非零数仍相等'], rubric: ['求解', '代入检验'], variations: ['改变整数参数'], types: ['single', 'judge', 'fill', 'essay'], validUntil: new Date(Date.now() + 86400000).toISOString(), recipe: { kind: 'linear-equation', coefficients: [-2, 2], constants: [-1, 1], solutions: [-3, 3] }, ...extra });
@@ -16,6 +16,16 @@ const mix = (extra: Partial<QuizMix> = {}): QuizMix => ({ single: 1, multiple: 0
 beforeEach(() => { openIsolated(fs.mkdtempSync(path.join(os.tmpdir(), 'sb-seed-domain-'))); });
 afterEach(closeDb);
 describe('预产物选择与现场编译', () => {
+  it('explicit exact topic beats unused blueprints sharing only a broad Agent tag', () => {
+    const first = add('a', { externalId: 'workflow', recipe: undefined, topic: 'Agent应用·工作流', tags: ['Agent应用', '工作流'] });
+    const v = validateQuestionSeedBatch({ batchId: 'mcp', seeds: [raw({ externalId: 'mcp', recipe: undefined, topic: 'Agent应用·MCP受众校验', tags: ['Agent应用', 'MCP受众校验'] })] });
+    if (!v.ok) throw new Error(v.error);
+    importSeeds(v.value, 'a');
+    const exact = listSeeds('a').find(r => r.id !== first.id)!;
+    writeSeed('a', { ...exact, uses: 9, lastUsedAt: Date.now() });
+    expect(selectSeed('a', 'Agent应用·MCP受众校验', ['single'])?.seed.externalId).toBe('mcp');
+    expect(selectSeed('a', 'Agent应用', ['single'])?.seed.externalId).toBe('workflow');
+  });
   it('主题、账号、有效期和题型共同约束，不拿无关材料填空', () => {
     const r = add(); add('b', { externalId: 'b-math' });
     expect(selectSeed('a', '数学', ['single'])?.id).toBe(r.id);

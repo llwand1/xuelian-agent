@@ -26,7 +26,7 @@ export function pluginBoundaryTokens(tools: ToolDefinition[]): number {
   return tools.some(t=>t.function.name === 'plugin_call') ? estimateTokens(PLUGIN_BOUNDARY) : 0;
 }
 export function isPluginRequest(text: string): boolean {
-  return /github|\bPR\b|插件|pull.request|仓库|b\s*站|哔哩哔哩|bilibili/iu.test(text) && !/studentbuddy.*插件生态|插件.*怎么(开发|实现)/u.test(text);
+  return /github|\bPR\b|插件|pull.request|仓库|b\s*站|哔哩哔哩|bilibili|tinyfish|本地\s*agent|外部\s*agent|委派任务/iu.test(text) && !/studentbuddy.*插件生态|插件.*怎么(开发|实现)/u.test(text);
 }
 export async function executePluginChatTool(name: string, json: string, ctx: ToolContext): Promise<ToolResult> {
   const args = objectValue(JSON.parse(json) as unknown), enabled = enabledPlugins(ctx.ownerId);

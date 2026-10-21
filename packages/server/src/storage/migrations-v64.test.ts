@@ -1,0 +1,23 @@
+import { afterEach, expect, it } from 'vitest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { closeDb, getDb, openIsolated } from './db.js';
+import { migrate } from './migrations.js';
+import { recordLearningEvent } from '../learning/learning-events.js';
+let dir: string;
+afterEach(() => { closeDb(); fs.rmSync(dir, { recursive: true, force: true }); });
+it('upgrades actual desktop legacy layout transactionally, archives every old byte, and supports new idempotent answers', () => {
+  dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sb-v64-')); openIsolated(dir);
+  const db = getDb();
+  db.exec(`DELETE FROM schema_version WHERE version>=64; DROP TABLE learning_event;
+    CREATE TABLE learning_event(id TEXT PRIMARY KEY, owner_id TEXT, session_id TEXT, type TEXT, v INTEGER, payload TEXT, ts TEXT);
+    INSERT INTO learning_event VALUES('old','a','s','custom',1,'{"original":true}','2026-10-01T00:00:00Z')`);
+  migrate(db);
+  expect(db.prepare('SELECT * FROM learning_event_v46_legacy').get()).toEqual({ id: 'old', owner_id: 'a', session_id: 's', type: 'custom', v: 1, payload: '{"original":true}', ts: '2026-10-01T00:00:00Z' });
+  const event = { ownerId: 'a', kind: 'quiz.answered' as const, payload: { correct: false, attemptKey: 'one-answer' } };
+  recordLearningEvent(event); recordLearningEvent(event);
+  expect(db.prepare('SELECT COUNT(*) n FROM learning_event').get()).toEqual({ n: 1 });
+  migrate(db);
+  expect(db.prepare('SELECT COUNT(*) n FROM learning_event_v46_legacy').get()).toEqual({ n: 1 });
+});

@@ -1,50 +1,11 @@
 /**
- * settings-platform-cdp.mjs — 「一键默认设置 + 模型下拉」真机渲染探针（零依赖，直驱无头 Chrome）。
- *
- * ★ 为什么需要它：本次改动（2026-09-21 v0.2.99）的两件事**都发生在屏幕上**——
- *   ① 「一键默认设置」按钮点下去，8 行绑定表要跟着变（不变＝用户看到"点了没反应"）；
- *   ② 模型列要从输入框变成**真下拉**（`RoleRow` 里那个 `models.length > 0 ? select : input`）。
- *   单测（`RoleRow.test.tsx` 8 例）是 jsdom：**没有真 CSS、没有真 fetch、没有真后端**，
- *   它证明不了"这条链路在真机上真的接上了"。本探针补这一层。
- *
- * ★★ **本探针最重要的产出其实是一条「现状事实」，别把它当断言噪音**：
- *   `GET /api/providers/:id/models` 要拿 **key** 去问上游的 `/models`，而**免费通道的 key 只在服务端 env**。
- *   于是**没配 `SB_PLATFORM_*` 时，平台服务商永远返回空候选** ⇒ 绑定到平台通道的那几行
- *   **渲染的是输入框、不是下拉**（A7 就锁这条）。也就是说：要「直接用选项选」，
- *   在**免费通道配好 key 之前**在界面上是**看不见**的；一旦 key 配好（且上游实现了 `/models`），
- *   同一行会自动变成下拉。A5 用一个**本地假上游**（实现了 `/models`）证明"配好了就真有下拉"。
- *
- * 验什么（16 条，任一失败 EXIT=1）：
- *   A1  应用壳渲染出来了（不是落地页）——侧栏有「设置」导航项
- *   A2  「免费通道 · 一键默认设置」卡在场
- *   A3  卡上按钮文案 = 「一键默认设置」且可点
- *   A4  额度行读到了（本地单人模式 ⇒ 「本地模式：不计入免费额度」，与 `GET /quota` 的 `limited:false` 对齐）
- *   A5  ★ 绑到**有候选的服务商**的那一行渲染**真 `<select>`**，且候选里有假上游返回的模型名
- *   A6  「（用默认模型）」这个选项在场（留空＝走 env/常量回落，是合法状态不是"没填"）
- *   A7  ★★ 绑到**平台通道**的行**没有**下拉、是输入框（＝免费通道未配 key 时的真实观感，见文件头）
- *   A8  ★ 反向不变量：**没有**任何 `.settings-model-input` 手填框（空模型不许被当成「自定义…」）
- *   A9-0  ★★ 首屏点一下**只进确认态**（出现「确认覆盖」+「取消」），且**没有**发出配置
- *   A9-0b ★ 代价说明点名后果（覆盖 / 模型名 / 8 个角色）
- *   A9-0c ★★ **取消干净回退**且**没有任何成功提示**（二次确认存在的全部意义）
- *   A9-0d 取消之后还能再进确认态（不是一次性状态）
- *   A9   点「确认覆盖」⇒ 提示「已一键配好 8 个角色」，且按钮**复位解禁**（不是只能点一次）
- *   A9c-b ★ 成功后确认态收干净（确认键与代价说明都消失）
- *   A10 ★ 覆盖语义实证：点之前某角色绑的是"假上游 + 指定模型"，点之后被重置为"平台 + 留空"
- *   A11 ★ 反向不变量：卡上**没有任何**「显示/复制密钥」入口（key 用户不可见、也取不到）
- *
- * ★★ **2026-09-21 起按钮是两段式的**（一键默认加二次确认）：单击只进确认态、
- *   点「确认覆盖」才真动手 ⇒ 本探针的 A9 段必须走完整流程。若发现 A9b/A9d 红而 A9-0 绿，
- *   先怀疑**探针自己**还在按旧的单击语义写，别急着判产品坏了。
- *
- * ★ 副作用声明（**只对隔离实例**）：本探针会**真的写库**（建 1 个 provider、改 1 条 role_binding、
- *   点一次一键默认设置），故 `SB_DATA_DIR` 指向 `mkdtemp` 出来的临时目录，**绝不碰真实库**；
- *   同时它会拉起一个**本地假上游**（只回答 `/models`）与一个隔离后端 + 一个 vite 开发服，
- *   跑完全部杀掉、临时目录删除。**不会**调用任何真实模型（假上游只回模型名列表，不接 chat）。
- *
- * 前置：本机装有 Chromium 系浏览器（Chrome 或 Edge）；仓内 `node_modules` 已装（要 `tsx` 与 `vite`）。
- * 端口：后端/vite/假上游/CDP 全部**随机**（起 Chrome 前先探 CDP 端口占用，被占就拒绝跑）。
- * 用法：node tools/probes/settings-platform-cdp.mjs
- *   可选：SB_SHOT_DIR=<目录> 截图落点（缺省系统临时目录，**不入仓**）
+ * Settings end-to-end regression on production assets, with an isolated database and fake /models upstream.
+ * Covers default-channel confirmation, real model dropdowns, seven groups / sixteen independent pages,
+ * local-provider deletion + cancellation + binding fallback, default-provider protection, 390/320px layout.
+ * Requires: npm run build; Node 22; local Chrome or Edge. Never touches user data or calls a real model.
+ * Run: node tools/probes/settings-platform-cdp.mjs
+ * Optional SB_SETTINGS_APP_ROOT points at a desktop stage or installed app (web/ + packages/server/dist/).
+ * Optional SB_SHOT_DIR controls screenshot and results.json output; SB_CDP_PORT overrides the CDP port.
  */
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -54,6 +15,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..');
+const APP_ROOT = process.env.SB_SETTINGS_APP_ROOT ?? ROOT;
+const WEB_DIST = process.env.SB_SETTINGS_APP_ROOT ? join(APP_ROOT, 'web') : join(ROOT, 'packages/web/dist');
 const SHOTS = process.env.SB_SHOT_DIR ?? join(tmpdir(), 'cdp-shots');
 const PROFILE = join(tmpdir(), `cdp-settings-${Date.now()}`);
 const DATA_DIR = mkdtempSync(join(tmpdir(), 'sb-settings-probe-'));
@@ -61,7 +24,6 @@ mkdirSync(SHOTS, { recursive: true });
 
 const pick = (base) => base + Math.floor(Math.random() * 200);
 const API_PORT = pick(18820);
-const WEB_PORT = pick(5190);
 const STUB_PORT = pick(19900);
 const CDP_PORT = Number(process.env.SB_CDP_PORT ?? pick(9300));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -119,35 +81,20 @@ const stub = createServer((req, res) => {
   res.end('{"error":"probe stub: only /models is implemented"}');
 });
 
-// ── 起三件套：假上游 → 隔离后端 → vite ────────────────────────────────────────
+// ── 起三件套：假上游 → 隔离生产后端与同源静态资源 ────────────────────────────────────────
 await new Promise((r) => stub.listen(STUB_PORT, '127.0.0.1', r));
 console.log(`stub upstream  http://127.0.0.1:${STUB_PORT}/v1/models  ->  ${STUB_MODELS.join(', ')}`);
 
-const api = spawn('npm', ['run', 'start', '-w', '@sb/server'], {
-  cwd: ROOT,
-  shell: true,
+const api = spawn(process.execPath, [join(APP_ROOT, 'packages/server/dist/index.js')], {
+  cwd: APP_ROOT,
   stdio: 'ignore',
-  env: { ...process.env, SB_PORT: String(API_PORT), SB_DATA_DIR: DATA_DIR, SB_HOST: '127.0.0.1' },
+  env: { ...process.env, SB_PORT: String(API_PORT), SB_DATA_DIR: DATA_DIR, SB_HOST: '127.0.0.1',
+    SB_WEB_DIST: WEB_DIST, SB_PLATFORM_API_KEY: '', SB_REQUIRE_AUTH: '0' },
 });
 killed.push(api.pid);
 
-// ★ vite 直接起（`npx vite`），不走 `npm run dev:web -- --port N`：
-//   npm 的 `--` 透传在本仓会把 `--port 5199` 变成**位置参数**（实测变成 `vite 5199`），
-//   于是端口设置被静默忽略、vite 去抢默认的 5173（而 5173 常常已被开发中的实例占着）。
-// ★ `--host 127.0.0.1`：不显式指定时 vite 绑 `localhost`，Windows 上可能只落 `[::1]`
-//   ⇒ 探针 `fetch('http://127.0.0.1:port')` 会连不上（症状像"前端没起来"，实为绑定地址问题）。
-const webFree = await (async () => { try { await fetch(`http://127.0.0.1:${WEB_PORT}/`); return false; } catch { return true; } })();
-if (!webFree) { console.error(`端口 ${WEB_PORT} 已被占用，拒绝继续`); cleanup(); process.exit(2); }
-const web = spawn('npx', ['vite', '--port', String(WEB_PORT), '--strictPort', '--host', '127.0.0.1'], {
-  cwd: join(ROOT, 'packages/web'),
-  shell: true,
-  stdio: 'ignore',
-  env: { ...process.env, SB_PROXY_TARGET: `http://127.0.0.1:${API_PORT}` },
-});
-killed.push(web.pid);
-
 const API = `http://127.0.0.1:${API_PORT}`;
-const WEB = `http://127.0.0.1:${WEB_PORT}/`;
+const WEB = `${API}/`;
 const up = async (url, ms = 90_000) => {
   const end = Date.now() + ms;
   while (Date.now() < end) {
@@ -158,7 +105,7 @@ const up = async (url, ms = 90_000) => {
 };
 if (!(await up(`${API}/api/health`))) { console.error('✗ 隔离后端没起来'); cleanup(); process.exit(1); }
 console.log(`backend        ${API}  (SB_DATA_DIR=${DATA_DIR})`);
-if (!(await up(WEB))) { console.error('✗ vite 没起来'); cleanup(); process.exit(1); }
+if (!(await up(WEB))) { console.error('✗ 生产前端没起来'); cleanup(); process.exit(1); }
 console.log(`web            ${WEB}`);
 
 // ── 造数据（全部走 HTTP，等价于用户在界面上做的事）────────────────────────────
@@ -170,7 +117,7 @@ const j = async (path, init) => {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      Origin: `http://127.0.0.1:${WEB_PORT}`,
+      Origin: API,
       ...(init?.headers ?? {}),
     },
   });
@@ -181,6 +128,7 @@ const created = await j('/api/providers', {
   body: JSON.stringify({ name: '探针假上游', baseUrl: `http://127.0.0.1:${STUB_PORT}/v1`, apiKey: 'sk-probe', type: 'openai' }),
 });
 const stubId = created.body?.id;
+const roleCount = (await j('/api/providers/roles')).body.roles.length;
 if (!stubId) { console.error('✗ 建 provider 失败', created); cleanup(); process.exit(1); }
 const listed = await j(`/api/providers/${stubId}/models`);
 console.log(`假上游候选    ${JSON.stringify(listed.body)}`);
@@ -251,13 +199,15 @@ await evalJs(`(() => {
   if (el) el.click();
   return !!el;
 })()`);
+const clickBtn = (text) => evalJs(`(() => {
+  const b = [...document.querySelectorAll('button')].find(x => x.getClientRects().length && (x.textContent.trim() === ${JSON.stringify(text)} || x.getAttribute('aria-label') === ${JSON.stringify(text)}));
+  b?.click(); return !!b;
+})()`);
+await waitFor(`!!document.querySelector('.settings-nav')`, 15_000);
+await clickBtn('默认通道与额度');
 const cardUp = await waitFor(`!!document.querySelector('h3') && /免费通道/.test(document.body.innerText)`, 15_000);
 check('A2 「免费通道 · 一键默认设置」卡在场', !!cardUp);
 if (!cardUp) { await shot('settings-nocard'); cleanup(); ws.close(); process.exit(1); }
-
-// 等候选拉完（SettingsView 开屏会为每个 provider 拉一次 /models）
-await waitFor(`document.querySelectorAll('select.settings-model-select').length > 0`, 15_000, 300);
-await sleep(1200);
 
 // ── A3 按钮 ──────────────────────────────────────────────────────────────────
 const btn = await evalJs(`(() => {
@@ -272,6 +222,8 @@ const stateText = await evalJs(`(() => {
   return s ? s.textContent.trim() : null;
 })()`);
 check('A4 额度行已读到（本地模式：不计入免费额度）', stateText === '本地模式：不计入免费额度', stateText ?? '未找到');
+await clickBtn('角色模型绑定');
+await waitFor(`document.querySelectorAll('select.settings-model-select').length > 0`, 15_000);
 
 // ── A5/A6 有候选的那一行：真下拉 + 候选 + 「（用默认模型）」──────────────────────
 const selInfo = await evalJs(`(() => {
@@ -288,7 +240,7 @@ check('A6 「（用默认模型）」选项在场', !!sel && sel.opts.includes('
 
 // ── A7 平台通道那几行：没有下拉（现状事实，见文件头）───────────────────────────
 const inputs = await evalJs(`document.querySelectorAll('input[placeholder="模型名（没拉到候选列表，可手填）"]').length`);
-check('A7 ★★ 绑平台通道的行是输入框（未配 key ⇒ 平台拉不到候选）', inputs === 7, `${inputs} 个输入框（期望 7）`);
+check('A7 ★★ 绑平台通道的行是输入框（未配 key ⇒ 平台拉不到候选）', inputs === roleCount - 1, `${inputs} 个输入框（期望 ${roleCount - 1}）`);
 
 // ── A8 反向：不许出现手填框（空模型 ≠ 自定义）─────────────────────────────────
 const customInputs = await evalJs(`document.querySelectorAll('.settings-model-input').length`);
@@ -303,12 +255,8 @@ await shot('settings-before');
 //   若探针还按单击写，A9b/A9d 会红——那是**探针过时**，不是产品坏了（同型先例见文件头：
 //   「探针的错要自己认，不能记到产品头上」）。故本段改成完整走一遍真机确认流程：
 //   首屏 → 确认态 → **取消（不许配）** → 再进确认态 → 确认（才配）。
-const clickBtn = (text) =>
-  evalJs(`(() => {
-    const b = [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === ${JSON.stringify(text)});
-    if (b) b.click();
-    return !!b;
-  })()`);
+await clickBtn('默认通道与额度');
+await waitFor(`!![...document.querySelectorAll('button')].find(b => b.textContent.trim() === '一键默认设置' && !b.disabled)`, 10_000);
 
 const readCard = () =>
   evalJs(`(() => {
@@ -337,8 +285,8 @@ const confirmState = await until((o) => o.ok === true);
 check('A9-0 ★★ 首屏点一下只进确认态：出现「确认覆盖」+「取消」，且**没有**发出配置（无成功提示）',
   !!confirmState && confirmState.cancel === true && !/已一键配好/.test(confirmState.flash ?? ''),
   confirmState ? `确认键=${confirmState.ok} 取消键=${confirmState.cancel} flash="${confirmState.flash}"` : '确认态未出现');
-check('A9-0b ★ 代价说明点名后果（覆盖 / 模型名 / 8 个角色）',
-  !!confirmState && /覆盖/.test(confirmState.warn) && /模型名/.test(confirmState.warn) && /8 个角色/.test(confirmState.warn),
+check('A9-0b ★ 代价说明点名后果（覆盖 / 模型名 / 全部学习角色）',
+  !!confirmState && /覆盖/.test(confirmState.warn) && /模型名/.test(confirmState.warn) && /全部学习角色/.test(confirmState.warn),
   confirmState?.warn || '未找到 .settings-hint.warn');
 
 // ★★ A9-0c：**取消必须真的什么都不做**。这是二次确认存在的全部意义——
@@ -372,7 +320,7 @@ const done = await (async () => {
 })();
 if (busySeen) check('A9a 进行中态：按钮转「配置中…」且禁用', busySeen.d === true, busySeen.t);
 else skip('A9a 进行中态：按钮转「配置中…」且禁用', '操作在首次采样前已完成，进行中态无从观测');
-check('A9b 提示文案报出配好的角色数', !!done && /已一键配好 8 个角色/.test(done.flash ?? ''), done?.flash ?? '未捕获到提示');
+check('A9b 提示文案报出配好的角色数', !!done && (done.flash ?? '').includes(`已一键配好 ${roleCount} 个角色`), done?.flash ?? '未捕获到提示');
 
 const after = await evalJs(`(() => {
   const b = [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === '一键默认设置');
@@ -387,7 +335,6 @@ check('A9c ★ 按钮复位解禁（不是只能点一次）', !!a && a.t === '�
 // ★ 成功之后确认态必须收干净：留着「确认覆盖」或那句代价说明，用户会以为"还没配完"
 check('A9c-b ★ 成功后确认态收干净（确认键与代价说明都消失）',
   !!a && a.confirmLeft === false && a.warn === '', JSON.stringify({ confirmLeft: a?.confirmLeft, warn: a?.warn }));
-check('A9d 8 行全部改绑平台通道（下拉消失 ⇒ 全变输入框）', !!a && a.selects === 0 && a.inputs === 8, JSON.stringify(a));
 
 // ── A10 覆盖语义实证 + 真落库 ────────────────────────────────────────────────
 // ★ 读取形状：`GET /roles` 回的是 `{ roles, bindings }`，**不是数组**（`roles` 是 8 个角色的
@@ -397,10 +344,10 @@ const roles = await j('/api/providers/roles');
 const bindings = roles.body?.bindings;
 const explain = Array.isArray(bindings) ? bindings.find((r) => r.role === 'explain') : null;
 const allPlatform =
-  Array.isArray(bindings) && bindings.length === 8 && bindings.every((r) => r.model === '');
+  Array.isArray(bindings) && bindings.length === roleCount && bindings.every((r) => r.model === '');
 check('A10 ★ 覆盖语义：explain 从「假上游 + agnes-2.5-pro」被重置为「平台 + 留空」',
   !!explain && explain.provider_id !== stubId && explain.model === '', JSON.stringify(explain));
-check('A10b 真落库：8 行 model 全为空串', allPlatform, `${Array.isArray(bindings) ? bindings.length : '?'} 行`);
+check('A10b 真落库：全部 model 为空串', allPlatform, `${Array.isArray(bindings) ? bindings.length : '?'} 行`);
 
 // ── A11 反向：卡上没有任何"看/复制密钥"入口 ──────────────────────────────────
 const keyEntry = await evalJs(`(() => {
@@ -409,8 +356,59 @@ const keyEntry = await evalJs(`(() => {
   return [...sec.querySelectorAll('button,a')].map((n) => n.textContent.trim()).join(' | ');
 })()`);
 check('A11 ★ 反向：卡上没有任何「显示/复制密钥」入口', keyEntry === '一键默认设置', keyEntry);
+await clickBtn('角色模型绑定');
+check('A9d 全部改绑平台通道（切回独立绑定页显示最新值）', await waitFor(`document.querySelectorAll('input[placeholder="模型名（没拉到候选列表，可手填）"]').length === ${roleCount}`, 15_000));
 
 await shot('settings-after');
+
+// Real two-level navigation, provider deletion, and viewport regression on the packaged application.
+const groups = [
+  ['模型与服务商', ['供应商管理', '角色模型绑定', '默认通道与额度']],
+  ['学习与出题', ['考试范围', '题型配比', '真题优先', '图片题']],
+  ['联网搜索', ['搜索服务与密钥']],
+  ['阅读与交互', ['回答风格', '词条朗读', '阅读字号', '等待练习']],
+  ['插件中心', ['插件管理与接入']], ['外部 Agent 授权', ['学习接口授权']],
+  ['工具与诊断', ['工具权限与记录', 'AI 健康']],
+];
+for (const [group, pages] of groups) {
+  await clickBtn(group);
+  for (const page of pages) {
+    await clickBtn(page);
+    check('B1 独立子页 ' + page, await waitFor(`document.querySelectorAll('.settings-panel').length === 1 && document.querySelector('.settings-panel')?.getAttribute('aria-label') === ${JSON.stringify(page)}`, 5000));
+  }
+}
+await clickBtn('模型与服务商');
+await clickBtn('供应商管理');
+await waitFor(`!!document.querySelector('[aria-label="删除服务商 探针假上游"]')`, 5000);
+check('B2 本机 NULL 归属供应商删除按钮可用', await evalJs(`document.querySelector('[aria-label="删除服务商 探针假上游"]')?.disabled === false`));
+check('B3 管理页没有混入角色绑定表或默认通道', await evalJs(`!document.querySelector('.settings-panel table') && !document.querySelector('.settings-panel')?.innerText.includes('一键默认设置')`));
+await shot('settings-providers-desktop');
+for (const width of [390, 320]) {
+  await send('Emulation.setDeviceMetricsOverride', { width, height: 844, deviceScaleFactor: 1, mobile: false });
+  await sleep(250);
+  check('B4 窄屏分类导航与删除入口可见 ' + width, await evalJs(`(() => {
+    const nav = document.querySelector('.settings-mobile-nav');
+    const button = document.querySelector('[aria-label="删除服务商 探针假上游"]');
+    const r = button?.getBoundingClientRect();
+    return !!nav?.getClientRects().length && !!r?.width && r.left >= 0 && r.right <= innerWidth && document.documentElement.scrollWidth <= innerWidth;
+  })()`));
+  await shot('settings-providers-mobile-' + width);
+}
+await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
+await clickBtn('删除服务商 探针假上游');
+check('B5 删除必须明确确认且取消不删除', (await j('/api/providers')).body.some(p => p.id === stubId));
+await clickBtn('取消');
+check('B5b 取消后供应商仍在', await evalJs(`!!document.querySelector('[aria-label="删除服务商 探针假上游"]') && !document.querySelector('.settings-delete-confirm')`));
+await j('/api/providers/roles/explain', { method: 'PUT', body: JSON.stringify({ providerId: stubId, model: 'agnes-2.5-pro' }) });
+await clickBtn('删除服务商 探针假上游');
+await clickBtn('确认删除');
+check('B6 确认删除后列表移除', await waitFor(`!document.querySelector('[aria-label="删除服务商 探针假上游"]') && document.querySelector('.settings-panel [role="status"]')?.textContent.includes('已删除服务商')`, 5000));
+check('B7 真实后端删除与角色回落生效', !(await j('/api/providers')).body.some(p => p.id === stubId)
+  && (await j('/api/providers/roles')).body.bindings.some(b => b.role === 'explain' && b.provider_id !== stubId && b.model === ''));
+check('B8 系统默认通道不可删除', (await j('/api/providers/openai-default', { method: 'DELETE' })).status === 403);
+await clickBtn('角色模型绑定');
+check('B9 切回绑定页不会残留被删服务商', await waitFor(`!!document.querySelector('.settings-panel table') && ![...document.querySelectorAll('.settings-panel option')].some(o => o.value === ${JSON.stringify(stubId)})`, 5000));
+writeFileSync(join(SHOTS, 'results.json'), JSON.stringify({ appRoot: APP_ROOT, checks, skips }, null, 2));
 
 // ── 收尾 ─────────────────────────────────────────────────────────────────────
 const failed = checks.filter((c) => !c.pass);

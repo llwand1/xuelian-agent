@@ -55,7 +55,7 @@ export async function gradeAnswer(req: GradeRequest, ownerId: string | null, sig
 }
 
 /** Round workers persist the grade and apply these effects once, inside their recording transaction. */
-export function applyGradeEffects(req: GradeRequest, result: GradeResult, ownerId: string | null): void {
+export function applyGradeEffects(req: GradeRequest, result: GradeResult, ownerId: string | null, meta: { attemptKey?: string; answered?: boolean } = {}): void {
   const topic = (req.topic ?? '').slice(0, 80);
   if (result.misconception) {
     recordMisconception(ownerId, { termId: req.termId ?? null, topic, note: result.misconception });
@@ -70,5 +70,7 @@ export function applyGradeEffects(req: GradeRequest, result: GradeResult, ownerI
     qtype: req.qtype === 'fill' ? 'fill' : 'short',
     ...(req.termId ? { termId: req.termId } : {}),
     source: 'chat-quiz',
+    ...meta,
+    ...(req.answer.trim() === '未作答' || !req.answer.trim() ? { answered: false } : {}),
   });
 }

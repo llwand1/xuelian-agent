@@ -13,7 +13,8 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { GUIDE_CATALOG, GUIDE_TEXT_KINDS, defaultGuideText, type GuideItem, type GuideKind, type GuideLang } from '@sb/shared';
-import { PK_HASH, type View } from '../../app/nav';
+import { type View } from '../../app/nav';
+import { useFloatGuideBridge } from './useFloatGuideBridge';
 import { Lantern } from './Lantern';
 import { GuidePopover } from './GuidePopover';
 import { GUIDE_COPY as T } from './guide-copy';
@@ -32,10 +33,15 @@ interface Props {
   onNewSession: () => void;
   /** 请 App 切到对话页并回到「未选会话」态（随机话题要在那个态下开新会话） */
   onFreshChat: () => void;
+  openRequest?: number;
 }
 
-export function GuideBeacon({ lang, view, sessionId, onView, onNewSession, onFreshChat }: Props) {
+export function GuideBeacon({ lang, view, sessionId, onView, onNewSession, onFreshChat, openRequest = 0 }: Props) {
   const g = useGuide({ lang, view, sessionId });
+  useFloatGuideBridge({ sessionId, view, enabled: g.proactive && g.stage !== 'busy' && g.result.items.length > 0,
+    key: JSON.stringify([view, sessionId, g.stage, g.result.items[0]?.kind]),
+    headline: g.teaser || g.result.headline, label: g.result.items[0]?.label ?? '', hint: g.result.items[0]?.hint ?? '', source: g.source === 'ai' ? 'ai' : 'rules' });
+  useEffect(() => { if (openRequest > 0) g.show(); }, [openRequest, g.show]);
   useMobilePanel(g.open, g.close);
   const uid = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -59,9 +65,6 @@ export function GuideBeacon({ lang, view, sessionId, onView, onNewSession, onFre
     'nav.terms': () => onView('terms'),
     'nav.continent': () => onView('continent'),
     'nav.settings': () => onView('settings'),
-    'nav.pk': () => {
-      window.location.hash = PK_HASH;
-    },
   });
 
   // 点弹层外面收起（同 ComposerMenu）

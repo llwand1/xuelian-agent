@@ -8,6 +8,16 @@ import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { preparePackage } from './prepare-package.mjs';
 
+test('source-only commits skip automatic desktop build and publication without bypassing PR verification', async () => {
+  const workflow = await readFile(new URL('../../.github/workflows/windows-installer.yml', import.meta.url), 'utf8');
+  const installer = /  installer:\r?\n    if: ([^\r\n]+)/.exec(workflow)?.[1];
+  const publish = /  publish:\r?\n    if: ([^\r\n]+)/.exec(workflow)?.[1];
+  assert.equal(installer, "github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository && !contains(github.event.workflow_run.head_commit.message, '[skip desktop release]'))");
+  assert.equal(publish, "github.event_name != 'pull_request' && !contains(github.event.workflow_run.head_commit.message, '[skip desktop release]')");
+  assert.match(workflow, /needs: installer/);
+  assert.match(workflow, /Require main CI for manual publication/);
+});
+
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), 'studentbuddy-package-'));
   const filename = 'StudentBuddy-0.1.0-windows-x64-setup.exe';

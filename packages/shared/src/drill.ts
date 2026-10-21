@@ -2,7 +2,7 @@
  * shared/drill — 「等待时刷词」（百词斩式）的**纯口径**（契约 `docs/WAIT-DRILL-SPEC.md`）。
  *
  * 场景：用户把问题发给 AI 之后有一段什么都做不了的等待；这段时间弹出一张张词条卡让人刷——
- * 看词选义 / 看义选词 / 拼写，答对闪过、答错翻出详情、「斩」掉认识的词。回复到了就切回去。
+ * 看词选义 / 看义选词 / 判断 / 拼写，答对闪过、答错翻出详情、「斩」掉认识的词。回复到了就切回去。
  *
  * ★ 为什么放 shared：题面与判分**必须**与知识大陆同一份归一化（`normText`）、同一份哈希
  *   （`continentHash`），否则同一条词条在大陆上判对、在刷词里判错。本文件只算不存、零 IO。
@@ -17,12 +17,13 @@ import { continentHash, monsterOccupies, normText } from './continent.js';
 import type { ReviewStatus } from './ebbinghaus.js';
 import { spellFriendly } from './typing.js';
 
-export type DrillKind = 'meaning' | 'reverse' | 'spell';
+export type DrillKind = 'meaning' | 'reverse' | 'spell' | 'judge';
 
 export const DRILL_KIND_LABEL: Record<DrillKind, string> = {
   meaning: '看词选义',
   reverse: '看义选词',
   spell: '拼写',
+  judge: '判断题',
 };
 
 /** 四选一（百词斩口径） */
@@ -54,7 +55,7 @@ export interface DrillCard {
   term: string;
   definition: string;
   domain: string;
-  /** 题面：`meaning` 出词条、`reverse` / `spell` 出释义 */
+  /** 题面：选义出词条，反向/拼写出释义，判断出待检验的配对 */
   prompt: string;
   /** 选项：`meaning` 为释义、`reverse` 为词条；`spell` 为空 */
   options: string[];
@@ -65,13 +66,13 @@ export interface DrillCard {
 }
 
 /**
- * 题型节拍：每 4 张里 1 张拼写（固定在第 4 张），其余 3 张里 1 张看义选词——
- * 落在哪一张由 `seed` 定，避免"每组第二张必是反向"这种可预测的节奏。
+ * 每四张各有看词选义、看义选词、判断、拼写；前两张的顺序由稳定种子决定。
  */
 export function drillKindAt(index: number, seed: string): DrillKind {
   const i = Math.max(0, Math.trunc(index));
   if (i % 4 === 3) return 'spell';
-  const slot = continentHash(`${seed}|kind|${Math.floor(i / 4)}`) % 3;
+  if (i % 4 === 2) return 'judge';
+  const slot = continentHash(`${seed}|kind|${Math.floor(i / 4)}`) % 2;
   return i % 4 === slot ? 'reverse' : 'meaning';
 }
 
@@ -137,6 +138,12 @@ export function buildDrillCard(
 ): DrillCard {
   const base = { origin, termId: term.id, term: term.term, definition: term.definition, domain: term.domain };
   const full = [...pool, ...DRILL_SEED_POOL];
+  if (kind === 'judge') {
+    const wrong = pickDistractors(term, full, `${seed}|judge`, 1, 'definition')[0];
+    const truthful = !wrong || continentHash(`${seed}|truth`) % 2 === 0;
+    return { ...base, kind, prompt: `判断下面的对应关系是否正确：\n${term.term} —— ${truthful ? term.definition : wrong.definition}`,
+      options: ['正确', '错误'], answerIndex: truthful ? 0 : 1, hint: '' };
+  }
   if (kind === 'spell' && !spellFriendly(term.term)) kind = 'meaning';
   if (kind !== 'spell') {
     const field = kind === 'meaning' ? 'definition' : 'term';

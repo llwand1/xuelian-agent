@@ -40,7 +40,7 @@ export function PlatformChannelCard({
 }: {
   flash: (ok: boolean, text: string) => void;
   /** 一键配完要刷新上面那张绑定表——否则用户看到的是"点了没反应"（表还是旧的） */
-  onConfigured: () => void;
+  onConfigured?: () => void;
 }) {
   const [quota, setQuota] = useState<PlatformQuotaView | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,7 +85,7 @@ export function PlatformChannelCard({
     try {
       const r = await api.providers.oneClickDefault();
       flash(true, `已一键配好 ${r.roles} 个角色：走免费通道，用 ${r.model}`);
-      onConfigured();
+      onConfigured?.();
       await loadQuota();
     } catch (e) {
       flash(false, e instanceof Error ? e.message : String(e));
@@ -111,22 +111,22 @@ export function PlatformChannelCard({
     <section className="settings-sec">
       <h3>免费通道 · 一键默认设置</h3>
       <p className="settings-hint">
-        一键把 8 个学习环节全部绑到平台免费通道，使用服务默认模型（<b>agnes-2.5-flash</b>）。
+        一键把全部学习角色绑到平台免费通道，使用服务默认模型（<b>agnes-2.5-flash</b>）。
         {/* ★ 额度那句**必须随 `reason` 变**：平台通道不限时还说"每 5 小时 250 次"＝界面在撒谎。
             读不到额度（`quota === null`）时走默认分支，保持与从前逐字相同的文案。 */}
         {quota?.reason === 'unlimited' ? (
           <>
-            当前平台通道<b>不限次数</b>、但受全站每日用量总量保护；想换更好的模型，就在上方「服务商」里
+            当前平台通道<b>不限次数</b>、但受全站每日用量总量保护；想换更好的模型，就到「供应商管理」里
             配自己的 key，再回「角色模型绑定」逐项指定。
           </>
         ) : quota?.reason === 'local' ? (
           <>
-            本地模式<b>不计入免费额度</b>；想换更好的模型，就在上方「服务商」里
+            本地模式<b>不计入免费额度</b>；想换更好的模型，就到「供应商管理」里
             配自己的 key，再回「角色模型绑定」逐项指定。
           </>
         ) : (
           <>
-            额度<b>每 5 小时 250 次</b>、按你的账号单独计算；用完或想换更好的模型，就在上方「服务商」里
+            额度<b>每 5 小时 250 次</b>、按你的账号单独计算；用完或想换更好的模型，就到「供应商管理」里
             配自己的 key，再回「角色模型绑定」逐项指定。
           </>
         )}
@@ -157,7 +157,7 @@ export function PlatformChannelCard({
         // `role="alert"`：这句是**代价说明**，不是补充阅读材料。它出现的那一刻必须被读屏念出来
         // ——确认态本身没有任何别的视觉位移（按钮原地换了文案），不念出来等于确认了个寂寞。
         <p className="settings-hint warn" role="alert">
-          ⚠ 这一步会<b>覆盖你现有的 8 个角色绑定</b>——包括你自填的模型名，一律改回免费通道的默认模型
+          ⚠ 这一步会<b>覆盖你现有的全部学习角色绑定</b>——包括你自填的模型名，一律改回免费通道的默认模型
           （<b>agnes-2.5-flash</b>）。想保留某个角色的自选模型，先取消，改完再逐行调。确定继续吗？
         </p>
       )}

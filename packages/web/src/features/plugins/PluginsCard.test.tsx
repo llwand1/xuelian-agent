@@ -2,12 +2,14 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { PluginView } from '@sb/shared';
+import { TINYFISH_PLUGIN } from '@sb/shared';
 import { PluginsCard } from './PluginsCard';
-const api=vi.hoisted(()=>({list:vi.fn(),calls:vi.fn(),update:vi.fn(),test:vi.fn(),disconnect:vi.fn(),remove:vi.fn(),import:vi.fn(),githubState:vi.fn()}));
+const api=vi.hoisted(()=>({list:vi.fn(),calls:vi.fn(),update:vi.fn(),test:vi.fn(),disconnect:vi.fn(),remove:vi.fn(),import:vi.fn(),githubState:vi.fn(),localSupport:vi.fn()}));
 vi.mock('./plugin-api',()=>({pluginApi:api}));
 let plugin:PluginView;
 beforeEach(()=>{
   vi.clearAllMocks();api.githubState.mockRejectedValue(new Error('not desktop'));
+  api.localSupport.mockRejectedValue(new Error('not desktop'));
   plugin={manifest:{schemaVersion:1,id:'github',name:'GitHub',version:'1',description:'只读仓库',transport:'streamable-http',endpoint:'https://api.githubcopilot.com/mcp/',tools:['get_file_contents']},
     builtin:true,policy:'github_read_only',enabled:false,hasToken:false,repositories:[],tools:[],testedAt:null,error:''};
   api.list.mockImplementation(async()=>({plugins:[plugin]}));api.calls.mockResolvedValue({calls:[]});
@@ -45,5 +47,16 @@ it('confirms disconnect before clearing credentials and presents audit separatel
   render(<PluginsCard/>);await screen.findAllByText('未连接');fireEvent.click(screen.getByText('高级：使用已有 Token'));await screen.findByText('仓库不可访问');
   fireEvent.click(screen.getByRole('button',{name:'断开授权'}));expect(api.disconnect).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button',{name:'确认断开'}));await waitFor(()=>expect(api.disconnect).toHaveBeenCalledWith('github'));
+});
+it('renders TinyFish with API Key and confirmation policy, never GitHub-only repository controls',async()=>{
+  plugin={...plugin,manifest:TINYFISH_PLUGIN,policy:'confirm_each_call'};
+  render(<PluginsCard/>);await screen.findByLabelText('TinyFish Token');
+  expect(screen.getByText('内置接入 · 逐次确认')).toBeTruthy();
+  expect(screen.getByText(/API Key（必填）/)).toBeTruthy();
+  expect(screen.queryByLabelText('GitHub 仓库范围')).toBeNull();
+  expect(screen.queryByText('内置 · 严格只读')).toBeNull();
+  fireEvent.change(screen.getByLabelText('TinyFish Token'),{target:{value:'tf_fixture_secret'}});
+  fireEvent.click(screen.getByRole('button',{name:'保存配置'}));
+  await waitFor(()=>expect(api.update).toHaveBeenCalledWith('tinyfish',{token:'tf_fixture_secret'}));
 });
 

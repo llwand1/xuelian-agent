@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://studentbuddy.app/schemas/plugin-manifest-v2.schema.json",
+  "title": "StudentBuddy Plugin Manifest v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "name",
+    "version",
+    "description",
+    "transport",
+    "endpoint",
+    "tools",
+    "publisher",
+    "kind",
+    "network",
+    "auth",
+    "permissions"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 2
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{1,47}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "transport": {
+      "const": "streamable-http"
+    },
+    "endpoint": {
+      "type": "string",
+      "format": "uri",
+      "maxLength": 1000
+    },
+    "tools": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9_.-]{1,128}$"
+      }
+    },
+    "publisher": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "url"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://",
+          "maxLength": 1000
+        }
+      }
+    },
+    "kind": {
+      "enum": [
+        "service",
+        "agent"
+      ]
+    },
+    "network": {
+      "enum": [
+        "public",
+        "loopback"
+      ]
+    },
+    "auth": {
+      "enum": [
+        "none",
+        "bearer",
+        "x-api-key"
+      ]
+    },
+    "permissions": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 32,
+      "propertyNames": {
+        "pattern": "^[a-zA-Z0-9_.-]{1,128}$"
+      },
+      "additionalProperties": {
+        "enum": [
+          "web:read",
+          "web:automate",
+          "context:read",
+          "context:write",
+          "tasks:delegate",
+          "tasks:read"
+        ]
+      },
+      "$comment": "The runtime additionally enforces an exact key match with tools. Permissions describe effects; they never grant trust or bypass per-call approval."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "network": {
+            "const": "loopback"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "kind": {
+            "const": "agent"
+          },
+          "auth": {
+            "const": "bearer"
+          },
+          "endpoint": {
+            "pattern": "^http://(127\\.0\\.0\\.1|\\[::1\\]):[0-9]{2,5}/"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "endpoint": {
+            "pattern": "^https://"
+          }
+        }
+      }
+    }
+  ]
+}

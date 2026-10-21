@@ -81,7 +81,7 @@ export const GUIDE_CATALOG: Record<GuideKind, GuideKindInfo> = {
   },
   'nav.continent': {
     group: 'go',
-    label: { zh: '去知识大陆', en: 'Visit the Continent' },
+    label: { zh: '去知识矿境', en: 'Visit the Knowledge Mines' },
     hint: { zh: '到期的词条是怪物，复习就是收复', en: 'Due terms are monsters; reviewing wins the land back' },
     need: { zh: '随时可用', en: 'Always available' },
   },

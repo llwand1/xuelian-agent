@@ -1,5 +1,7 @@
 # 学练agent-应试学习,学习ai,题库搜索,练习反馈
 
+> 2026-10-21 主体源码更新：横版「知识矿境」替换旧俯视知识大陆，常规/游戏刷词共用词条、判分与复习记录；新增可调刷怪节奏、平 A / 防御动作轮播、每日题量、悬浮球引路灯、安静学习来信及视频截图/悬浮还原。知境保持独立，新怪物提醒下线，对战转为彩蛋。网站与公共安装包通道未发布本批改动，源码同步不等于公开发版。[知识矿境契约](docs/KNOWLEDGE-MINES-SPEC.md) · [动作轮播 QA](docs/MINING-COMBAT-QA.md) · [每日任务 QA](docs/DAILY-STUDY-TASK-QA.md) · [引路灯/视频 QA](docs/FLOAT-GUIDE-VIDEO-QA.md)。
+
 ![release](https://img.shields.io/github/v/release/llwand1/xuelian-agent)
 ![version](https://img.shields.io/badge/version-0.2.186-orange)
 
@@ -15,6 +17,22 @@
 [立即体验](https://11wand.com/) · [Windows 本地版](https://github.com/llwand1/xuelian-agent/releases/tag/desktop-stable) · [等待时刷词](#等待时刷词把等回复的空档变成一次小复习) · [阅读模式](#阅读模式把外部资源变成学习材料) · [知识大陆](#词条卡牌与知识大陆)
 
 StudentBuddy 把提问、查资料、做题和复习串在同一段学习过程中。你可以从营地里的一道热身题开始，也可以带着自己的问题或资料直接进入。
+
+## 核心架构方向：不定式学习引擎
+
+**AI 时代，每个人都可以是开发者。学习工具不应只有一种预设形态，用户可以借助外部 AI，持续改造自己的学习世界与 Agent。**
+
+我们把这个方向称为「不定式设计」：**稳定内核、开放协议、可替换内容、用户拥有改进权**。不是任意代码覆盖一切，也不是为了游戏再造一套题库。学习域和游戏域是同级核心，通过适配器连接；像素挖矿世界的横向探索与纵向深入，对应学习的广度与深度。
+
+- **世界可创作**：外部 AI 生成地图、知识矿脉、学习分区、人物与 NPC，以声明式内容包交付；校验、预览后由用户加载，保留学习记录。
+- **AI 原生同伴**：NPC 是由 Agent 控制的同伴玩家，而非只能重复台词的装饰；共用运动物理和类型化输入。独立 MVP 已加入同行/等候、消息与外部控制会话，未连模型时如实标为离线模式；真实主体模型接入仍待完成。
+- **Agent 可演进**：用户或外部 Agent 提出提示词、策略、工作流与能力组合的版本提案，查看差异、确认应用、保留历史并回滚。自改进不等于训练模型权重或静默改写宿主源码。
+- **联机从内核准备**：服务器权威的固定步长模拟；客户端提交操作，不上传最终坐标或矿物结果。共享世界与个人学习记录分开，读题不暂停整个房间。
+- **协议优先于单一模型厂商**：内容协议与 MCP/本地 Agent 桥接通过宿主适配器连接，不让网络/模型调用进入游戏物理帧，也不绕过现有插件授权。
+
+**当前阶段要说清楚**：本仓库已新增独立的 [`@sb/open-engine`](packages/open-engine/README.md) Agent 演进与联机权威内核，并有自动化测试；独立挖矿 MVP 已验证地图接口、Agent 提案/回滚界面及本地双客户端房间传输。**正式主程序尚未接入这些新内核，公网大厅、账号联机与主体 Agent 配置应用尚未交付。** 这是一条已开始落地的核心架构方向，不冒充完整线上产品。
+
+协议、实现边界、接入顺序和验收标准见 [不定式学习引擎架构](docs/OPEN-LEARNING-ENGINE.md)。已有外部服务继续使用 [统一插件接入规范](packages/web/public/plugin-development.md)。
 
 ## 学习工作台：从资料到练习反馈
 
@@ -59,9 +77,9 @@ StudentBuddy 更新的是你的学习状态，不是训练或改写模型本身�
 
 ### 桌面学习来信与视频练习
 
-新版定时出题先由吉祥物在旁边发出邀请：「某考点的小题出好了，快来挑战一下吧！」点击「挑战一下」才展开题卡；也可延后两分钟。中文逐字显现、像素字符符文和表情随备题、待挑战、答对或答错变化；减少动态效果时保持完整静态文案。自动出题仍默认关闭，不抢焦点、不堆题。
+当前源码中，定时出题只用吉祥物动作提示，不自动弹出对话框。鼠标停留在悬浮球上，点击「学习来信」才显示邀请，再点「挑战一下」展开题卡；关闭后可重新查看。番茄钟内可分别设置出题间隔和「稍后提醒」时间，均支持 1–60 分钟。自动出题仍默认关闭，不抢焦点、不堆题。
 
-![实际 React 吉祥物与 Windows 原生邀请：隔离组件动画演示](docs/images/desktop-companion-invite.gif)
+![原有邀请卡样式演示；当前源码须从学习来信菜单主动打开，隔离组件数据](docs/images/desktop-companion-invite.gif)
 
 上图与下图来自实际组件，视频候选、材料和模型输出使用隔离预置数据；不包含个人学习内容。[演示来源记录](docs/images/bilibili-companion-evidence.json)。
 
@@ -108,7 +126,7 @@ Windows 本地版把学习窗口和像素吉祥物带到桌面，学习数据留
 
 ### 等待时刷词：把等回复的空档变成一次小复习
 
-**离开小屏幕，也能练一题。** Windows 悬浮球可开启定时练习，默认每 3 分钟弹出独立小题卡；在卡片里直接作答、看解析和接收像素魔法反馈。做完或跳过后重新计时，可延后两分钟，不连续堆题；练习范围可选当前学习方向或正在共读的网页。右键吉祥物或托盘菜单即可设置。
+**离开小屏幕，也能练一题。** Windows 悬浮球可开启定时练习，默认每 3 分钟备好一道题，用动作提示而非自动弹窗；从悬停菜单打开「学习来信」后，可主动挑战、作答并看解析。做完或跳过后重新计时，不连续堆题；出题间隔与延后时间可在番茄钟设置，范围还支持当前学习方向、共读网页或 B站学习视频。
 
 **问题已经发出，学习还可以继续。** 桌面开启自动刷词后，AI 回复等待超过 2 秒就出现词卡；很快完成的回复不会打断你。手机由你主动点开“刷词”，把屏幕留给正在阅读的回答。
 
@@ -187,9 +205,13 @@ Windows 本地版把学习窗口和像素吉祥物带到桌面，学习数据留
 
 ## 桌面插件与更新
 
-设置 → 插件 → GitHub：选择 Chrome / Edge，点击连接，在该浏览器授权，再勾选仓库。接入固定校验的 GitHub 官方 MCP 组件，主对话可读取选中仓库的文件、Issue、PR 与 Actions；高级 Token 连接保留。浏览器令牌仅在内存，退出应用需重新连接。
+设置使用七个独立分区，点击导航只查看当前设置，不再把所有卡片铺成一个长页面。模型与服务商中，本机自建服务商支持确认删除与错误反馈；系统默认通道和登录用户看到的平台通道会明确说明不可删除。
 
-可导入声明式 JSON 接入其他公网 HTTPS Streamable HTTP MCP 服务，不运行第三方脚本；第三方工具逐次确认。配置、工具清单和调用记录可见。未开放子 Agent 插件权限、GitHub 写操作或插件商店。[插件契约与格式](docs/PLUGIN-ECOSYSTEM-SPEC.md)。
+设置 → 插件中心 → GitHub：选择 Chrome / Edge，点击连接，在该浏览器授权，再勾选仓库。接入固定校验的 GitHub 官方 MCP 组件，主对话可读取选中仓库的文件、Issue、PR 与 Actions；高级 Token 连接保留。浏览器令牌仅在内存，退出应用需重新连接。
+
+TinyFish 内置接入支持官方 API Key 认证、搜索/页面提取与异步网页任务。桌面本地 Agent 插件提供参考 MCP 桥接器和可选兼容 API worker，可双向共享指定资料、委派任务并取回真实结果；需要对方运行桥接器/worker，不自动控制任意已安装的 Agent。
+
+统一 v2 插件 JSON 声明发布者、版本、认证、网络边界与逐工具权限，兼容旧 v1。第三方工具逐次确认，配置/工具清单/审计可见，不自动同步整个词库或会话。未开放内部子 Agent 插件权限、GitHub 写操作或插件商店。[设置与插件变更](docs/SETTINGS-PLUGINS-V2.md) · [统一接入与桥接指南](packages/web/public/plugin-development.md)。
 
 桌面构建通过测试、隔离升级验证和签名后进入 [desktop-stable 更新通道](https://github.com/llwand1/xuelian-agent/releases/tag/desktop-stable)，以发行页显示版本为准。扩展 ZIP 也随正式桌面 Release 单独提供。仓库改名不改变 StudentBuddy 的程序名、旧数据目录和更新签名。
 
@@ -203,14 +225,16 @@ Windows 本地版把学习窗口和像素吉祥物带到桌面，学习数据留
 <summary>开发者信息</summary>
 
 ![node](https://img.shields.io/badge/node-%E2%89%A522.11-blue)
-![tests](https://img.shields.io/badge/tests-463%20files%20%2F%204894%20cases-brightgreen)
-![api](https://img.shields.io/badge/REST%20routes-244-0ea5e9)
-![contracts](https://img.shields.io/badge/shared%20contracts-314%20types-8a63f6)
+![tests](https://img.shields.io/badge/tests-483%20files%20%2F%204972%20cases-brightgreen)
+![api](https://img.shields.io/badge/REST%20routes-254-0ea5e9)
+![contracts](https://img.shields.io/badge/shared%20contracts-320%20types-8a63f6)
 ![deps](https://img.shields.io/badge/external%20runtime%20deps-8-blue)
 ![stack](https://img.shields.io/badge/stack-React%2018%20%C2%B7%20Express%20%C2%B7%20SQLite-8a63f6)
 
-当前测试基线 **463 文件 / 4894 例**。Windows 安装包见[桌面更新通道](https://github.com/llwand1/xuelian-agent/releases/tag/desktop-stable)；在线体验**已上线到 v0.2.186**。
+当前测试基线 **483 文件 / 4972 例**。Windows 安装包见[桌面更新通道](https://github.com/llwand1/xuelian-agent/releases/tag/desktop-stable)；在线体验**已上线到 v0.2.186**。
 
 代码结构、开发约定与复验方式见 [工程文档](docs/ENGINEERING.md)。
 
 </details>
+
+> 本地安装验证与源码可能处于不同阶段，详见各功能 QA；公开网站与桌面稳定通道以实际发行版本为准，不随源码同步自动升级。

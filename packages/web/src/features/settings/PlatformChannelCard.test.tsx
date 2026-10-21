@@ -102,7 +102,7 @@ describe('PlatformChannelCard — 一键默认设置的二次确认', () => {
     expect(screen.queryByRole('button', { name: '一键默认设置' })).toBeNull();
   });
 
-  it('③ 代价说明点名后果：覆盖 / 模型名 / 8 个角色', async () => {
+  it('③ 代价说明点名后果：覆盖 / 模型名 / 全部学习角色', async () => {
     mount();
     await ready();
 
@@ -113,7 +113,7 @@ describe('PlatformChannelCard — 一键默认设置的二次确认', () => {
     const warn = screen.getByRole('alert').textContent ?? '';
     expect(warn).toContain('覆盖');
     expect(warn).toContain('模型名');
-    expect(warn).toContain('8 个角色');
+    expect(warn).toContain('全部学习角色');
   });
 
   it('④ 取消能干净回退，且始终没有请求', async () => {

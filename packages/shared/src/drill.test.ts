@@ -26,12 +26,13 @@ const E: DrillTermLike = { id: 'e', term: '哈希表', definition: '用哈希函
 const lib: DrillTermLike[] = [A, B, C, D, E];
 
 describe('drillKindAt：题型节拍', () => {
-  it('每 4 张固定 1 张拼写，其余 3 张里恰好 1 张看义选词', () => {
+  it('每 4 张各一张看词选义、看义选词、判断和拼写', () => {
     for (let group = 0; group < 6; group += 1) {
       const kinds = [0, 1, 2, 3].map((i) => drillKindAt(group * 4 + i, 'seed'));
       expect(kinds[3]).toBe('spell');
       expect(kinds.filter((k) => k === 'reverse')).toHaveLength(1);
-      expect(kinds.filter((k) => k === 'meaning')).toHaveLength(2);
+      expect(kinds.filter((k) => k === 'meaning')).toHaveLength(1);
+      expect(kinds[2]).toBe('judge');
     }
   });
   it('反向题落点随 seed 变、同 seed 恒同', () => {
@@ -103,6 +104,21 @@ describe('buildDrillCard：四选一与干扰项纪律', () => {
 });
 
 describe('gradeDrill：判分', () => {
+  it('判断题有正误两种陈述，两个选项只认下标；揭示保留原词释义', () => {
+    const answers = new Set<number>();
+    for (let i = 0; i < 40; i++) {
+      const card = buildDrillCard('judge', A, lib, 'due', `judge-${i}`);
+      answers.add(card.answerIndex);
+      expect(card.options).toEqual(['正确', '错误']);
+      expect(card.prompt.includes(A.definition)).toBe(card.answerIndex === 0);
+      expect(card.definition).toBe(A.definition);
+      expect(gradeDrill(card, card.answerIndex)).toBe(true);
+      expect(gradeDrill(card, 1 - card.answerIndex)).toBe(false);
+      expect(gradeDrill(card, '正确')).toBe(false);
+      expect(card).toEqual(buildDrillCard('judge', A, lib, 'due', `judge-${i}`));
+    }
+    expect([...answers].sort()).toEqual([0, 1]);
+  });
   it('选择题比下标；拼写比归一化文本，别名也算对，空串不算', () => {
     const choice = buildDrillCard('meaning', A, lib, 'library');
     expect(gradeDrill(choice, choice.answerIndex)).toBe(true);

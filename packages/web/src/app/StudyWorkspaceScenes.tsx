@@ -5,12 +5,13 @@ import { SceneTransition } from '../components/SceneTransition';
 import { TermIndexProvider } from '../features/chat/term-index';
 import { ChatView } from '../features/chat/ChatView';
 import { TermsLibraryView } from '../features/terms/TermsLibraryView';
-import { ContinentPage } from '../features/continent/ContinentPage';
+import { MiningPage } from '../features/mining/MiningPage';
 import { SettingsView } from '../features/settings/SettingsView';
 
-export function StudyWorkspaceScenes({ view, currentId, sessions, termsKeyword, travelling, onEnter,
+export function StudyWorkspaceScenes({ view, currentId, sessions, termsKeyword, travelling, onEnter, identity = 'local',
   onNewSession, onRoundDone, onBusyChange, onOpenTerms, onFollowUp, onGoContinent }: {
   view: View;
+  identity?: string;
   currentId: string | null;
   sessions: Session[];
   termsKeyword: string;
@@ -33,7 +34,7 @@ export function StudyWorkspaceScenes({ view, currentId, sessions, termsKeyword, 
       </TermIndexProvider>
     </div>
     {view === 'terms' && <TermsLibraryView key={termsKeyword} initialKeyword={termsKeyword} onGoContinent={onGoContinent} />}
-    {view === 'continent' && <ContinentPage />}
+    {view === 'continent' && <MiningPage key={identity} identity={identity} sessionId={currentId} onOpenTerms={onOpenTerms} onFollowUp={onFollowUp} />}
     {view === 'settings' && <SettingsView />}
   </SceneTransition>;
 }

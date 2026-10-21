@@ -703,6 +703,7 @@ internal static partial class Launcher
      */
     private static void HandleBallMessage(string message)
     {
+        if(message!=null&&message.StartsWith("sb-video:capture:",StringComparison.Ordinal)){CaptureVideoFrame(BallWebView(),message.Substring("sb-video:capture:".Length));return;}
         if (message != null && message.StartsWith("sb-float:invite:", StringComparison.Ordinal)) { HandleStudyInvite(message.Substring("sb-float:invite:".Length)); return; }
         if (message != null && message.StartsWith("sb-desktop:reader:", StringComparison.Ordinal)) { OpenNativeReader(message); return; }
         if (message != null && message.StartsWith("sb-float:shape:", StringComparison.Ordinal))

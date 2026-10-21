@@ -10,16 +10,17 @@ internal sealed class DesktopQuickMenu : Form
     private readonly Timer clock;
     private DateTime leftAt = DateTime.MinValue;
     protected override bool ShowWithoutActivation { get { return true; } }
-    internal DesktopQuickMenu(Form companion, Func<bool> canShow, Action input, Action capture, float scale)
+    internal DesktopQuickMenu(Form companion, Func<bool> canShow, Action input, Action capture, Action mail, float scale)
     {
         ball = companion; available = canShow;
         Text = "StudentBuddy 快速提问"; ShowInTaskbar = false; TopMost = true;
         FormBorderStyle = FormBorderStyle.None; StartPosition = FormStartPosition.Manual; AutoScaleMode = AutoScaleMode.None;
-        BackColor = Color.FromArgb(21, 13, 21); ClientSize = new Size((int)Math.Round(218*scale), (int)Math.Round(38*scale));
+        BackColor = Color.FromArgb(21, 13, 21); ClientSize = new Size((int)Math.Round(324*scale), (int)Math.Round(38*scale));
         Font = new Font("Microsoft YaHei", 9f);
-        Button ask = MakeButton("输入提问", 0, scale), shot = MakeButton("截图提问", 1, scale);
+        Button ask = MakeButton("输入提问", 0, scale), shot = MakeButton("截图提问", 1, scale), letters = MakeButton("学习来信", 2, scale);
         ask.Click += delegate { Hide(); input(); }; shot.Click += delegate { Hide(); capture(); };
-        Controls.Add(ask); Controls.Add(shot);
+        letters.Click += delegate { Hide(); mail(); };
+        Controls.Add(ask); Controls.Add(shot); Controls.Add(letters);
         clock = new Timer(); clock.Interval = 100; clock.Tick += delegate { TickMenu(); }; clock.Start();
     }
     private static Button MakeButton(string label, int index, float scale)
@@ -73,7 +74,16 @@ internal static partial class Launcher
     {
         if (BallWindow == null) return;
         QuickMenu = new DesktopQuickMenu(BallWindow, delegate { return !Exiting && !BallMoving && !CaptureRunning && BallWindow.Visible && BallWindow.ClientSize == BallSize() && !PendingViews.ContainsKey(BallWindow); },
-            OpenQuickInput, delegate { CaptureDesktop(BallWebView()); }, SystemDpiScale());
+            OpenQuickInput, delegate { CaptureDesktop(BallWebView()); }, OpenStudyMail, SystemDpiScale());
+    }
+    private static void OpenStudyMail()
+    {
+        WebView2PostMail("sb-float:mail-open");
+    }
+    private static void WebView2PostMail(string message)
+    {
+        var view = BallWebView();
+        if (view != null && view.CoreWebView2 != null) view.CoreWebView2.PostWebMessageAsString(message);
     }
     private static void OpenQuickInput()
     {

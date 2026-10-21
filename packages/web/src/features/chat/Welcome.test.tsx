@@ -28,10 +28,10 @@ describe('像素营地现场开场题', () => {
     const view = render(<CampfireWorld onEnter={enter} />);
     fireEvent.click(screen.getByRole('button', { name: '魔法图书馆，前往词条库' }));
     expect(enter).toHaveBeenLastCalledWith('terms', expect.objectContaining({ x: 0, y: 0 }));
-    fireEvent.click(screen.getByRole('button', { name: '遗迹入口，前往知识大陆' }));
+    fireEvent.click(screen.getByRole('button', { name: '矿洞入口，前往知识矿境' }));
     expect(enter).toHaveBeenLastCalledWith('continent', expect.objectContaining({ x: 0, y: 0 }));
     view.rerender(<CampfireWorld onEnter={enter} travelling="terms" />);
-    fireEvent.click(screen.getByRole('button', { name: '遗迹入口，前往知识大陆' }));
+    fireEvent.click(screen.getByRole('button', { name: '矿洞入口，前往知识矿境' }));
     expect(enter).toHaveBeenCalledTimes(2);
     expect(h.request).not.toHaveBeenCalled();
   });

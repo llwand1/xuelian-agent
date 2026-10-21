@@ -10,16 +10,23 @@
  */
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { DrillCard } from '@sb/shared';
-import { DrillFx, type DrillFxState } from './DrillFx';
-import { DrillQuestion } from './DrillQuestion';
+import type { DrillFxState } from './DrillFx';
+import { DrillCardPane } from './DrillCardPane';
 import type { DrillEntry, DrillPhase, DrillResult, DrillStats } from './useDrillSession';
 import { useDragWindow, type WindowPos } from './useDragWindow';
 import { readNarrow } from '../../lib/use-narrow';
+import { MiningBattle } from '../mining/MiningBattle';
 import './drill.css';
 import './drill-fx.css';
 import './drill-action-fx.css';
 
 export interface DrillOverlayProps {
+  mode?: 'normal' | 'game';
+  onMode?: (mode: 'normal' | 'game') => void;
+  inline?: boolean;
+  storageKey?: string;
+  onOpenTerm?: (term: string) => void;
+  onAsk?: (term: string) => void;
   busy: boolean;
   replyReady: boolean;
   /** 练习局（从入口手动打开、没在等回复）：头部不说「回复到了」 */
@@ -63,6 +70,7 @@ function footHint(phase: DrillPhase, card: DrillCard | null): string {
 }
 
 export function DrillOverlay(p: DrillOverlayProps) {
+  const game = p.mode === 'game';
   /**
    * 打开时把焦点挪进小窗、关掉时还回去（多半是聊天输入框——回复到了正好接着打字）。
    * ★ 不挪焦点的后果在真机上见过：发送完消息焦点还在聊天框里，按 1–4 什么都不发生。
@@ -111,16 +119,20 @@ export function DrillOverlay(p: DrillOverlayProps) {
       if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(frame);
     };
   }, []);
-  useDragWindow(stage, { handle: '.drill-head', initial: p.windowPos, onSettle: p.onWindowMoved });
+  useDragWindow(stage, { handle: p.inline ? '.no-drag-handle' : '.drill-head', initial: p.windowPos, onSettle: p.onWindowMoved, layoutKey: `${p.inline ? 'inline' : 'window'}:${p.mode ?? 'normal'}` });
   return (
-    <div className="drill-overlay" role="dialog" aria-label="等待时刷词">
-      <div className="drill-stage" ref={stage} tabIndex={-1}>
+    <div className={p.inline ? 'mining-inline' : 'drill-overlay'} role={p.inline ? 'region' : 'dialog'} aria-label={p.inline ? '知识矿境学习' : '等待时刷词'}>
+      <div className={`drill-stage${game ? ' is-game' : ''}`} ref={stage} tabIndex={-1}>
         <header className="drill-head" title="按住这里拖动小窗">
           <div className="drill-brand">
             <span className="drill-brand-tag">WAIT</span>
-            <b>等待时刷词</b>
+            <b>{p.inline ? '挖矿与复习' : '等待时刷词'}</b>
             <small className={p.busy ? 'live' : ''}>{p.busy ? 'AI 正在回复…' : p.practice ? '练习局' : '回复到了'}</small>
           </div>
+          {p.onMode && <div className="mining-mode" aria-label="学习表现形式">
+            <button type="button" aria-pressed={!game} onClick={() => p.onMode?.('normal')}>常规模式</button>
+            <button type="button" aria-pressed={game} onClick={() => p.onMode?.('game')}>游戏模式</button>
+          </div>}
           <div className="drill-stats" aria-label="战绩">
             <span>
               连击 <b>{p.stats.combo}</b>
@@ -147,9 +159,9 @@ export function DrillOverlay(p: DrillOverlayProps) {
             >
               {p.muted ? '♪ 关' : '♪ 开'}
             </button>
-            <button type="button" className="drill-icon" title="收起（Esc）——输入框上方的小签可唤回，这局不作废" onClick={p.onClose}>
+            {!p.inline && <button type="button" className="drill-icon" title="收起（Esc）——输入框上方的小签可唤回，这局不作废" onClick={p.onClose}>
               ✕
-            </button>
+            </button>}
           </div>
         </header>
 
@@ -168,31 +180,15 @@ export function DrillOverlay(p: DrillOverlayProps) {
         )}
 
         <div className="drill-body">
-          <DrillQuestion
-            phase={p.phase}
-            card={p.card}
-            entry={p.entry}
-            result={p.result}
-            notice={p.notice}
-            keepState={p.keepState}
-            draft={p.draft}
-            onDraft={p.onDraft}
-            onAnswer={p.onAnswer}
-            onDontKnow={p.onDontKnow}
-            onNext={p.onNext}
-            onLearned={p.onLearned}
-            onSlay={p.onSlay}
-            onKeep={p.onKeep}
-            onDismiss={p.onDismiss}
-          />
-          <DrillFx fx={p.fx} />
+          {game ? <MiningBattle {...p} /> : <DrillCardPane {...p} />}
+
         </div>
 
         <p className="drill-notice" role="status" aria-live="polite">
           {p.notice || p.newNote}
         </p>
         <footer className="drill-foot">
-          <span>{footHint(p.phase, p.card)}</span>
+          <span>{p.inline ? footHint(p.phase, p.card).replace(' · Esc 收起', '') + (game ? ' · E 开始动作轮播' : '') : footHint(p.phase, p.card)}</span>
           <span className="drill-mobile-stats">
             连击 {p.stats.combo} · 答对 {p.stats.correct} · 斩 {p.stats.slain}
             {p.stats.reviewed > 0 && ` · 打卡 ${p.stats.reviewed}`}

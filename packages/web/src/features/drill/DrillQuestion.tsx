@@ -15,6 +15,8 @@ import { MathText } from '../chat/MathText';
 import type { DrillEntry, DrillPhase, DrillResult } from './useDrillSession';
 
 interface Props {
+  gameActions?: boolean;
+  advanceDisabled?: boolean;
   phase: DrillPhase;
   card: DrillCard | null;
   entry: DrillEntry | null;
@@ -40,7 +42,7 @@ function optionClass(i: number, card: DrillCard, result: DrillResult | null): st
   return 'drill-opt dim';
 }
 
-export function DrillQuestion({ phase, card, entry, result, notice, keepState, draft, onDraft, onAnswer, onDontKnow, onNext, onLearned, onSlay, onKeep, onDismiss }: Props) {
+export function DrillQuestion({ phase, card, entry, result, notice, keepState, draft, onDraft, onAnswer, onDontKnow, onNext, onLearned, onSlay, onKeep, onDismiss, gameActions = false, advanceDisabled = false }: Props) {
   const narrow = useNarrow();
   if (phase === 'loading') return <div className="drill-card drill-wait">正在翻词库…</div>;
   if (phase === 'empty' || !card || !entry) {
@@ -130,7 +132,7 @@ export function DrillQuestion({ phase, card, entry, result, notice, keepState, d
 
       {result && (
         <div className={result.slain ? 'drill-detail cut' : result.correct ? 'drill-detail ok' : 'drill-detail bad'} role="status">
-          <b>{result.slain ? '斩！今天不再出这条' : result.correct ? '对了' : result.answer === null ? '记一下' : '错了'}</b>
+          <b>{result.slain ? gameActions ? '斩：本轮不做动作' : '斩！今天不再出这条' : result.correct ? '对了' : result.answer === null ? '记一下' : '错了'}</b>
           <span>
             {card.term} —— {card.definition}
           </span>
@@ -143,16 +145,16 @@ export function DrillQuestion({ phase, card, entry, result, notice, keepState, d
             <button type="button" className="drill-btn" onClick={onDontKnow}>
               不认识 <kbd>N</kbd>
             </button>
-            {!isNew && (
+            {(!isNew || gameActions) && (
               <button type="button" className="drill-btn slay" onClick={onSlay}>
-                斩 <kbd>Z</kbd>
+                {gameActions ? '斩 · 跳过动作' : '斩'} <kbd>Z</kbd>
               </button>
             )}
           </>
         )}
-        {phase === 'reveal' && isNew && (
+        {phase === 'reveal' && isNew && !result?.slain && (
           <>
-            <button type="button" className="drill-btn" disabled={keepState !== null} onClick={onDismiss}>
+            <button type="button" className="drill-btn" disabled={keepState !== null || advanceDisabled} onClick={onDismiss}>
               不要 <kbd>X</kbd>
             </button>
             <button type="button" className={`drill-btn primary drill-keep${keepState === 'saved' ? ' saved' : ''}`} disabled={keepState !== null} aria-busy={keepState === 'saving'} onClick={onKeep}>
@@ -160,14 +162,14 @@ export function DrillQuestion({ phase, card, entry, result, notice, keepState, d
             </button>
           </>
         )}
-        {phase === 'reveal' && !isNew && !result?.slain && (
+        {phase === 'reveal' && (!isNew || result?.slain) && (!result?.slain || gameActions) && (
           <>
-            {!result?.correct && (
+            {!result?.correct && !gameActions && (
               <button type="button" className="drill-btn slay" onClick={onSlay}>
                 斩 <kbd>Z</kbd>
               </button>
             )}
-            <button type="button" className="drill-btn primary" onClick={onNext}>
+            <button type="button" className="drill-btn primary" disabled={advanceDisabled} onClick={onNext}>
               下一张 <kbd>Enter</kbd>
             </button>
           </>

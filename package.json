@@ -25,6 +25,7 @@
     "lint": "tsc --noEmit -p packages/shared && tsc --noEmit -p packages/server && tsc --noEmit -p packages/web && eslint packages --max-warnings 0",
     "test": "node tools/test-tmp.mjs",
     "test:raw": "vitest run",
+    "test:open-engine": "node --test packages/open-engine/tests/*.test.mjs",
     "gates": "node tools/gates/check.mjs && node tools/check-public-traces.mjs && node tools/check-version.mjs",
     "traces": "node tools/check-public-traces.mjs",
     "og:shots": "tsx tools/probes/og-card-cdp.mts",
