@@ -201,7 +201,7 @@ export function parseBlocks(src: string): Block[] {
         body.push(at(j));
       }
       const text = body.join('\n');
-      // 专用通道各自校验后渲染；html 只在独立沙箱标签页打开。
+      // 专用通道各自校验后渲染；HTML 默认不执行，仅主对话完成后显式启用内嵌沙箱。
       if (lang === 'svg') blocks.push({ kind: 'svg', code: text, closed });
       else if (lang === 'mermaid') blocks.push({ kind: 'mermaid', code: text, closed });
       else if (['math', 'latex', 'tex'].includes(lang)) blocks.push({ kind: 'math', code: text, closed });

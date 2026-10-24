@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { RESTORE_LATEST, useScrollAnchor } from './useScrollAnchor';
+import { READ_MESSAGE, RESTORE_LATEST, useScrollAnchor } from './useScrollAnchor';
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 function Harness({ count = 0, session = null }: { count?: number; session?: string | null }) {
@@ -16,6 +16,21 @@ function Harness({ count = 0, session = null }: { count?: number; session?: stri
   </>;
 }
 describe('welcome and conversation scrolling', () => {
+  it('explicit card reading prevents resize/stream follow-latest from hiding its controls', () => {
+    let resize: ResizeObserverCallback = () => {};
+    vi.stubGlobal('ResizeObserver', class {
+      constructor(callback: ResizeObserverCallback) { resize = callback; }
+      observe() {} disconnect() {}
+    });
+    const view = render(<Harness count={1} />), scroll = screen.getByTestId('scroll');
+    expect(scroll.scrollTop).toBe(1000);
+    act(() => { scroll.dispatchEvent(new Event(READ_MESSAGE, { bubbles: true })); scroll.scrollTop = 200; resize([], {} as ResizeObserver); });
+    expect(scroll.scrollTop).toBe(200);
+    view.rerender(<Harness count={2} />); expect(scroll.scrollTop).toBe(200);
+    expect(screen.getByRole('button', { name: '回到底部' })).toBeTruthy();
+    act(() => window.dispatchEvent(new Event(RESTORE_LATEST)));
+    expect(scroll.scrollTop).toBe(1000);
+  });
   it('restores newly hydrated history, switches sessions and reopens the float at the newest turn', () => {
     const view = render(<Harness />);
     view.rerender(<Harness count={40} session="one" />);

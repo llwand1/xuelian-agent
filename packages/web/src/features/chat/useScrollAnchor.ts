@@ -12,6 +12,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { shouldAutoScroll } from './chat-meta';
 
 export const RESTORE_LATEST = 'sb-chat:restore-latest';
+/** Host-only DOM event: explicit card interaction takes scroll ownership away from follow-latest. */
+export const READ_MESSAGE = 'sb-chat:read-message';
 export function useScrollAnchor(signal: readonly unknown[], hasConversation = true, restoreKey: string | null = null) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const stickRef = useRef(true);
@@ -29,6 +31,13 @@ export function useScrollAnchor(signal: readonly unknown[], hasConversation = tr
     if (!el || !hasConversation || el.clientHeight === 0) return;
     stickRef.current = shouldAutoScroll(el.scrollHeight - el.scrollTop - el.clientHeight);
     setShowJump(!stickRef.current);
+  }, [hasConversation]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    const read = () => { if (hasConversation) { stickRef.current = false; setShowJump(true); } };
+    el?.addEventListener(READ_MESSAGE, read);
+    return () => el?.removeEventListener(READ_MESSAGE, read);
   }, [hasConversation]);
 
   useLayoutEffect(() => {

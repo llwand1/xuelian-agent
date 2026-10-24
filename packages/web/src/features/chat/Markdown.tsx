@@ -1,8 +1,8 @@
 /**
  * Markdown — 助手正文渲染（块级切分在 lib/markdown.ts，SVG/图表走净化卡片）。
  * 只做「数据结构 → DOM」，文本节点一律作为 React children 渲染（自动转义），
- * SVG/图解注入前净化，公式只注入受限 KaTeX 生成的标记；```html 永不内联（HtmlCard 只给
- * 「新标签页打开」，由服务端 CSP sandbox 隔离）。
+ * SVG/图解注入前净化，公式只注入受限 KaTeX 生成的标记；HTML 仅在主对话显式授权、
+ * 整轮完成后进入 opaque-origin iframe，默认不执行。流式修补与 stable 块均不能授予执行许可。
  *
  * 流式性能：长回答若每帧全量重解析整篇 Markdown，总开销是 O(n²)——越流越卡。
  * 现按 stableCut 把文本切成「已闭合块（stable）+ 正在书写的块（tail）」：
@@ -16,6 +16,7 @@ import { highlightCode, highlightStable, extFor } from '../../lib/highlight';
 import { SvgPreviewCard } from './SvgPreviewCard';
 import { ChartCard } from './ChartCard';
 import { HtmlCard } from './HtmlCard';
+import type { HtmlMode } from './html-sandbox';
 import { LearningReplyCard } from './LearningReplyCard';
 import { MathFormula } from './MathFormula';
 import { MermaidDiagram } from './MermaidDiagram';
@@ -162,7 +163,9 @@ function CodeBlock({ block }: { block: Extract<Block, { kind: 'code' }> }) {
 }
 
 /** memo 化：stable 块的 block 引用跨帧不变，这里直接跳过重渲染（性能设计见文件头） */
-const BlockNode = memo(function BlockNode({ block, streaming }: { block: Block; streaming: boolean }) {
+const BlockNode = memo(function BlockNode({ block, streaming, htmlMode, htmlPending }: {
+  block: Block; streaming: boolean; htmlMode: HtmlMode; htmlPending: boolean;
+}) {
   switch (block.kind) {
     case 'heading': {
       const inner = <InlineNodes nodes={block.inline} />;
@@ -184,7 +187,7 @@ const BlockNode = memo(function BlockNode({ block, streaming }: { block: Block; 
     case 'quote':
       return (
         <blockquote className="md-quote">
-          {block.body ? block.body.map((part, i) => <BlockNode key={i} block={part} streaming={streaming} />) : block.lines.map((ln, i) => (
+          {block.body ? block.body.map((part, i) => <BlockNode key={i} block={part} streaming={streaming} htmlMode={htmlMode} htmlPending={htmlPending} />) : block.lines.map((ln, i) => (
             <span key={i} className="md-quote-line">
               <InlineNodes nodes={ln} />
             </span>
@@ -194,7 +197,7 @@ const BlockNode = memo(function BlockNode({ block, streaming }: { block: Block; 
     case 'learning-card':
       return (
         <LearningReplyCard variant={block.variant} title={<InlineNodes nodes={block.title} />}>
-          {block.body ? block.body.map((part, i) => <BlockNode key={i} block={part} streaming={streaming} />) : block.lines.map((line, i) => (
+          {block.body ? block.body.map((part, i) => <BlockNode key={i} block={part} streaming={streaming} htmlMode={htmlMode} htmlPending={htmlPending} />) : block.lines.map((line, i) => (
             <span key={i} className="learning-reply-line"><InlineNodes nodes={line} /></span>
           ))}
         </LearningReplyCard>
@@ -238,13 +241,15 @@ const BlockNode = memo(function BlockNode({ block, streaming }: { block: Block; 
     case 'chart':
       return <ChartCard code={block.code} streaming={!block.closed || streaming} />;
     case 'html':
-      return <HtmlCard code={block.code} streaming={!block.closed || streaming} />;
+      return <HtmlCard code={block.code} closed={block.closed} streaming={htmlPending} mode={htmlMode} />;
     case 'hr':
       return <hr className="md-hr" />;
   }
 });
 
-export function Markdown({ text, streaming = false }: { text: string; streaming?: boolean }) {
+export function Markdown({ text, streaming = false, htmlMode = 'disabled' }: {
+  text: string; streaming?: boolean; htmlMode?: HtmlMode;
+}) {
   /**
    * 流式半截语法先补尾再解析：token 是逐段到的，不补的话屏幕会闪出 `**`、`  ` 这类原始记号，
    * 下一帧闭合时又跳一次。只在流式渲染时补——落库、导出、复制一律用原文，
@@ -276,10 +281,10 @@ export function Markdown({ text, streaming = false }: { text: string; streaming?
   return (
     <div className="md-root">
       {stable.map((b, i) => (
-        <BlockNode key={`s${i}`} block={b} streaming={false} />
+        <BlockNode key={`s${i}`} block={b} streaming={false} htmlMode={streaming ? 'disabled' : htmlMode} htmlPending={streaming} />
       ))}
       {tail.map((b, i) => (
-        <BlockNode key={`t${i}`} block={b} streaming={streaming} />
+        <BlockNode key={`t${i}`} block={b} streaming={streaming} htmlMode={streaming ? 'disabled' : htmlMode} htmlPending={streaming} />
       ))}
     </div>
   );

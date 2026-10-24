@@ -43,12 +43,12 @@ describe('知识矿境：一套内核、两种表现形式', () => {
     fireEvent.keyDown(window, { key: '3' }); expect(markMock).toHaveBeenCalledTimes(1);
     expect(document.querySelector('.drill-detail')).toBeNull();
     expect(wrong).toBe(0); clickCorrect(); await advance();
-    const input = screen.getByLabelText('拼写作答'); fireEvent.change(input, { target: { value: '半个草稿' } });
+    const input = screen.getByLabelText('拼写作答'); fireEvent.change(input, { target: { value: '半' } });
     const asked = prompt(); fireEvent.click(screen.getByText('游戏模式'));
     fireEvent.click(screen.getByText('开始动作轮播 E'));
-    expect(prompt()).toBe(asked); expect((screen.getByLabelText('拼写作答') as HTMLInputElement).value).toBe('半个草稿');
+    expect(prompt()).toBe(asked); expect((screen.getByLabelText('拼写作答') as HTMLInputElement).value).toBe('半');
     fireEvent.click(screen.getByText('常规模式'));
-    expect((screen.getByLabelText('拼写作答') as HTMLInputElement).value).toBe('半个草稿');
+    expect((screen.getByLabelText('拼写作答') as HTMLInputElement).value).toBe('半');
     expect(mapMock).toHaveBeenCalledTimes(1);
   });
   it('话题提醒交给矿境优先出题；链接回正式词条和带原会话的追问', async () => {

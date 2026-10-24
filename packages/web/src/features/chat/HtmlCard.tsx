@@ -1,96 +1,100 @@
-/**
- * HtmlCard — ```html 围栏卡：本应用 DOM 内绝不渲染模型写的网页。
- * 点「侧栏预览」才把源码交给 /api/preview 换 id → 右侧内置浏览器面板载入沙箱文档；
- * 「新标签页」是同一条上传路径的备用出口。沙箱文档源为 null ⇒ demo 照跑，碰不到本应用数据。
- */
-import { useState } from 'react';
-import { pickTitle, uploadPreview } from '../../lib/preview-api';
-import { openPreview } from '../../lib/preview-store';
+/** Executable HTML only enters an opaque-origin sandbox, never the host DOM or a new window. */
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { pickTitle } from '../../lib/preview-api';
+import { HtmlSandboxFrame } from './HtmlSandboxFrame';
+import { htmlSourceError, type HtmlMode } from './html-sandbox';
+import { isHtmlRunning, startHtmlRun, stopHtmlRun, subscribeHtmlRuns } from './html-runs';
+import { READ_MESSAGE } from './useScrollAnchor';
+import './html-card.css';
 
-const FALLBACK_TITLE = 'HTML 演示页';
-
-export function HtmlCard({ code, streaming }: { code: string; streaming: boolean }) {
-  const [busy, setBusy] = useState<'panel' | 'tab' | ''>('');
-  const [errMsg, setErrMsg] = useState('');
+export function HtmlCard({ code, closed, streaming, mode }: {
+  code: string; closed: boolean; streaming: boolean; mode: HtmlMode;
+}) {
+  const id = useId().replace(/[^a-z0-9-]/gi, '');
+  const root = useRef<HTMLElement>(null);
+  const keepHeader = useRef(false);
+  const autoSource = useRef<string | null>(null);
+  const [visible, setVisible] = useState(typeof IntersectionObserver === 'undefined');
+  const [epoch, setEpoch] = useState(0);
+  const [runSource, setRunSource] = useState('');
+  const [error, setError] = useState('');
   const [showSrc, setShowSrc] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  const run = async (mode: 'panel' | 'tab'): Promise<void> => {
-    setBusy(mode);
-    setErrMsg('');
-    try {
-      const url = await uploadPreview(code);
-      if (mode === 'panel') openPreview(url, pickTitle(code, FALLBACK_TITLE));
-      else window.open(url, '_blank', 'noopener');
-    } catch (e) {
-      setErrMsg(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy('');
-    }
+  const [expanded, setExpanded] = useState(false);
+  const copyTimer = useRef<ReturnType<typeof setTimeout>>();
+  const active = useSyncExternalStore(subscribeHtmlRuns, () => isHtmlRunning(id), () => false);
+  const invalid = useMemo(() => htmlSourceError(code), [code]);
+  const permitted = mode !== 'disabled' && !streaming && closed && !invalid;
+  const running = permitted && active && runSource === code;
+  const title = pickTitle(code, 'HTML 互动卡片');
+  const readCard = (action: () => void) => {
+    root.current?.dispatchEvent(new Event(READ_MESSAGE, { bubbles: true }));
+    keepHeader.current = true;
+    action();
   };
-
-  const copy = async (): Promise<void> => {
+  useLayoutEffect(() => {
+    if (!keepHeader.current) return;
+    keepHeader.current = false;
+    root.current?.querySelector<HTMLElement>('header')?.scrollIntoView?.({ block: 'start', behavior: 'auto' });
+  }, [epoch, running, expanded, showSrc]);
+  const start = () => {
+    setError(''); setRunSource(code); setEpoch(n => n + 1); startHtmlRun(id);
+  };
+  useEffect(() => () => stopHtmlRun(id), [code, id]);
+  useEffect(() => {
+    if (!root.current || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => {
+      const shown = !!entry?.isIntersecting;
+      setVisible(shown);
+      if (!shown) stopHtmlRun(id);
+    });
+    observer.observe(root.current);
+    return () => observer.disconnect();
+  }, [id]);
+  useEffect(() => {
+    if (!permitted) { stopHtmlRun(id); return; }
+    let cancelled = false;
+    // Deferral cancels StrictMode's discarded effect; cleanup must not consume the one-shot autoplay.
+    queueMicrotask(() => {
+      if (!cancelled && mode === 'auto' && visible && autoSource.current !== code && !document.hidden
+        && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+        autoSource.current = code;
+        start();
+      }
+    });
+    return () => { cancelled = true; };
+  }, [code, mode, permitted, visible, id]);
+  useEffect(() => {
+    const hide = () => { if (document.hidden) stopHtmlRun(id); };
+    document.addEventListener('visibilitychange', hide);
+    return () => { document.removeEventListener('visibilitychange', hide); stopHtmlRun(id); clearTimeout(copyTimer.current); };
+  }, [id]);
+  const fail = (message: string) => { setError(message); stopHtmlRun(id); };
+  const copy = async () => {
     try {
       await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch {
-      /* 剪贴板不可用静默 */
-    }
+      setCopied(true); clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 1600);
+    } catch { setError('无法复制，请展开源码手动选择。'); }
   };
-
-  return (
-    <div className="chat-svg-card">
-      <div className="chat-svg-head">
-        <span className="chat-svg-badge">网页</span>
-        <span className="chat-svg-title">{pickTitle(code, FALLBACK_TITLE)}</span>
-        <span className="chat-svg-dim">{(code.length / 1024).toFixed(1)} KB</span>
-        <span className="chat-svg-actions">
-          <button
-            className="chat-svg-btn primary"
-            disabled={streaming || busy !== ''}
-            onClick={() => void run('panel')}
-            title="在右侧内置浏览器面板打开（隔离沙箱）"
-          >
-            {busy === 'panel' ? '打开中…' : '侧栏预览'}
-          </button>
-          <button
-            className="chat-svg-btn"
-            disabled={streaming || busy !== ''}
-            onClick={() => void run('tab')}
-            title="在新标签页打开（同一沙箱）"
-          >
-            {busy === 'tab' ? '打开中…' : '新标签页'}
-          </button>
-          <button className="chat-svg-btn" onClick={() => void copy()} title="复制 HTML 源码">
-            {copied ? '已复制' : '复制'}
-          </button>
-          <button className="chat-svg-btn" onClick={() => setShowSrc((o) => !o)} title="查看/隐藏 HTML 源码">
-            {showSrc ? '隐藏源码' : '源码'}
-          </button>
-        </span>
-      </div>
-
-      {streaming ? (
-        <div className="chat-svg-body chat-svg-drawing">
-          <span className="chat-svg-spin" />
-          正在生成网页…
-        </div>
-      ) : (
-        <div className="chat-svg-body">
-          {/* 刻意不内联渲染：demo 页只在沙箱文档（侧栏面板或新标签页）里跑 */}
-          <div className="chat-svg-fallback">
-            {errMsg ? <p className="chat-error">打开失败：{errMsg}</p> : null}
-            <p>交互网页不在对话里直接运行——点「侧栏预览」在右侧面板里跑，或点「新标签页」（都是沙箱隔离，读不到本应用数据）。</p>
-          </div>
-        </div>
-      )}
-
-      {showSrc && (
-        <pre className="chat-svg-src">
-          <code>{code}</code>
-        </pre>
-      )}
-    </div>
-  );
+  let status = '此处仅展示 HTML 源码，不运行脚本。';
+  if (streaming) status = '正在生成 HTML 卡片，整轮完成后才运行…';
+  else if (!closed) status = 'HTML 围栏尚未闭合，保留源码，不执行。';
+  else if (invalid) status = invalid;
+  else if (mode !== 'disabled') status = epoch ? '已停止。重播会从初始状态开始。' : '点击运行卡片；重播不恢复上次操作状态。';
+  return <section ref={root} className={`html-card${expanded ? ' html-card-expanded' : ''}`} aria-label={title}>
+    <header className="html-card-head">
+      <span className="html-card-badge">HTML · 沙箱</span><strong className="html-card-title">{title}</strong>
+      <span className="html-card-actions">
+        {permitted && <button type="button" onClick={() => readCard(running ? () => stopHtmlRun(id) : start)}>{running ? '停止' : epoch ? '重播' : '运行卡片'}</button>}
+        {running && <button type="button" aria-pressed={expanded} onClick={() => readCard(() => setExpanded(v => !v))}>{expanded ? '收起' : '展开'}</button>}
+        <button type="button" onClick={() => void copy()}>{copied ? '已复制' : '复制'}</button>
+        <button type="button" aria-expanded={showSrc} onClick={() => readCard(() => setShowSrc(v => !v))}>{showSrc ? '隐藏源码' : '源码'}</button>
+      </span>
+    </header>
+    {error && <p className="html-card-error" role="alert">{error}</p>}
+    {running ? <HtmlSandboxFrame key={`${id}-${epoch}`} code={code} title={title} runId={`${id}-${epoch}`} onError={fail} />
+      : <p className="html-card-status" role="status">{status}</p>}
+    {showSrc && <pre className="html-card-source"><code>{code}</code></pre>}
+  </section>;
 }

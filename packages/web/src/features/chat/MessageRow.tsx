@@ -186,7 +186,7 @@ export function MessageRow({
             <div className="chat-bubble md">
               {/* 正文里的 [n] 引用要能点回这条回答自己的资料架（不是面板当前显示的那份）：由 Provider 交给 CiteChip */}
               <MessageSourcesProvider sessionId={sessionId ?? ''} sources={m.sources}>
-                <Markdown text={m.content} />
+                <Markdown text={m.content} htmlMode={m.htmlAutoRun ? 'auto' : 'manual'} />
               </MessageSourcesProvider>
               {m.replyPractice && <p className="reply-practice-hint" role="status"><span aria-hidden="true">◆</span> 本次回复已提炼为可练习的题目</p>}
             </div>

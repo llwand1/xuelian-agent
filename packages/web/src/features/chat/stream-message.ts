@@ -7,6 +7,8 @@ export interface StreamMessage {
   replyPractice?: ReplyPracticeRef;
   role: 'user' | 'assistant';
   content: string;
+  /** Client-only completion flag. History never restores it; old cards require explicit replay. */
+  htmlAutoRun?: boolean;
   /** 消息时间：历史消息取库内 created_at（SQLite UTC 串），本轮新消息取本地 ISO */
   ts?: string;
   streaming?: boolean;
