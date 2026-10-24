@@ -4,7 +4,7 @@
  *
  * 钉的是「数据结构 → DOM」这一层的真实行为：标题降级映射、内联格式、原始 HTML
  * 绝不成为活元素（全篇不 dangerouslySetInnerHTML 的契约）、任务列表只读勾选、
- * 长代码块折叠、```html 永不内联、流式高亮分档。纯解析逻辑在 lib/markdown.test.ts，
+ * 长代码块折叠、默认 Markdown 不执行 HTML、流式高亮分档。纯解析逻辑在 lib/markdown.test.ts，
  * 这里只锁组件渲染（前端测试空白的一次补课，见 `docs/TEST-PLAN.md` §7）。
  */
 import { describe, it, expect, afterEach, vi } from 'vitest';
@@ -171,7 +171,7 @@ describe('Markdown 组件渲染', () => {
     expect(q(el, 'pre')!.className).not.toContain('md-pre-folded');
   });
 
-  it('```html 围栏永不内联：无 iframe、原文不成为活元素，只给卡片入口', () => {
+  it('默认 Markdown 不授予 HTML 执行能力：无 iframe、原文不成为宿主活元素', () => {
     const { container } = render(
       <Markdown text={'```html\n<b>粗体</b>\n```'} />,
     );

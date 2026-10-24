@@ -1,9 +1,11 @@
 # 学练agent-应试学习,学习ai,题库搜索,练习反馈
 
+> 2026-10-24 发布更新：网站 v0.2.188、Windows 桌面 0.2.210。对话可就地运行 HTML 动画与交互卡片，不新开浏览器窗口；支持停止、重播、展开和查看源码。[运行边界与验证](docs/HTML-CARDS-SPEC.md)。
+
 > 2026-10-21 发布更新：网站 v0.2.187、Windows 桌面 0.2.208。横版「知识矿境」替换旧俯视知识大陆，常规/游戏刷词共用词条、判分与复习记录；新增可调刷怪节奏、平 A / 防御动作轮播与每日题量。桌面另含悬浮球引路灯、安静学习来信及实时视频截图。知境保持独立，新怪物提醒下线，对战转为彩蛋。[知识矿境契约](docs/KNOWLEDGE-MINES-SPEC.md) · [动作轮播 QA](docs/MINING-COMBAT-QA.md) · [每日任务 QA](docs/DAILY-STUDY-TASK-QA.md) · [引路灯/视频 QA](docs/FLOAT-GUIDE-VIDEO-QA.md)。
 
 ![release](https://img.shields.io/github/v/release/llwand1/xuelian-agent)
-![version](https://img.shields.io/badge/version-0.2.187-orange)
+![version](https://img.shields.io/badge/version-0.2.188-orange)
 
 **StudentBuddy：开源 AI 学习 Agent，把资料、练习、思考、反馈和复习接在一起。**
 
@@ -153,6 +155,8 @@ Windows 本地版把学习窗口和像素吉祥物带到桌面，学习数据留
 
 流程、关系、时序与思维图自动布局，配在解释附近；图面保持白底，可查看原文、下载或放大。内容未写完时先留位置，遇到无法解析的式子和图解保留原文。
 
+**对话内联 HTML 卡片**：Agent 输出自包含 HTML 动画、模拟器或小工具，整轮完成后在当前消息的隔离沙箱运行，不新开浏览器窗口。支持停止、重播、展开和查看源码；历史卡片点击运行，内部操作状态不持久化。[运行边界与验证](docs/HTML-CARDS-SPEC.md)。
+
 ### 阅读模式：把外部资源变成学习材料
 
 **本地版可以就在你选定的 Chrome / Edge 里共读。** 从更多功能「网页共读」跳转浏览器，连接当前对话，再从扩展点击「共读当前页」。首次直接在共读页面下载扩展 ZIP，解压并在浏览器加载一次，不必查找安装目录；页面按下载、解压、加载、刷新逐步说明，未检测到扩展时不会假装已经连上。之后不用填写地址和配对码；内置窗口作为备用保留。正文、划选和阅读视野随阅读更新为临时资料，AI 在绑定对话检索相关段落再回答；停止共读或断连后清除。详见 [连接说明](tools/browser-extension/README.md)。
@@ -225,13 +229,13 @@ TinyFish 内置接入支持官方 API Key 认证、搜索/页面提取与异步�
 <summary>开发者信息</summary>
 
 ![node](https://img.shields.io/badge/node-%E2%89%A522.11-blue)
-![tests](https://img.shields.io/badge/tests-483%20files%20%2F%204972%20cases-brightgreen)
+![tests](https://img.shields.io/badge/tests-485%20files%20%2F%204991%20cases-brightgreen)
 ![api](https://img.shields.io/badge/REST%20routes-254-0ea5e9)
 ![contracts](https://img.shields.io/badge/shared%20contracts-320%20types-8a63f6)
 ![deps](https://img.shields.io/badge/external%20runtime%20deps-8-blue)
 ![stack](https://img.shields.io/badge/stack-React%2018%20%C2%B7%20Express%20%C2%B7%20SQLite-8a63f6)
 
-当前测试基线 **483 文件 / 4972 例**。Windows 安装包见[桌面更新通道](https://github.com/llwand1/xuelian-agent/releases/tag/desktop-stable)；在线体验**已上线到 v0.2.187**。
+当前测试基线 **485 文件 / 4991 例**。Windows 安装包见[桌面更新通道](https://github.com/llwand1/xuelian-agent/releases/tag/desktop-stable)；在线体验**已上线到 v0.2.188**。
 
 代码结构、开发约定与复验方式见 [工程文档](docs/ENGINEERING.md)。
 

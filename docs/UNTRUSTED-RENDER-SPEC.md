@@ -3,6 +3,8 @@
 > 版本：v1.0 | 状态：[已落地] | 日期：2026-09-30
 > 关联：`packages/web/src/lib/svg-sanitize.ts`（净化器）｜`svg-allowlist.ts`（白名单数据）｜`markdown-inline.ts`（链接 / 图片白名单）｜`docs/TEST-PLAN.md` §3（攻击语料 + 模糊测试登记）
 
+2026-10-22 主对话 HTML 卡片改为消息内 `srcDoc` 沙箱，不再强制侧栏/新窗口；默认 Markdown 仍无执行能力。完整权限、历史/流式规则、CPU/自身导航残余边界与浏览器/WebView2 验证见 [HTML-CARDS-SPEC](HTML-CARDS-SPEC.md)。
+
 2026-10-08 白底图面：`prepareSvg` 在既有净化后用固定 DOM 属性添加白色底层，实体化原有主题变量；不扩大净化白名单，不加载资源。预览与 blob 下载/放大同一份 SVG。显式 Markdown 学习卡正文/标题继续走 React 文本及现有安全行内解析，不产生新的 HTML 注入点。
 
 ## 0. 立场
@@ -23,7 +25,7 @@
 | Mermaid | 模型 DSL | 净化 SVG | 完整围栏后按需渲染，strict，禁配置/资源/点击，唯一 ID、陈旧结果隔离；共用 prepareSvg |
 | Markdown 正文 | 模型 token 流 | React 元素树（**不走 innerHTML**） | AST → React；唯一两个「属性直出」点：`<a href>`（`safeHref`）与 `<img src>`（`safeImgSrc`） |
 | ```svg 围栏 / 题图 / 图表 | 模型输出 → `fixSvg` 自愈 | `dangerouslySetInnerHTML`（`SvgPreviewCard` / `ChartCard` / `CoachCardViews`）+ blob: 独立文档（下载 / 新窗口） | **白名单净化器**（§2） |
-| ```html 围栏 | 模型输出 | `<iframe sandbox>` + `CSP: sandbox`，源为 `null` | 隔离而非净化（沙箱页不能调写接口：`originCheck` 不放行 `'null'`） |
+| ```html 围栏 | 模型输出 | 主对话显式启用的 `iframe.srcDoc`，`sandbox="allow-scripts"`，opaque origin | 前置 meta CSP 限制资源/连接，窄 presentation 消息核对 source/runId；`originCheck` 不放行 `'null'`。默认 Markdown 不执行；旧 `/api/preview` 仍由响应头 CSP sandbox 隔离 |
 
 `safeHref` 只放行 `http(s):` / `mailto:` / `#…` / **站内根路径 `/…`**；根路径**必须排除 `//` 与 `/\`**（协议相对 URL 与 Chromium 的反斜杠等价形，长得像站内、点开就出站——2026-09-30 修）。
 

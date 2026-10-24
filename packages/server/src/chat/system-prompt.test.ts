@@ -35,6 +35,11 @@ describe('SYSTEM_PROMPT 图解引导（```svg 围栏）', () => {
 });
 
 describe('普通对话学习结构', () => {
+  it('HTML 互动卡就地沙箱运行且明确能力、体积和重播边界', () => {
+    for (const text of ['自包含 HTML 片段', '128 KiB', '围栏必须闭合', '当前对话内的隔离沙箱直接运行',
+      '不引 CDN', '不调用 fetch/WebSocket', '桌面消息桥', 'prefers-reduced-motion', '重播会重置内部状态']) expect(SYSTEM_PROMPT).toContain(text);
+    expect(SYSTEM_PROMPT).not.toContain('用户点卡片按钮在新标签页打开');
+  });
   it('模型获知可用卡片及白底图面，引导式不先交付答案', () => {
     const ordinary = buildChatStyleBlock(DEFAULT_ANSWER_STYLE);
     for (const variant of ['CORE', 'STEP', 'EXAMPLE', 'PITFALL', 'CHECK']) expect(ordinary).toContain(`[!${variant}]`);

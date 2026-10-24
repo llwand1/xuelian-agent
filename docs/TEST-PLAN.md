@@ -1,3 +1,14 @@
+> 正式发布复验（2026-10-24）：旧矿境切换测试改用单字未完成草稿，避免日期轮转到短答案时，输入组件按题长截断四字夹具导致错误预期；不修改矿境运行代码。
+
+> 2026-10-22 对话内联 HTML 卡片：仅新增普通渲染/隔离回归，无线上模型调用。
+
+手动交互复测另补 `HtmlCard.test.tsx` / `useScrollAnchor.test.tsx` 两例：手动展开/源码/重播退出贴底跟随，布局变化后头部可达且不重挂 iframe；演示滑块改为调整真实位移振幅与波形，不再改变方块宽度。
+
+| 测试文件 | 回归范围 |
+|---|---|
+| `packages/web/src/features/chat/html-sandbox.test.ts` | CSP 文档壳、片段/完整文档、UTF-8 大小、脚本参数转义、窄消息协议、运行数量限制 |
+| `packages/web/src/features/chat/HtmlCard.test.tsx` | 流式/stable/未闭合不执行、主对话显式能力、历史手动重播、StrictMode 单次自动运行、停止/展开/复制、错误/高度/消息源校验、隐藏卸载 |
+
 工具指标验证：`node --test tools/metrics-contracts.test.mjs` 排除兼容转导出造成的类型虚增；桌面 Node 测试同时核对真实源码差异、未忽略新文件与 LF/CRLF 状态噪声。
 
 `tools/desktop/npm-package.test.mjs` 同时锁定仅源码提交的桌面发布选择：`[skip desktop release]` 不绕过主分支 CI 或 PR 安装验证，只跳过该提交后续的桌面自动构建与发布。

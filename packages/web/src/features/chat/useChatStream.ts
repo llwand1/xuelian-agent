@@ -194,9 +194,9 @@ export function useChatStream(
         // 屏上文本与库内文本逐字一致（服务端保证）：/messages 晚于本轮落库返回时尾条已是这段字，
         // 此时只把过程补进去，不再插一条重复正文
         if (t && last?.role === 'assistant' && last.content === t) {
-          return hasProc ? [...ms.slice(0, -1), { ...last, ...proc }] : ms;
+          return [...ms.slice(0, -1), { ...last, ...proc, htmlAutoRun: true }];
         }
-        return [...ms, { role: 'assistant', content: t, ts: new Date().toISOString(), ...proc, ...takeTurnSources(sessionId) }];
+        return [...ms, { role: 'assistant', content: t, ts: new Date().toISOString(), ...proc, ...takeTurnSources(sessionId), htmlAutoRun: true }];
       });
     }
     // 已归位到消息内：清空「当前轮」（ref 与镜像一起清），否则底部与消息里会重复显示一整份过程
