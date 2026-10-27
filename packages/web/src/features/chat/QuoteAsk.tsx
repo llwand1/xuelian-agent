@@ -1,5 +1,5 @@
 /**
- * QuoteAsk —— 选中助手回答里的文字，浮出一枚「引用追问」小牌；点它把选区变成输入框里的引用块。
+ * QuoteAsk —— 选中已保存的助手原文，携带稳定消息 ID 和文本锚点打开隐藏分支，不改主输入框。
  *
  * 只认**助手正文**（`.chat-row:not(.user) .chat-bubble.md`）里的选区：用户自己的话、
  * 过程面板、题卡里的字都不算——引用的语义是「你刚才说的这句」。
@@ -14,12 +14,13 @@
  */
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { isQuotableSelection } from './quote-ask';
+import { anchorFromRange } from './quote-anchors';
+import { QUOTE_BRANCH_MAX, type QuoteAnchor } from '@sb/shared';
 
 const DEBOUNCE_MS = 180;
 const BTN_CLASS = 'chat-quote-btn';
 
-interface Hit {
-  text: string;
+interface Hit extends QuoteAnchor {
   x: number;
   y: number;
 }
@@ -29,18 +30,24 @@ export function readQuotableSelection(root: HTMLElement | null): Hit | null {
   if (!root || typeof document === 'undefined') return null;
   const sel = document.getSelection();
   if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return null;
-  const text = sel.toString();
+  const text = sel.getRangeAt(0).toString();
   if (!isQuotableSelection(text)) return null;
   const range = sel.getRangeAt(0);
   const anchor = range.commonAncestorContainer;
   const el = anchor.nodeType === Node.ELEMENT_NODE ? (anchor as Element) : anchor.parentElement;
   const bubble = el?.closest('.chat-row:not(.user) .chat-bubble.md');
   if (!bubble || !root.contains(bubble)) return null;
+  if (el?.closest('button,input,textarea,.streaming,.quote-branch-links')) return null;
+  const content = el?.closest<HTMLElement>('.quote-anchor-content');
+  const messageId = content?.dataset.messageId;
+  if (!content || !messageId) return null;
+  const quote = anchorFromRange(range, content, messageId);
+  if (!quote) return null;
   const rect = range.getBoundingClientRect();
-  return { text, x: rect.left + rect.width / 2, y: rect.bottom };
+  return { ...quote, x: Math.max(90, Math.min(innerWidth - 90, rect.left + rect.width / 2)), y: Math.min(innerHeight - 50, rect.bottom) };
 }
 
-export function QuoteAsk({ rootRef, onQuote }: { rootRef: RefObject<HTMLElement | null>; onQuote: (text: string) => void }) {
+export function QuoteAsk({ rootRef, onQuote }: { rootRef: RefObject<HTMLElement | null>; onQuote: (anchor: QuoteAnchor) => void }) {
   const [hit, setHit] = useState<Hit | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
 
@@ -81,14 +88,16 @@ export function QuoteAsk({ rootRef, onQuote }: { rootRef: RefObject<HTMLElement 
       ref={btnRef}
       type="button"
       className={BTN_CLASS}
+      disabled={hit.quote.length > QUOTE_BRANCH_MAX}
       onMouseDown={(e) => e.preventDefault()}
       onClick={() => {
-        onQuote(hit.text);
+        const { messageId, quote, start, end, prefix, suffix } = hit;
+        onQuote({ messageId, quote, start, end, prefix, suffix });
         setHit(null);
         document.getSelection()?.removeAllRanges();
       }}
     >
-      ↩ 引用追问
+      {hit.quote.length > QUOTE_BRANCH_MAX ? '选区过长（最多 1200 字）' : '↗ 小窗追问'}
     </button>
   );
 }

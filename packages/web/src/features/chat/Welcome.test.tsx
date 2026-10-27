@@ -23,6 +23,11 @@ beforeEach(() => { vi.useFakeTimers(); resetRoundMocks(); localStorage.clear(); 
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe('像素营地现场开场题', () => {
+  it('外置文字模式不自动调用原模型召题，也不伪造可答题目', async () => {
+    render(<Welcome externalAgent="Codex 本地 Agent" onPick={vi.fn()} />); await advance();
+    expect(screen.getByText('当前选择：Codex 本地 Agent')).toBeTruthy(); expect(h.request).not.toHaveBeenCalled();
+    expect(screen.queryByText('这次召题没有完成')).toBeNull();
+  });
   it('两处场景入口带正确目的地，旅行中禁重复点击，不召新题', () => {
     const enter = vi.fn();
     const view = render(<CampfireWorld onEnter={enter} />);

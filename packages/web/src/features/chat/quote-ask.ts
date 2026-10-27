@@ -35,7 +35,7 @@ export function mergeQuoteIntoInput(input: string, quote: string): string {
   return head ? `${head}\n\n${quote}\n\n` : `${quote}\n\n`;
 }
 
-/** 选区是否值得当引用：至少两个非空白字符（单字符多半是误触） */
+/** Single characters can be meaningful terms/formulae (熵/x); starting a branch still needs a click. */
 export function isQuotableSelection(text: string): boolean {
-  return text.replace(/\s+/g, '').length >= 2;
+  return text.replace(/\s+/g, '').length >= 1;
 }

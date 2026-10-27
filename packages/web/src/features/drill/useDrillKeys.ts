@@ -39,6 +39,8 @@ export function useDrillKeys(enabled: boolean, handlers: DrillKeyHandlers): void
         return;
       }
       if (isField) return;
+      // Native button/link activation must win over global next-card shortcuts.
+      if ((e.key === 'Enter' || e.key === ' ') && el?.closest('button,a,summary,select')) return;
       if (e.key >= '1' && e.key <= '4') {
         e.preventDefault();
         ref.current.onDigit(Number(e.key) - 1);

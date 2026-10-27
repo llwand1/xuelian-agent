@@ -20,6 +20,7 @@ import { LANDING_LANG_KEY, LandingLangProvider, LangToggle, initialLandingLang }
 import { BRAND_TAGLINE, DEMO_BTN, FOOT_CHANGELOG, FOOT_TERMS, HERO } from './landing-copy';
 import { CATALOG_PATH, CHANGELOG_PATH } from '../seo/paths';
 import { Landing } from './Landing';
+import { CURRENT } from './landing-current-copy';
 import { LandingBrand, totalTicks } from './LandingBrand';
 import { GraphDemo } from './demo/GraphDemo';
 import { ASK, LEAD, SEG1, SEG2, SPEED, TAIL, TERMS } from './demo/TermFlowDemo';
@@ -227,16 +228,17 @@ describe('落地页双语 — 两语都得在产品事实之内', () => {
   });
 });
 
-describe('落地页双语 — 冒险录各章跟着换语言', () => {
-  it('EN 侧：知识大陆与伙伴章的标题、按钮都是英文；切回中文后换成中文', () => {
+describe('落地页双语 — 当前产品能力跟着换语言', () => {
+  it('工作台、横版矿境与外置 Agent 两语都上屏，并标明独立试用边界', () => {
     store('en');
     const { container, getByText } = renderLanding();
-    expect(container.querySelector('.wf-ch-continent .wf-h2')?.textContent).toBe('Knowledge Mines: one learning core, a new world');
-    expect(getByText('One answer, one action: arrange attacks and defenses while the world keeps moving.')).toBeTruthy();
-    expect(container.querySelector('.wf-ch-npc .wf-h2')?.textContent).toBe('Recruit your AI companions');
+    expect(container.querySelector('.lc-mining h2')?.textContent).toBe(CURRENT.miningTitle.en);
+    expect(getByText(CURRENT.learningTitle.en)).toBeTruthy();
+    expect(getByText(CURRENT.trial.en)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '中文' }));
-    expect(container.querySelector('.wf-ch-continent .wf-h2')?.textContent).toBe('知识矿境，同一理念，横版探索');
-    expect(getByText('一题一步，编排平A与防御轮播；作答时世界继续。')).toBeTruthy();
+    expect(container.querySelector('.lc-mining h2')?.textContent).toBe(CURRENT.miningTitle.zh);
+    expect(getByText(CURRENT.learningTitle.zh)).toBeTruthy();
+    expect(getByText(CURRENT.trial.zh)).toBeTruthy();
   });
 });
 

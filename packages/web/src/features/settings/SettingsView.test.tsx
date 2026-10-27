@@ -15,17 +15,18 @@ vi.mock('./AiHealthCard', () => ({ AiHealthCard: () => <div>health mounted</div>
 vi.mock('./WaitDrillCard', () => ({ WaitDrillCard: () => <div>wait mounted</div> }));
 vi.mock('./ReadingSizeCard', () => ({ ReadingSizeCard: () => <div>reading mounted</div> }));
 vi.mock('./AgentTermsCard', () => ({ AgentTermsCard: () => <div>agents mounted</div> }));
+vi.mock('./ExternalAgentCard', () => ({ ExternalAgentCard: () => <div>external-agent mounted</div> }));
 import { SettingsView } from './SettingsView';
 beforeEach(() => sessionStorage.clear());
 afterEach(cleanup);
 const desktop = () => within(screen.getByRole('navigation', { name: '设置分区' }).querySelector<HTMLElement>('.settings-groups')!);
 const click = (name: string) => fireEvent.click(desktop().getByRole('button', { name }));
-it('has seven groups and sixteen independent leaf pages, mounting exactly one at a time', () => {
+it('has seven groups and seventeen independent leaf pages, mounting exactly one at a time', () => {
   render(<SettingsView />);
   expect(desktop().getAllByRole('button', { expanded: false })).toHaveLength(6);
   expect(desktop().getAllByRole('button', { expanded: true })).toHaveLength(1);
   const groups = [
-    ['模型与服务商', [['供应商管理', 'providers'], ['角色模型绑定', 'roles'], ['默认通道与额度', 'channel']]],
+    ['模型与服务商', [['供应商管理', 'providers'], ['角色模型绑定', 'roles'], ['默认通道与额度', 'channel'], ['外置 Agent 对话', 'external-agent']]],
     ['学习与出题', [['考试范围', 'exam'], ['题型配比', 'mix'], ['真题优先', 'real'], ['图片题', 'images']]],
     ['联网搜索', [['搜索服务与密钥', 'search']]],
     ['阅读与交互', [['回答风格', 'answer'], ['词条朗读', 'speech'], ['阅读字号', 'reading'], ['等待练习', 'wait']]],
@@ -47,7 +48,7 @@ it('has seven groups and sixteen independent leaf pages, mounting exactly one at
       count++;
     }
   }
-  expect(count).toBe(16);
+  expect(count).toBe(17);
 });
 it('remembers each group leaf and restores the last page after leaving settings', () => {
   const { unmount } = render(<SettingsView />);

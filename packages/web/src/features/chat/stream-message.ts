@@ -4,9 +4,13 @@ import type { ToolStep } from './step-fold';
 import type { QuizBlockView, ScenarioBlockView } from './chat-blocks';
 
 export interface StreamMessage {
+  /** Stable persisted answer ID used to anchor hidden quote conversations. */
+  id?: string;
   replyPractice?: ReplyPracticeRef;
   role: 'user' | 'assistant';
   content: string;
+  /** Client-only completion flag. History never restores it; old cards require explicit replay. */
+  htmlAutoRun?: boolean;
   /** 消息时间：历史消息取库内 created_at（SQLite UTC 串），本轮新消息取本地 ISO */
   ts?: string;
   streaming?: boolean;

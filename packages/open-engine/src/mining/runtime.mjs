@@ -37,7 +37,7 @@ export class MiningRuntime {
       e.preventDefault(); canvas.focus({ preventScroll: true }); canvas.setPointerCapture(e.pointerId);
       const p = point(e);
       if (e.button === 2) { this.game.torch(this.game.target.x, this.game.target.y); return; }
-      if (this.game.monsters.hit(p.x, p.y)) onNotice('怪物只受答题结算的平A伤害；点击「开始轮播」准备行动。');
+      if (this.game.monsters.hit(p.x, p.y)) onNotice('怪物只受答题结算的平A伤害；点击右下「施法」准备行动。');
       else this.setInput('mine', true);
     });
     for (const event of ['pointerup', 'pointercancel', 'lostpointercapture']) listen(canvas, event, () => this.setInput('mine', false));

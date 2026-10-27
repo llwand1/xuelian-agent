@@ -137,6 +137,7 @@ export function foldToolRounds(rows: HistoryRow[]): StreamMessage[] {
       }
       out.push({
         role: 'assistant',
+        id: r.id,
         content: r.content,
         ts: r.created_at,
         ...(r.replyPractice ? { replyPractice: r.replyPractice } : {}),

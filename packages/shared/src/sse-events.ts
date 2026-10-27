@@ -67,6 +67,8 @@ export type SseEvent =
   | { type: 'chat-error'; seq: number; sessionId: string; message: string }
   | {
       type: 'done';
+      /** Persisted answer identity; optional for older servers/non-chat producers. */
+      messageId?: string;
       seq: number;
       sessionId: string;
       usage?: TokenUsage;

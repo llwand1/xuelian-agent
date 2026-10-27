@@ -50,6 +50,12 @@ afterEach(() => {
 });
 
 describe('Landing — 公用体验入口（§2.10）', () => {
+  it('explicit local entry enters the local shell without an email form', async () => {
+    providersRef.impl = () => Promise.resolve({ providers: { github: false, demo: false }, form: 'local' });
+    const enter = vi.fn(); const { findAllByText, queryByRole } = render(<Landing onAuthed={() => undefined} onEnterLocal={enter} />);
+    fireEvent.click((await findAllByText('打开本地工作台'))[0]!);
+    expect(enter).toHaveBeenCalledOnce(); expect(queryByRole('textbox', { name: /邮箱/ })).toBeNull();
+  });
   it('providers.demo=true → 画「免注册，直接体验」并附共享池警示文案', async () => {
     stubProviders(true);
     const { findByText, getByText } = render(<Landing onAuthed={() => undefined} />);

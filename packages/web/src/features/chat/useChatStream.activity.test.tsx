@@ -3,13 +3,14 @@ import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SseEvent } from '@sb/shared';
 import { useChatStream } from './useChatStream';
+import type { HistoryRow } from './history-fold';
 
 const network = vi.hoisted(() => ({
   emit: (_event: SseEvent) => {},
   send: vi.fn(async () => ({ ok: true })),
   regenerate: vi.fn(async () => ({ ok: true })),
   resend: vi.fn(async () => ({ ok: true })),
-  messages: vi.fn(async () => []),
+  messages: vi.fn(async (): Promise<HistoryRow[]> => []),
 }));
 vi.mock('../../lib/api', () => ({
   ApiError: Error,
@@ -44,6 +45,16 @@ async function mount() {
 }
 
 describe('对话真实 hook 的轮完成边界', () => {
+  it('history is manual; a slow history response overlapping done marks the existing answer, not a duplicate', async () => {
+    const content = '```html\n<b>演示</b>\n```';
+    network.messages.mockResolvedValueOnce([{ id: 'a', role: 'assistant', content, created_at: '2026-10-22 12:00:00' }]);
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    const h = await mount();
+    expect(h.result.current.messages[0]?.htmlAutoRun).toBeUndefined();
+    act(() => { network.emit(start()); network.emit({ ...base, type: 'token', content }); network.emit(done()); });
+    expect(h.result.current.messages).toHaveLength(1);
+    expect(h.result.current.messages[0]?.htmlAutoRun).toBe(true);
+  });
   it('native service recovery clears stuck generation and waits for persisted history before resuming', async () => {
     const handlers = new Set<(event: { data: string }) => void>();
     vi.stubGlobal('chrome', { webview: {
@@ -121,6 +132,7 @@ describe('对话真实 hook 的轮完成边界', () => {
     act(() => { while (frames.length) frames.shift()?.(); });
     expect(h.result.current.busy).toBe(false);
     expect(h.result.current.messages.at(-1)?.content).toBe(answer);
+    expect(h.result.current.messages.at(-1)?.htmlAutoRun).toBe(true);
   });
 
   it.each(['send', 'regenerate', 'resend'] as const)('%s 的迟到回执不能覆盖 SSE 已完成状态', async (mode) => {

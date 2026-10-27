@@ -14,7 +14,7 @@ import { estimateTokens, truncateHistoryToBudget, getContextLimit } from './cont
 import { toolDefinitions, toolDefinitionTokens } from './tools/index.js';
 import { runToolCalls, type StepPayload } from './tool-exec.js';
 import { createExecTool } from './tool-dispatch.js';
-import { withDesktopChatRun } from '../desktop/chat-integration.js';
+import { withConfiguredChatRun } from '../external-agent/chat.js';
 import { patchDesktopRun } from '../desktop/task-store.js';
 import { createSourceShelf } from '../sources/shelf.js';
 import { persistRounds, loadHistory, insertUserMessage, insertAssistantMessage, touchSessionTitle } from './persist.js';
@@ -54,7 +54,7 @@ export type { ChatOptions, ChatResult } from './options.js';
 
 export function handleMessage(opts: ChatOptions): Promise<ChatResult> {
   const prev = locks.get(opts.sessionId) ?? Promise.resolve();
-  const next = prev.then(() => withDesktopChatRun(opts, runTurn), () => withDesktopChatRun(opts, runTurn));
+  const next = prev.then(() => withConfiguredChatRun(opts, runTurn), () => withConfiguredChatRun(opts, runTurn));
   locks.set(opts.sessionId, next);
   const cleanup = () => {
     if (locks.get(opts.sessionId) === next) locks.delete(opts.sessionId);
@@ -341,7 +341,7 @@ async function runTurn(opts: ChatOptions): Promise<ChatResult> {
     const replyPractice = !pendingToolRound && !opts.grillMe && !opts.signal?.aborted
       ? cacheReplyPractice(assistantId, opts.text, acc) : undefined;
     publish(sessionId, {
-      type: 'done',
+      type: 'done', messageId: assistantId,
       sessionId,
       ...(replyPractice ? { replyPractice } : {}),
       // 思考耗时随收口帧下发（与刚落的 `thinking_ms` 同源——落库先于发布，屏上与库内不会分叉）

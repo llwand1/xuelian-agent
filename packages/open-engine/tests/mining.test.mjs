@@ -114,3 +114,28 @@ test('an unanswered action from a defeated player cannot hit a newly spawned mon
   g.resolve('slash');assert.equal(m.hp,3);assert.equal(g.combat.pending,null);
   assert.match(g.combat.log[0].text,/原战斗目标已离场/);
 });
+
+test('movement accelerates promptly but preserves speed caps, stopping control and buffered jumping', async()=>{
+  const {FEEL,createPlayer,stepPlayer}=await import('../src/mining/physics.mjs');
+  const g=new MiningSimulation(),p=createPlayer(g.world.spawn);p.grounded=true;
+  for(let i=0;i<12;i++)stepPlayer(p,g.world,{right:true});assert.ok(p.vx>=170);assert.ok(p.vx<=FEEL.speed);
+  for(let i=0;i<12;i++)stepPlayer(p,g.world,{});assert.equal(p.vx,0);
+  assert.equal(FEEL.buffer,.12);assert.equal(FEEL.coyote,.09);
+});
+
+test('attack, guard, dodge and damage have different bounded pixel feedback, with no generic square shock ring',()=>{
+  const records={};
+  for(const kind of ['attack','guard','dodge','hurt','guard-break','defeat']){
+    const calls=[];const ctx=new Proxy({}, {get:(_t,p)=>(...args)=>calls.push([p,...args]),set:()=>true});
+    const fx=new ImpactLayer();fx.emit({x:20,y:20,kind,fromX:0,fromY:0});fx.draw(ctx,.08);
+    assert.equal(calls.filter(c=>c[0]==='strokeRect').length,0);records[kind]=JSON.stringify(calls);fx.dispose();assert.equal(fx.items.length,0);
+  }
+  assert.equal(new Set(Object.values(records)).size,6);
+});
+
+test('resizing repaints the canvas immediately and unchanged sizes never clear a live frame', async()=>{
+  const {Renderer}=await import('../src/mining/render.mjs');let paints=0;
+  const fake={canvas:{getBoundingClientRect:()=>({width:600,height:400}),width:0,height:0},ctx:{imageSmoothingEnabled:true},draw:dt=>{assert.equal(dt,0);paints++;}};
+  Renderer.prototype.resize.call(fake);assert.equal(fake.canvas.width,300);assert.equal(fake.canvas.height,200);assert.equal(paints,1);
+  Renderer.prototype.resize.call(fake);assert.equal(paints,1);assert.equal(fake.ctx.imageSmoothingEnabled,false);
+});

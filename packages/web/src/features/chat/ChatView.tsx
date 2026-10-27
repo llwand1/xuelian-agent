@@ -16,9 +16,8 @@ import { useChatStream } from './useChatStream';
 import { useScrollAnchor } from './useScrollAnchor';
 import { useSessionDraft } from './useSessionDraft';
 import { useBusyTitle } from './useBusyTitle';
-import { QuoteAsk } from './QuoteAsk';
+import { QuoteBranchProvider } from './QuoteBranchProvider';
 import { ChatErrorBar } from './ChatErrorBar';
-import { buildQuote, mergeQuoteIntoInput } from './quote-ask';
 import { ThoughtPanel } from './ThoughtPanel';
 import { ToolSteps } from './ToolSteps';
 import { TaskPanel } from './TaskPanel';
@@ -46,6 +45,8 @@ import { useAutoResize } from './useAutoResize';
 import { useQuickStart } from './useQuickStart';
 import { useRemember } from './use-remember';
 import { useGuideBridge } from './use-guide-bridge';
+import { HtmlRepairProvider } from './HtmlRepair';
+import { useExternalAgentMode } from './useExternalAgentMode';
 
 export function ChatView({
   sessionId,
@@ -66,6 +67,7 @@ export function ChatView({
 }) {
   /** v18.4 联网开关：默认开（契约 QUIZ-SEARCH §3）。对话与出题共用这一份；入口在 composer 的「+」菜单 */
   const [online, setOnline] = useState(true);
+  const externalAgent = useExternalAgentMode(setOnline);
   const {
     messages,
     historyReady = true,
@@ -92,7 +94,7 @@ export function ChatView({
     replyConfirm,
     dismissConfirm,
     pkInvite,
-  } = useChatStream(sessionId, onRoundDone, onBusyChange, online);
+  } = useChatStream(sessionId, onRoundDone, onBusyChange, externalAgent ? false : online);
   const [input, setInput] = useState('');
   const [sendError, setSendError] = useState('');
   // v18.3：grill 收尾卡点选后 send 失败要浮出来（此前 void 吞掉 {ok:false}＝点了没反应）
@@ -210,14 +212,14 @@ export function ChatView({
   });
 
   return (
-    <div className={`chat-view${handoff.leaving ? ' is-campfire-handoff' : ''}`}>
+    <HtmlRepairProvider blocked={blocked || !sessionId} onRepair={text => { fire(text); jumpToBottom(); }}><QuoteBranchProvider sessionId={sessionId} rootRef={scrollRef} revision={messages.map(m => m.id ?? '').join('|')}><div className={`chat-view${handoff.leaving ? ' is-campfire-handoff' : ''}`}>
       {(isEmpty || handoff.keep) && <CampfireWorld key={handoff.heroKey} onEnter={onEnter} travelling={travelling} exiting={handoff.leaving} />}
       {handoff.leaving && <CampfireHandoffTrace />}
       <ChatSpeakerDefs />
       {/* 会话铭牌条（与其它页面的页标题同一套：角标 + 压印标题 + 荆棘分隔）；空会话由欢迎页自带角标，不重复 */}
       <ChatHeading hidden={isEmpty || handoff.waiting} title={sessionTitle} rounds={rounds} />
       <div className="chat-scroll" ref={scrollRef} onScroll={onScroll} role="log" aria-live="polite" aria-busy={busy}>
-        {(isEmpty || handoff.keep) && <CampfireWelcome key={handoff.heroKey} frozen={handoff.keep} leaving={handoff.leaving} onPick={pick} blocked={blocked} onAsk={() => inputRef.current?.focus()} onEnter={onEnter} travelling={travelling} />}
+        {(isEmpty || handoff.keep) && <CampfireWelcome externalAgent={externalAgent} key={handoff.heroKey} frozen={handoff.keep} leaving={handoff.leaving} onPick={pick} blocked={blocked} onAsk={() => inputRef.current?.focus()} onEnter={onEnter} travelling={travelling} />}
         {messages.map((m, i) => (
           <MessageRow
             key={`${sessionId}-${i}`}
@@ -258,9 +260,6 @@ export function ChatView({
         {roundMeta && <div className="chat-round-meta">{roundMeta}</div>}
         {grillNode}
       </div>
-      {/* 选中回答里的一句 → 「引用追问」：引用块并进输入框（函数式更新，不覆盖已打的字）、焦点回输入框 */}
-      <QuoteAsk rootRef={scrollRef} onQuote={(t) => { setInput((v) => mergeQuoteIntoInput(v, buildQuote(t))); inputRef.current?.focus(); }} />
-
       {/* AI 主动发起对战的邀请卡（PK-SPEC §16）。挂在这里而不是 ChatComposer 内部：
           那张卡要吃的是一整个 queue（十个回调），composer 已经贴着 300 行门禁，
           从这儿透传只会把它推过线 —— 于是本视图只留这一行。
@@ -273,6 +272,7 @@ export function ChatView({
       )}
 
       <ChatComposer
+        externalAgent={externalAgent}
         sessionId={sessionId}
         blocked={blocked}
         busy={busy}
@@ -312,6 +312,6 @@ export function ChatView({
         onChoiceReply={replyChoice}
         onDismissChoice={dismissChoice}
       />
-    </div>
+    </div></QuoteBranchProvider></HtmlRepairProvider>
   );
 }

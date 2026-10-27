@@ -1,0 +1,17 @@
+.html-card { min-width: 0; width: 100%; margin: 16px 0; overflow: hidden; border: 1px solid #cbd5dc; border-radius: 12px; background: #fff; color: #203044; }
+.html-card-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px; background: #f3f7f9; border-bottom: 1px solid #dce4e9; }
+.html-card-badge { flex: none; font-size: 11px; font-weight: 700; color: #52697a; }
+.html-card-title { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 14px; }
+.html-card-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.html-card-actions button { padding: 6px 10px; border: 1px solid #c4d1dc; border-radius: 6px; background: #fff; color: #24394c; font: inherit; font-size: 12px; cursor: pointer; }
+.html-card-actions button:hover { background: #e6f2fb; border-color: #668ca5; }
+.html-card-actions button:focus-visible { outline: 2px solid #2a6f9d; outline-offset: 2px; }
+.html-card-frame { display: block; width: 100%; height: var(--sb-html-height, 180px); border: 0; background: #fff; }
+.html-card-expanded .html-card-frame { height: min(80vh, 960px); min-height: 260px; }
+.html-card-status, .html-card-error, .html-card-warning { margin: 0; padding: 16px; font-size: 13px; line-height: 1.6; white-space: pre-line; }
+.html-card-warning { color: #795012; background: #fff7e5; overflow-wrap: anywhere; }
+.html-card-actions button:disabled { opacity: .5; cursor: not-allowed; }
+.html-card-status { color: #52697a; }
+.html-card-error { color: #9b2334; background: #fff1f2; overflow-wrap: anywhere; }
+.html-card-source { max-height: 400px; overflow: auto; margin: 0; padding: 14px; border-top: 1px solid #dce4e9; background: #f7fafc; color: #18202e; font: 12px/1.6 ui-monospace, monospace; white-space: pre; }
+@media (max-width: 700px) { .html-card-actions { width: 100%; } .html-card-actions button { min-height: 36px; } }

@@ -18,7 +18,7 @@ import { BRAND_TAGLINE as BRAND_TAGLINE_ZH } from '../lib/brand';
  * ★ 2026-09-28 改口径：EN 不再只属于落地页——全局中英切换后，产品侧栏那句副标也读本条的 `en`
  *   （`app/shell-copy.ts` 直接复用本常量，不另写一句）。故本常量是两处共用的唯一事实源。
  */
-export const BRAND_TAGLINE: Bi = { zh: BRAND_TAGLINE_ZH, en: 'A gamified knowledge learning agent' };
+export const BRAND_TAGLINE: Bi = { zh: BRAND_TAGLINE_ZH, en: 'Your AI learning workspace' };
 
 export const TOP: { langTip: Bi; login: Bi; ghLogin: Bi } = {
   langTip: { zh: '切换语言', en: 'Switch language' },
@@ -35,11 +35,11 @@ export const HERO: {
   ctaNote: Bi;
   statsAria: Bi;
 } = {
-  titlePre: { zh: '把词条化为力量，', en: 'Turn knowledge into power. ' },
-  titleAccent: { zh: '向遗忘的怪物宣战', en: 'Face the monsters of forgetting.' },
+  titlePre: { zh: '把一个问题，', en: 'Start with a question. ' },
+  titleAccent: { zh: '学成你的世界。', en: 'Build your world of understanding.' },
   sub: {
-    zh: '一个游戏化知识学习 Agent。和 AI 把问题聊明白，把词条带进横版知识矿境；通过挖矿和怪物遭遇复习，选择、判断、拼写延续同一套刷词手感，再把疑问带回对话。',
-    en: 'A gamified knowledge learning agent. Work through questions with AI, then take your terms into a side-view mining world. Review through mining and monster encounters, and bring new questions back to chat.',
+    zh: '和 AI 对照资料聊明白，把自己的答案和思考留下，再用词卡、练习与知识矿境反复验证。一个本地优先、可以接入不同模型与 Agent 的学习工作台。',
+    en: 'Understand with AI and your sources, keep your answers and reasoning, then revisit ideas through cards, practice and Knowledge Mines. A local-first learning workspace for your choice of models and agents.',
   },
   cta: { zh: '开始使用', en: 'Get started' },
   ctaNote: { zh: '从你感兴趣的一个问题开始', en: 'Bring a question you care about' },
@@ -48,9 +48,9 @@ export const HERO: {
 
 /** 首屏用玩法标签说明体验，工程指标留在仓库的自动对账页。 */
 export const HERO_TAGS: Bi[] = [
-  { zh: '词条即武器', en: 'Terms as weapons' },
+  { zh: '资料 × 对话 × 练习', en: 'Sources × chat × practice' },
   { zh: '知识矿境', en: 'Knowledge Mines' },
-  { zh: '暗黑像素', en: 'Dark pixel art' },
+  { zh: '本地优先 · 可换 Agent', en: 'Local-first · Choose your agent' },
 ];
 
 export const AUTH: { or: Bi; ghBtn: Bi; ghHint: Bi } = {
@@ -178,7 +178,7 @@ export const LAND_TAG: { shipped: Bi; partial: Bi } = {
  * ★ 标题用中性说法（不放「预告」「首发」这类会过期的词），片子换了不用回来改文案。
  */
 export const PV = {
-  open: { zh: '看 PV', en: 'Watch PV' },
-  title: { zh: 'StudentBuddy 介绍', en: 'StudentBuddy intro' },
+  open: { zh: '播放早期影像', en: 'Play the early film' },
+  title: { zh: 'StudentBuddy 早期玩法影像', en: 'StudentBuddy early gameplay film' },
   close: { zh: '关闭', en: 'Close' },
 } satisfies Record<string, Bi>;

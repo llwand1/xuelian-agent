@@ -12,6 +12,10 @@
 import type { AuthUser, DeployForm } from '@sb/shared';
 
 export type EntryView = 'app' | 'landing';
+/** Explicit public introduction; does not change app authentication or deployment form. */
+export function isWelcomeRoute(hash: string): boolean {
+  return hash === '#/welcome' || hash.startsWith('#/welcome?');
+}
 
 export function entryFor(user: AuthUser | null, form: DeployForm): EntryView {
   if (user) return 'app';

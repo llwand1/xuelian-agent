@@ -13,8 +13,12 @@ export class Renderer {
   }
   resize() {
     const rect = this.canvas.getBoundingClientRect(); this.cssW = rect.width; this.cssH = rect.height;
-    this.w = Math.max(1, Math.floor(rect.width / 2)); this.h = Math.max(1, Math.floor(rect.height / 2));
+    const w = Math.max(1, Math.floor(rect.width / 2)), h = Math.max(1, Math.floor(rect.height / 2));
+    if (this.w === w && this.h === h) return;
+    this.w = w; this.h = h;
     this.canvas.width = this.w; this.canvas.height = this.h; this.ctx.imageSmoothingEnabled = false;
+    // Changing canvas dimensions clears its buffer. Paint in the resize callback, not one RAF later.
+    this.draw(0);
   }
   screenToWorld(x, y) { return { x: x * this.w / this.cssW + Math.round(this.camera.x), y: y * this.h / this.cssH + Math.round(this.camera.y) }; }
   worldToScreen(x, y) { return { x: Math.round((x - Math.round(this.camera.x)) * this.cssW / this.w), y: Math.round((y - Math.round(this.camera.y)) * this.cssH / this.h) }; }
@@ -130,9 +134,12 @@ export class Renderer {
   player() {
     const g = this.game, p = g.player, c = this.ctx;
     const appearance = g.registry.get('characters', g.appearanceId);
-    this.actor(p, g.registry.get('sprites', appearance?.spriteId));
-    if (g.combat.hurt > 0) { c.fillStyle = '#ed8d7866'; c.fillRect(Math.round(p.x - 3), Math.round(p.y), p.w + 6, p.h); }
-    if (g.combat.guard > 0) { c.strokeStyle = '#9fded8'; c.lineWidth = 2; c.strokeRect(Math.round(p.x - 5), Math.round(p.y - 3), p.w + 10, p.h + 6); }
+    c.save(); if (g.combat.hurt > 0 && !this.reduced) c.globalAlpha = Math.floor(g.combat.hurt * 20) % 2 ? .5 : 1;
+    this.actor(p, g.registry.get('sprites', appearance?.spriteId)); c.restore();
+    if (g.combat.guard > 0) {
+      c.fillStyle = '#9fded8';
+      for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3 + (this.reduced ? 0 : this.clock * .8); c.fillRect(Math.round(p.x + 9 + Math.cos(a) * 16), Math.round(p.y + 18 + Math.sin(a) * 23), 2, 2); }
+    }
     const y = Math.round(p.y + 4 + p.renderOffset);
     const held = resolveHeldItem(g.registry, g.heldItem);
     if (held.id === PICKAXE_ITEM) {

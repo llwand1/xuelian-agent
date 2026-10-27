@@ -1,3 +1,18 @@
+> 2026-10-22 对话内联 HTML 卡片：仅新增普通渲染/隔离回归，无线上模型调用。
+
+手动交互复测另补 `HtmlCard.test.tsx` / `useScrollAnchor.test.tsx` 两例：手动展开/源码/重播退出贴底跟随，布局变化后头部可达且不重挂 iframe；演示滑块改为调整真实位移振幅与波形，不再改变方块宽度。
+
+| 测试文件 | 回归范围 |
+|---|---|
+| `packages/server/src/chat/quote-branches.test.ts` | 分支独立存储/不改主线、来源上下文快照、分支续聊、逐端点归属校验、锚点限额、并发/停止/错误恢复、迁移幂等与来源删除级联 |
+| `packages/web/src/features/chat/quote-anchors.test.ts` | 跨格式节点文本锚点、重复词的偏移/前后文重定位、不改 React DOM、拒绝跨消息选区 |
+| `packages/web/src/features/chat/useQuoteBranches.test.tsx` | 打开不烧模型、连点防重、关闭/恢复历史、标记复用、会话切换的迟到响应隔离、错误保留草稿 |
+| `packages/web/src/lib/api-quote-branches.test.ts` | 独立 NDJSON 流、UTF-8/行边界拆包、完整收口标志、中断及鉴权错误不误报成功 |
+| `packages/web/src/features/chat/html-preflight.test.ts` | 纯解析预检、真实 var 闭包覆盖回归、语法/截断行号、现代脚本/作用域/模板/JSON 无误报、外部依赖提示与诊断限额 |
+| `packages/web/src/features/chat/HtmlReliability.test.tsx` | 语法错误禁执行/静态后备、运行异常保留 iframe、宿主点击修复/防连点/忙碌门控、源码和报错回传、源码替换清错、围栏数据隔离 |
+| `packages/web/src/features/chat/html-sandbox.test.ts` | CSP 文档壳、片段/完整文档、UTF-8 大小、脚本参数转义、窄消息协议、运行数量限制 |
+| `packages/web/src/features/chat/HtmlCard.test.tsx` | 流式/stable/未闭合不执行、主对话显式能力、历史手动重播、StrictMode 单次自动运行、停止/展开/复制、错误/高度/消息源校验、隐藏卸载 |
+
 工具指标验证：`node --test tools/metrics-contracts.test.mjs` 排除兼容转导出造成的类型虚增；桌面 Node 测试同时核对真实源码差异、未忽略新文件与 LF/CRLF 状态噪声。
 
 `tools/desktop/npm-package.test.mjs` 同时锁定仅源码提交的桌面发布选择：`[skip desktop release]` 不绕过主分支 CI 或 PR 安装验证，只跳过该提交后续的桌面自动构建与发布。
@@ -1364,3 +1379,39 @@ node node_modules\vitest\vitest.mjs run --reporter=dot   # npx 不可用时的�
 - `packages/web/src/features/sources/video-capture.test.ts`：本机截图关联 ID、超时/取消资源清理。
 - `packages/web/src/features/float/FloatGuideInvitation.test.tsx`：沿用引路灯、不自动执行、还原现场、活动优先级。
 - `packages/web/src/features/float/FloatGuideSwitch.test.tsx`：读取本人偏好、显式开关/打开、保存失败保留原值并可重试。
+
+### 场景优先矿境（2026-10-22）
+既有 `packages/web/src/features/mining/MiningPage.test.tsx` 补充：默认固定施法/主动连放、收起未答和已答解析、冷却中继续探索、原生按钮 Enter、新词学习跳过零记账、心形真实状态及按需设置休整。既有 `packages/open-engine/tests/mining.test.mjs` 补充移动响应和六种差异化像素特效；入口 `npm run test:open-engine`。真实生产布局、HUD 占比、320/390px、等待游戏及草稿闭环由 `tools/probes/mining-feel-cdp.mjs` 验证。
+
+### 2026-10-26 外置 Agent 对话 v1（独立本机试用，未发布公网）
+
+
+| 测试文件 | 用例数 | 覆盖 |
+|---|---:|---|
+| `src/external-agent/settings.test.ts` | 3 | 默认关闭、归属隔离、密文/回显边界、换地址不沿用凭据、URL/参数校验 |
+| `src/external-agent/transport.test.ts` | 4 | 兼容 SSE/JSON、UTF-8、模型探测、错误/断流/工具调用拒绝、真实 fetch 中止 |
+| `src/external-agent/chat.test.ts` | 4 | 无 provider 接管、关闭恢复、SQL 历史、重生成/编辑、半截落库与不暗中降级 |
+| `src/routes/external-agent.test.ts` | 2 | 本机启动/Host/Origin 边界、写入原子校验、GET 不回密钥 |
+| `src/features/settings/ExternalAgentCard.test.tsx` | 4 | 独立测试/保存/启用、密钥不回填、失败可见、公网不可编辑 |
+
+已有 `src/features/settings/SettingsView.test.tsx` 同步覆盖第 17 个独立子页，仍为 4 例。零依赖 Codex 桥接器另跑 `node --test tools/external-agent/bridge.test.mjs`：5 例，覆盖配对、Host/Origin、SSE/JSON、并发/取消、RPC 先通知后响应、只读临时线程、禁用工具、进程退出/失败收口。模拟测试与真实 Codex 推理验收区分记录，真实结果见本地 `.runtime/external-agent-evidence`。
+
+外置对话状态挂线：`src/features/chat/useExternalAgentMode.test.tsx`（2 例）验证外置模式自动关闭原先默认开启的联网标记、设置保存切换、线上/读取失败不阻断原聊天。已有 ChatComposer 的 16 例、ChatView 的 12 例同步回归。联网开关在外置模式下禁用；服务端对旧客户端携带的 online 标记不执行联网工具，真实步骤中明确说明。新版聊天不需要用户手动关默认联网才能第一次发消息。
+
+2026-10-26 外置对话最终实跑：全量 497 文件通过，5067 passed / 3 skipped / 0 failed；桥接 Node 测试 5/5；Welcome 外置模式不自动召题新增 1 例（该文件现 9），chat-menu 外置模式禁用联网/GrillMe 新增 1 例（该文件现 2）。真实 Codex 三轮 UI 回复、历史续聊、设置模型探测和真实取消另见 `docs/EXTERNAL-AGENT-CHAT.md`，不混入模拟测试的通过数。
+
+### 2026-10-27 当前 Hero 与 OpenCode 适配
+
+| 测试文件 | 用例数 | 覆盖 |
+|---|---:|---|
+| `src/app/LandingWorkbench.test.tsx` | 4 | 无模型调用/写入、段落追问、键盘页签、浮力滑块、练习思考保留、翻卡、横版矿境示意 |
+
+已有 Landing / LandingLang 更新为当前学习工作台与版本可用性断言；LandingDemoEntry 增加本地入口不索取邮箱（现 5 例）；entry 增加显式 welcome 不改变认证路由（现 4 例）。ExternalAgentCard 增加 OpenCode 预设清除草稿密钥但不自动保存（现 5 例）。transport 增加已知 OpenCode 额度错误的 SSE/HTTP 中文分类、拒绝回显私有诊断（现 5 例）。
+
+`node --test tools/external-agent/bridge.test.mjs tools/external-agent/opencode.test.mjs` 共 12 例：共享桥接器配对/来源/SSE/JSON/并发/取消，Codex 回归，OpenCode 原生事件过滤、文本增量合并、历史和禁工具、401 脱敏/工具/截断/矛盾拒绝、实际 abort 请求和归档、额度重试立即停止、上游错误正确分类、清理异常释放并发。均为模拟测试，不冒充上游模型真实可用性。
+
+### 2026-10-27 Qoder / Qoder CN 接入
+
+`node --test tools/external-agent/qoder.test.mjs`：7 例，覆盖真实格式模型目录解析、原生/Node CLI 定位与拒绝 shell、空工具/hooks/MCP/插件隔离、stdin 历史重放、reasoning 过滤、成功结果核对、不完整/截断/矛盾/工具/跨会话拒绝、登录/额度脱敏、取消真实子进程、旧 CLI 缺隔离参数拒绝。与 Codex/OpenCode Node 回归合计 19 例。
+
+已有 ExternalAgentCard 新增 Qoder 预设不自动保存、完整 ZIP 下载入口（现 6 例）；transport 新增 Qoder CLI 与桌面登录区分提示（现 6 例）。真实登录与生成结果单列在 `docs/QODER-AGENT-CHAT.md` 和本机 `.runtime/qoder-integration/`，不混作模拟测试通过数。

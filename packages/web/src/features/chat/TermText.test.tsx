@@ -14,6 +14,7 @@ import { render, screen, waitFor, fireEvent, cleanup } from '@testing-library/re
 import { TermIndexProvider } from './term-index';
 import { TermText } from './TermText';
 import { api, type TermItem } from '../../lib/api';
+import { QuoteBranchContext } from './quote-branch-context';
 
 vi.mock('../../lib/api', () => ({
   api: { terms: { list: vi.fn(), scopeTerm: vi.fn() } },
@@ -285,6 +286,20 @@ describe('英文发音（契约 §3.1 v1.1）', () => {
 });
 
 describe('无 Provider（笔记页等其他 Markdown 调用点）', () => {
+  it('对话正文词条的追问打开隐藏分支，不再新建普通会话', async () => {
+    listMock().mockResolvedValue([TERM]);
+    const ask = vi.fn().mockResolvedValue(undefined), regular = vi.fn();
+    const r = render(<QuoteBranchContext.Provider value={{ available: true, branches: [], ask, open: () => {} }}>
+      <TermIndexProvider onFollowUp={regular}><div className="chat-row"><div className="chat-bubble md">
+        <div className="quote-anchor-content" data-message-id="saved"><TermText text="闭包会保留变量" /></div>
+      </div></div></TermIndexProvider>
+    </QuoteBranchContext.Provider>);
+    await waitFor(() => expect(hls(r.container)).toHaveLength(1));
+    fireEvent.click(must(hls(r.container)[0]));
+    fireEvent.click(await screen.findByRole('button', { name: '小窗追问' }));
+    await waitFor(() => expect(ask).toHaveBeenCalledWith(expect.objectContaining({ messageId: 'saved', quote: '闭包' }), expect.any(String)));
+    expect(regular).not.toHaveBeenCalled();
+  });
   it('原样渲染文本、不高亮、不报错', () => {
     const { container } = render(
       <p>

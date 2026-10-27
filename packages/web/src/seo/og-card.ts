@@ -115,13 +115,13 @@ export const CATALOG_EN_OG_CARD: OgCard = {
 /** 首页（落地页）的卡 */
 export const HOME_OG_CARD: OgCard = {
   slug: 'home',
-  kicker: '游戏化知识学习 Agent',
+  kicker: '本地优先的 AI 学习工作台',
   title: 'StudentBuddy',
-  alias: '从一个问题出发，探索你的知识大陆',
-  lead: '知识铺成地块，复习变成挑战，带上学习伙伴继续探索。',
-  itemsLine: '往下：免注册直接体验，不必先给邮箱',
+  alias: '把一个问题，学成你的世界',
+  lead: '对照资料聊明白，留下答案与思考，再用练习和知识矿境反复验证。',
+  itemsLine: '资料共读 · 对话 · 练习反馈 · 词卡复习 · 横版知识矿境',
   urlLine: hostless(SITE_ORIGIN),
-  alt: 'StudentBuddy：游戏化知识学习 Agent，探索知识大陆，用理解收复地块',
+  alt: 'StudentBuddy：资料、对话、练习与知识矿境组成的 AI 学习工作台',
 };
 
 /** 计划表工具页的绝对地址（canonical 与卡片底部那行都用它，避免两处各拼一遍字符串） */

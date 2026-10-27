@@ -1,14 +1,8 @@
 /**
- * app/Landing — 未登录的产品落地页（2026-09-19 上线 … 2026-09-28 冒险录大改）。
- *
- * ★ 2026-09-28 版式：整页是一本「冒险录」——
- *   序章（首屏，可交互横版战斗 `hero/LandingHero`）→ 第一章 知识大陆如何生长（俯视大陆 ⇄ 横版讨伐）
- *   → 第二章 异火（意外发现）→ 第三章 副本（未来玩法预告）→ 第四章 词条（只留一段演示动画）
- *   → 第五章 AI 学习伙伴 → 第六章 卡牌 → 第七章 Boss 战＝对战 → 终章。
- *   游戏化之前的功能清单、工程讲解、隐私长文全部下线：门面只做**游戏化玩法演示**。
- *   各章文案与事实口径见 `world/world-copy.ts` 头注。
- *
- * ★ 定位不变：门面，不是功能页。已登录用户直接进应用壳，永远看不到本页。
+ * app/Landing — 当前学习工作台门面（2026-10-26 更新）。
+ * 资料共读、段落追问、互动图解、练习/复习与横版矿境；区分线上、本地、试用和原型。
+ * 所有首屏交互均为明确标注的静态示例，不调用模型、不写学习记录。
+ * 已登录用户默认进入应用；#/welcome 可主动查看门面，不改变原认证判断。
  * ★ 注册/登录表单复用侧栏的 `AccountBox`（standalone 模式），不在本页复制一份表单逻辑。
  * ★ 视觉纪律：禁 emoji；动效只用 steps()；禁内联 style（数据驱动处带 gates:style-ok）。
  */
@@ -19,16 +13,9 @@ import { AccountBox } from '../components/AccountBox';
 import { DemoLoginButton } from '../components/DemoLoginButton';
 import { GithubLoginButton } from '../components/GithubLoginButton';
 import { LandingBrand } from './LandingBrand';
-import { LandingHero } from './hero/LandingHero';
-import { LandingPv } from './LandingPv';
-import { ChapterContinent } from './world/ChapterContinent';
-import { ChapterTerm } from './world/ChapterTerm';
-import { ChapterDiscover } from './world/ChapterDiscover';
-import { ChapterDungeon } from './world/ChapterDungeon';
-import { ChapterNpc } from './world/ChapterNpc';
-import { ChapterCards } from './world/ChapterCards';
-import { ChapterBoss } from './world/ChapterBoss';
-import { ChapterFinale } from './world/ChapterFinale';
+import { LandingWorkbench } from './LandingWorkbench';
+import { LandingCurrent } from './LandingCurrent';
+import { CURRENT } from './landing-current-copy';
 import { AUTH, FOOT, FOOT_CHANGELOG, FOOT_TERMS, HERO, HERO_TAGS, TOP } from './landing-copy';
 import { LangToggle, useLandingLang } from './landing-lang';
 import { CATALOG_PATH, CHANGELOG_PATH } from '../seo/paths';
@@ -36,11 +23,12 @@ import { useLandingAtmos } from './useLandingAtmos';
 import './landing.css';
 import './landing-dark.css';
 import './world/world.css';
+import './landing-current.css';
 
 type AuthCard = 'closed' | 'register' | 'login';
 
 /** 语言状态不自带 Provider：根上那一层（`main.tsx`）罩着本页与应用壳，两边共用同一份（见 landing-lang 头注）。 */
-export function Landing({ onAuthed }: { onAuthed: (u: AuthUser) => void }) {
+export function Landing({ onAuthed, onEnterLocal }: { onAuthed: (u: AuthUser) => void; onEnterLocal?: () => void }) {
   const { lang } = useLandingLang();
   const [card, setCard] = useState<AuthCard>('closed');
   const rootRef = useRef<HTMLDivElement>(null);
@@ -52,6 +40,7 @@ export function Landing({ onAuthed }: { onAuthed: (u: AuthUser) => void }) {
   //   表现出来就是「GitHub 按钮先出现、体验按钮后弹出」这种没人能复现的抖动。
   const [githubEnabled, setGithubEnabled] = useState(false);
   const [demoEnabled, setDemoEnabled] = useState(false);
+  const [local, setLocal] = useState(false);
   useEffect(() => {
     // ★ 走 `api` 而不是裸 `fetch`：这条请求正是服务端 `app_open` 的采集点（GROWTH-SPEC §2.1），
     //   而归因头 `X-SB-Ref` 由 `lib/api-request.ts` 那一层统一注入。裸 fetch 绕过那层
@@ -61,20 +50,31 @@ export function Landing({ onAuthed }: { onAuthed: (u: AuthUser) => void }) {
       .then((d) => {
         setGithubEnabled(Boolean(d.providers.github));
         setDemoEnabled(Boolean(d.providers.demo));
+        setLocal(d.form === 'local');
       })
       .catch(() => {
         setGithubEnabled(false);
         setDemoEnabled(false);
       });
   }, []);
+  const start = () => {
+    if (local && onEnterLocal) { onEnterLocal(); return; }
+    setCard(card === 'register' ? 'closed' : 'register');
+  };
+  const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView?.({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 
   return (
-    <div className="landing" ref={rootRef} lang={lang === 'zh' ? 'zh-CN' : 'en'}>
+    <div className="landing landing-current" ref={rootRef} lang={lang === 'zh' ? 'zh-CN' : 'en'}>
       <header className="landing-top">
         <LandingBrand />
+        <nav className="landing-product-nav" aria-label={lang === 'zh' ? '产品导航' : 'Product navigation'}>
+          <button type="button" onClick={() => scrollTo('landing-learning')}>{CURRENT.navLearn[lang]}</button>
+          <button type="button" onClick={() => scrollTo('landing-mining')}>{CURRENT.navMine[lang]}</button>
+          <button type="button" onClick={() => scrollTo('landing-local')}>{CURRENT.navLocal[lang]}</button>
+        </nav>
         <div className="landing-top-right">
           <LangToggle />
-          <LandingPv />
+          <a className="landing-ghost" href="https://github.com/llwand1/xuelian-agent/releases/tag/desktop-stable" target="_blank" rel="noreferrer noopener">{CURRENT.download[lang]}</a>
           <a className="landing-ghost landing-gh" href="https://github.com/llwand1/xuelian-agent" target="_blank" rel="noreferrer noopener">
             GitHub
           </a>
@@ -86,21 +86,22 @@ export function Landing({ onAuthed }: { onAuthed: (u: AuthUser) => void }) {
       </header>
 
       <main className="landing-body">
-        {/* ① hero：2026-09-28 升级为可交互暗黑像素序章「词条即力量」（`hero/LandingHero`）。
-            标题/副标/CTA 仍由本文件给出（被测试锁住的门面文案），序章舞台包在外面。 */}
-        <LandingHero>
+        {/* 首屏学习工作台：交互示例与真实进入应用的 CTA 分离。 */}
+        <section className="landing-current-hero" aria-labelledby="landing-current-title">
           <div className="landing-hero-copy">
-            <h1 className="landing-title">
+            <p className="lc-hero-eyebrow">{CURRENT.eyebrow[lang]}</p>
+            <h1 className="landing-title" id="landing-current-title">
               {HERO.titlePre[lang]}
               <span className="landing-accent">{HERO.titleAccent[lang]}</span>
             </h1>
-            <p className="landing-sub">{HERO.sub[lang]}</p>
+            <p className="lc-release-note">{CURRENT.release[lang]}</p><p className="landing-sub">{HERO.sub[lang]}</p>
             <div className="landing-cta-row">
-              <button type="button" className="landing-cta" onClick={() => setCard(card === 'register' ? 'closed' : 'register')}>
-                {HERO.cta[lang]}
+              <button type="button" className="landing-cta" onClick={start}>
+                {(local && onEnterLocal ? CURRENT.openLocal : HERO.cta)[lang]}
               </button>
-              <span className="landing-cta-note">{HERO.ctaNote[lang]}</span>
+              <button type="button" className="lc-explore" onClick={() => scrollTo('landing-learning')}>{CURRENT.explore[lang]}</button>
             </div>
+            <span className="landing-cta-note">{CURRENT.heroHint[lang]}</span>
             {/* 公用体验入口（§2.10）：与上面的注册 CTA 并列，警示语必须读得到——
                 公用池里所有访客的数据互相可见，不明示等于默许隐私事故 */}
             {demoEnabled && (
@@ -116,7 +117,8 @@ export function Landing({ onAuthed }: { onAuthed: (u: AuthUser) => void }) {
               ))}
             </div>
           </div>
-        </LandingHero>
+          <LandingWorkbench />
+        </section>
 
         {/* ② 注册/登录卡：贴着 CTA 展开（它是 hero 的延伸，不占内容序列的位置） */}
         {card !== 'closed' && (
@@ -134,16 +136,10 @@ export function Landing({ onAuthed }: { onAuthed: (u: AuthUser) => void }) {
           </div>
         )}
 
-        {/* ③ 冒险录各章：只讲游戏化玩法 */}
-        <ChapterContinent />
-        <ChapterDiscover />
-        <ChapterDungeon />
-        <ChapterTerm />
-        <ChapterNpc />
-        <ChapterCards />
-        <ChapterBoss />
-        <ChapterFinale
-          onCta={() => {
+        {/* 当前能力、横版矿境、版本可用性与历史视频。 */}
+        <LandingCurrent
+          onStart={() => {
+            if (local && onEnterLocal) { onEnterLocal(); return; }
             setCard('register');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}

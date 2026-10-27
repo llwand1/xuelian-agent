@@ -38,9 +38,10 @@ describe('mergeQuoteIntoInput', () => {
 });
 
 describe('isQuotableSelection', () => {
-  it('至少两个非空白字符才算（单字符多半是误触）', () => {
-    expect(isQuotableSelection('a')).toBe(false);
-    expect(isQuotableSelection(' a \n')).toBe(false);
+  it('单个术语或公式字母可选，纯空白不可选', () => {
+    expect(isQuotableSelection('a')).toBe(true);
+    expect(isQuotableSelection(' a \n')).toBe(true);
+    expect(isQuotableSelection(' \n')).toBe(false);
     expect(isQuotableSelection('ab')).toBe(true);
     expect(isQuotableSelection('闭 包')).toBe(true);
   });

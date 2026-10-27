@@ -48,6 +48,7 @@ import { useNarrow } from '../../lib/use-narrow';
 type AskCardProps = Omit<ComponentProps<typeof AskStyleCard>, 'busy'>;
 
 export function ChatComposer({
+  externalAgent = '',
   sessionId,
   blocked,
   busy,
@@ -87,6 +88,7 @@ export function ChatComposer({
   onConfirmReply,
   onDismissConfirm,
 }: {
+  externalAgent?: string;
   sessionId: string | null;
   /** 门控：连接未就绪或正在生成（textarea 与部分动作据此禁用） */
   blocked: boolean;
@@ -140,7 +142,7 @@ export function ChatComposer({
 }) {
   const { fileRef, intakeHint, addImages } = useComposerImages(attachments, setAttachments);
 
-  const items = buildComposerMenuItems({ sessionId, blocked, quizzing, onQuiz, online, setOnline, mixTip,
+  const items = buildComposerMenuItems({ sessionId, blocked, quizzing, onQuiz, online, setOnline, mixTip, externalAgent,
     grillMe, setGrillMe, desktop: hasHost(), onReader: requestDesktopReader, onCapture: requestDesktopCapture });
 
   // 手机宽度下占位文案换短句（docs/MOBILE-SPEC.md §3.1）；布局差异仍在 CSS，这里只管字
@@ -156,6 +158,7 @@ export function ChatComposer({
         </button>
       )}
       {statusHint && <div className="chat-conn-hint">{statusHint}</div>}
+      {externalAgent && <div className="chat-conn-hint" role="status">外置 Agent：{externalAgent} · 纯文字对话，StudentBuddy 联网/文件工具未接入</div>}
       {(quizzing || scenarioing) && <QuizGenerating scenario={scenarioing} />}
       {mixTip && sessionId && (
         <div className="chat-quiz-mix">
@@ -178,7 +181,7 @@ export function ChatComposer({
       <div className={busy ? 'chat-composer busy' : 'chat-composer'}>
         <ComposerMenu
           items={items}
-          status={menuStatus({ online, docBase: doc.meta?.name })}
+          status={menuStatus({ online: externalAgent ? false : online, docBase: doc.meta?.name })}
           title="更多功能"
           disabled={!sessionId && !hasHost()}
         />

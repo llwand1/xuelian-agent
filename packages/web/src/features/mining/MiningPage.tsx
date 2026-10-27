@@ -44,9 +44,7 @@ function MiningLearningSession({ sessionId, identity, onOpenTerms, onFollowUp }:
   };
   useDrillKeys(mode !== 'game', { onDigit: s.answer, onEnter: enter, onDontKnow: s.dontKnow, onSlay: s.slay, onDismiss: s.dismiss, onClose: () => undefined });
   return <section className="mining-page">
-    <h1>知识矿境</h1>
-    <p>同一套学习理念，换一种表现形式。对话沉淀词条 → 探索挖矿与怪物遭遇 → 选择、判断、拼写 → 复习与追问回到主线。</p>
-    {priorityIds.length > 0 && <p>本次优先遭遇刚聊到的话题词条；仍遵守复习范围与番茄钟方向。</p>}
+    <header className="mining-page-heading"><h1>知识矿境</h1><small>{priorityIds.length > 0 ? '本次优先复习刚聊过的话题' : '探索 · 挖掘 · 答题施法'}</small></header>
     {followError && <p role="alert">{followError}</p>}
     <DrillOverlay inline mode={mode} onMode={setMode} storageKey={`sb:mining:${identity}:v1`}
       busy={false} replyReady={false} practice readyCountdown={0} muted={!prefs.sound}

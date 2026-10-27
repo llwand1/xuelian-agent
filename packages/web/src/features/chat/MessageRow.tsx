@@ -25,6 +25,7 @@ import { ChevronDownIcon } from '../../components/icons';
 import { QuizCard } from '../quiz/QuizCard';
 import { ScenarioPanel } from '../quiz/ScenarioPanel';
 import { MessageSourcesProvider } from '../sources/cite';
+import { QuoteBranchLinks } from './QuoteBranchProvider';
 import './reply-practice.css';
 
 export function MessageRow({
@@ -185,9 +186,10 @@ export function MessageRow({
           {m.content && (
             <div className="chat-bubble md">
               {/* 正文里的 [n] 引用要能点回这条回答自己的资料架（不是面板当前显示的那份）：由 Provider 交给 CiteChip */}
-              <MessageSourcesProvider sessionId={sessionId ?? ''} sources={m.sources}>
-                <Markdown text={m.content} />
-              </MessageSourcesProvider>
+              <div className="quote-anchor-content" data-message-id={m.id}><MessageSourcesProvider sessionId={sessionId ?? ''} sources={m.sources}>
+                <Markdown text={m.content} htmlMode={m.htmlAutoRun ? 'auto' : 'manual'} />
+              </MessageSourcesProvider></div>
+              <QuoteBranchLinks messageId={m.id} />
               {m.replyPractice && <p className="reply-practice-hint" role="status"><span aria-hidden="true">◆</span> 本次回复已提炼为可练习的题目</p>}
             </div>
           )}
