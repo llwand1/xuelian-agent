@@ -62,13 +62,15 @@ afterEach(cleanup);
 describe('Landing — 未登录门面（2026-09-28 冒险录版式）', () => {
 
 
-  it('★ 门面只讲游戏化玩法：下线的旧功能与工程讲解不再出现', () => {
+  it('门面围绕当前学习工作台，旧功能与未上线游戏承诺不再作为已交付卖点', () => {
     const { container } = render(<Landing onAuthed={() => undefined} />);
     const text = container.textContent ?? '';
     for (const gone of ['薄弱分析', '学习流编排', '知识图谱', '每日总结', '刷题笔记', 'AI 输出可靠性工程', '联网检索', '文档模式']) {
       expect(text).not.toContain(gone);
     }
     expect(LANDING_DEMOS.map((d) => d.key)).not.toContain('graph-flow');
+    for (const current of ['资料共读', '互动图解', '等待时刷词', '外置 Agent', 'OpenCode', '横版探索']) expect(text).toContain(current);
+    for (const gone of ['讨伐怪物时，镜头才会切进横版战场', '第七章', '未开启的副本']) expect(text).not.toContain(gone);
   });
 
 
@@ -84,10 +86,10 @@ describe('Landing — 未登录门面（2026-09-28 冒险录版式）', () => {
     expect(queryByPlaceholderText('邮箱')).toBeNull();
   });
 
-  it('终章「踏上大陆」也能展开注册卡', () => {
+  it('页尾「开始这段学习」也能展开注册卡', () => {
     const { getByText, queryByPlaceholderText } = render(<Landing onAuthed={() => undefined} />);
     window.scrollTo = () => undefined;
-    fireEvent.click(getByText('踏上大陆'));
+    fireEvent.click(getByText('开始这段学习'));
     expect(queryByPlaceholderText('邮箱')).toBeTruthy();
   });
 

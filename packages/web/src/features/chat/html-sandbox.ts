@@ -24,24 +24,28 @@ export function htmlSourceError(code: string): string {
  * CSP sandbox is NOT supported in meta: isolation comes from the iframe attribute.
  * CSP restricts resource/connection APIs, not all self-navigation or CPU consumption.
  */
-export function buildHtmlSandbox(code: string, runId: string, parentOrigin: string): string {
+export function buildHtmlSandbox(code: string, runId: string, parentOrigin: string, staticOnly = false): string {
   const error = htmlSourceError(code);
   if (error) throw new Error(error);
-  return `<!doctype html><html lang="zh"><head><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="${HTML_CSP}">
+  const policy = staticOnly ? HTML_CSP.replace("script-src 'unsafe-inline'", "script-src 'none'") : HTML_CSP;
+  const head = `<!doctype html><html lang="zh"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="${policy}">
 <meta name="referrer" content="no-referrer"><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>html{color-scheme:light;background:#fff}body{margin:0;padding:16px;font:16px/1.5 system-ui,sans-serif;color:#18202e;overflow-wrap:anywhere}*,*::before,*::after{box-sizing:border-box}img,svg,canvas{max-width:100%}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}</style>
-<script>(()=>{
+${staticOnly ? '' : `<script>(()=>{
+  const sourceLine=0;
   const runId=${literal(runId)},host=${literal(parentOrigin)},send=parent.postMessage.bind(parent);
   const report=(event,extra={})=>send({type:'sb-html-card',v:1,runId,event,...extra},host);
-  let timer=0;
+  let timer=0,lastHeight=-1,warnings=0;
   const measure=()=>{if(timer)return;timer=setTimeout(()=>{timer=0;
     const b=document.body;if(!b)return;
-    report('resize',{height:Math.max(b.scrollHeight,b.getBoundingClientRect().height)});
+    const height=Math.ceil(Math.max(b.scrollHeight,b.getBoundingClientRect().height));
+    if(height!==lastHeight){lastHeight=height;report('resize',{height});}
   },100);};
-  addEventListener('error',()=>report('error',{message:'卡片脚本或资源运行失败，请查看源码后重播。'}));
-  addEventListener('unhandledrejection',()=>report('error',{message:'卡片脚本发生未处理的错误。'}));
-  addEventListener('securitypolicyviolation',()=>report('error',{message:'已阻止卡片加载外部资源或使用受限能力。'}));
+  const warn=message=>{if(warnings++<3)report('warning',{message:String(message).slice(0,240)});};
+  addEventListener('error',e=>warn('卡片脚本异常'+(e.lineno?'（HTML 第 '+Math.max(1,e.lineno-sourceLine+1)+' 行）':'')+'：'+(e.message||'资源未能加载')+'；已保留可显示内容。'));
+  addEventListener('unhandledrejection',e=>warn('卡片异步脚本异常：'+String(e.reason?.message||e.reason||'未知错误').slice(0,160)+'；已保留可显示内容。'));
+  addEventListener('securitypolicyviolation',()=>warn('已阻止卡片加载外部资源或使用受限能力；请改成全部内联的自包含卡片。'));
   document.addEventListener('click',e=>{
     const a=e.target instanceof Element?e.target.closest('a[href]'):null;if(!a)return;
     e.preventDefault();const href=a.getAttribute('href')||'';
@@ -51,14 +55,16 @@ export function buildHtmlSandbox(code: string, runId: string, parentOrigin: stri
   document.addEventListener('submit',e=>e.preventDefault(),true);
   addEventListener('DOMContentLoaded',()=>{
     report('ready');measure();
-    new ResizeObserver(measure).observe(document.body);
-    new MutationObserver(measure).observe(document.body,{childList:true,subtree:true,characterData:true});
+    if(typeof ResizeObserver==='function')new ResizeObserver(measure).observe(document.body);
+    if(typeof MutationObserver==='function')new MutationObserver(measure).observe(document.body,{childList:true,subtree:true,characterData:true});
   },{once:true});
   addEventListener('resize',measure);
-})();</script></head><body>${code}</body></html>`;
+})();</script>`}</head><body>`;
+  // The marker precedes every interpolated literal; only trusted head text is replaced.
+  return head.replace('const sourceLine=0;', `const sourceLine=${head.split('\n').length};`) + code + '</body></html>';
 }
 
-export type HtmlReport = { event: 'ready' } | { event: 'resize'; height: number } | { event: 'error'; message: string };
+export type HtmlReport = { event: 'ready' } | { event: 'resize'; height: number } | { event: 'error' | 'warning'; message: string };
 
 /** Origin null is NOT identity. The caller must also match event.source to its exact frame. */
 export function readHtmlReport(value: unknown, runId: string): HtmlReport | null {
@@ -69,6 +75,6 @@ export function readHtmlReport(value: unknown, runId: string): HtmlReport | null
   if (d.event === 'resize' && typeof d.height === 'number' && Number.isFinite(d.height) && d.height >= 0) {
     return { event: 'resize', height: Math.max(HTML_MIN_HEIGHT, Math.min(HTML_MAX_HEIGHT, Math.ceil(d.height))) };
   }
-  if (d.event === 'error' && typeof d.message === 'string') return { event: 'error', message: d.message.slice(0, 240) || '卡片运行失败。' };
+  if ((d.event === 'error' || d.event === 'warning') && typeof d.message === 'string') return { event: d.event, message: d.message.slice(0, 240) || '卡片运行失败。' };
   return null;
 }

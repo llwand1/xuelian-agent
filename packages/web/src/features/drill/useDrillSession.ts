@@ -363,7 +363,7 @@ export function useDrillSession({ open, sessionId, dayKey, audio, onCardResolved
 
   const dontKnow = useCallback(() => answer(null), [answer]);
   const pass = useCallback(() => {
-    if (phaseRef.current !== 'question') return;
+    if (phaseRef.current !== 'question' && phaseRef.current !== 'learn') return;
     phaseRef.current = 'reveal'; clearAdvance();
     setPhase('reveal'); setResult({ correct: false, answer: null, slain: true });
     setFx({ kind: 'slay', key: ++fxKey.current });

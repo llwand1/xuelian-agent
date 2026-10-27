@@ -67,6 +67,19 @@ internal static class HtmlCardSmoke
                     Check(nativeTopMessages == 0, "Untrusted iframe cannot reach the actual top-level native message channel");
                     Check(trustedChildMessages == 0, "Even observed child bridge messages fail the installed source predicate");
                     Check(popups == 0, "Sandbox never requests a native popup window");
+                    view.CoreWebView2.Navigate(url + "/runtime");
+                    await Wait(view, "location.pathname==='/runtime' && !!window.fixtureWarning");
+                    Check(await view.CoreWebView2.ExecuteScriptAsync("window.fixtureWarning.includes('target.querySelectorAll') && window.fixtureWarning.includes('HTML 第 1 行')") == "true", "WebView2 reports the real callback failure with original HTML line");
+                    Check(await child.ExecuteScriptAsync("document.querySelector('#baseline').textContent==='核心静态内容仍可阅读'") == "true", "Callback failure preserves the existing readable document");
+                    view.CoreWebView2.Navigate(url + "/repaired");
+                    await Wait(view, "location.pathname==='/repaired' && window.fixtureReady===true"); await Task.Delay(200);
+                    Check(await view.CoreWebView2.ExecuteScriptAsync("!window.fixtureWarning") == "true" && await child.ExecuteScriptAsync("document.querySelector('i').style.color==='green'") == "true", "Renamed closure variables execute without warnings in WebView2");
+                    view.CoreWebView2.Navigate(url + "/static");
+                    await Wait(view, "location.pathname==='/static' && window.fixtureLoaded===true");
+                    string staticState = await child.ExecuteScriptAsync("typeof window.staticScriptRan==='undefined' && !!document.querySelector('h2')");
+                    Check(staticState == "null", "Script-disabled WebView2 frame rejects even native frame script evaluation");
+                    Check(await view.CoreWebView2.ExecuteScriptAsync("document.querySelector('iframe').getAttribute('sandbox')==='' && document.querySelector('iframe').srcdoc.includes(\"script-src 'none'\")") == "true", "Static fallback has both iframe and CSP script restrictions");
+                    using (var shot = File.Create(Path.Combine(evidence, "webview2-static.png"))) await view.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, shot);
                     File.WriteAllText(Path.Combine(evidence, "native-result.json"), new JavaScriptSerializer().Serialize(new { checks = checks, nativeTopMessages = nativeTopMessages, childNativeMessages = childNativeMessages, trustedChildMessages = trustedChildMessages, result = values }));
                     Console.WriteLine("Native HTML sandbox: " + checks + " assertions passed"); exit = 0;
                 }

@@ -1,17 +1,22 @@
 {
   "name": "@sb/web",
-  "version": "0.2.188",
+  "version": "0.2.189",
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node ../../tools/external-agent/package-bridges.mjs",
+    "prebuild": "node ../../tools/external-agent/package-bridges.mjs",
     "dev": "vite",
     "build": "tsc --noEmit -p . && vite build"
   },
   "dependencies": {
     "@sb/open-engine": "0.1.0",
     "@sb/shared": "*",
+    "acorn": "8.18.0",
+    "eslint-scope": "8.4.0",
     "katex": "0.19.0",
     "mermaid": "12.1.0",
+    "parse5": "7.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

@@ -6,24 +6,26 @@ import { OpenerQuestion } from './OpenerQuestion';
 import { CampfireShortcuts, type StudyPortalControls } from './StudyPortalLink';
 import './campfire-opener.css';
 
-export function Welcome({ onPick, blocked = false, frozen = false, onAsk, onEnter, travelling }: StudyPortalControls & {
+export function Welcome({ onPick, blocked = false, frozen = false, onAsk, onEnter, travelling, externalAgent = '' }: StudyPortalControls & {
   onPick: (text: string) => void;
   blocked?: boolean;
   frozen?: boolean;
   onAsk?: () => void;
+  externalAgent?: string;
 }) {
   const exam = useExamScope();
   const scopeKey = `${exam.on}:${exam.summary}`;
-  const opener = useCampfireOpener(scopeKey, !blocked && !frozen && !exam.loading, frozen);
+  const opener = useCampfireOpener(scopeKey, !externalAgent && !blocked && !frozen && !exam.loading, frozen);
   return (
     <div className="welcome welcome-campfire campfire-entering">
       <p className="welcome-eyebrow">CAMPFIRE · 篝火营地</p>
       <PixelScene />
-      <p className="welcome-hi">先来一道，聊起来就容易了。</p>
+      <p className="welcome-hi">{externalAgent ? '从一个问题开始，和外置 Agent 聊聊。' : '先来一道，聊起来就容易了。'}</p>
       <p className="welcome-sub">{exam.on && exam.summary ? `在${exam.summary}范围内，先热个身。` : '从一个小问题，开启今天的冒险。'}</p>
       <CampfireShortcuts onEnter={onEnter} travelling={travelling} />
       <div className="opener-stage">
-        {opener.status === 'ready' && opener.value ? <OpenerQuestion key={opener.value.id} opener={opener.value} onPick={onPick} onNext={opener.retry} blocked={blocked} />
+        {externalAgent ? <div className="opener-pending" role="status"><p>当前选择：{externalAgent}</p><p className="opener-loading-hint">直接在下方发送文字；开场召题仍需原模型，此模式不自动调用它。</p></div>
+          : opener.status === 'ready' && opener.value ? <OpenerQuestion key={opener.value.id} opener={opener.value} onPick={onPick} onNext={opener.retry} blocked={blocked} />
           : <div className={`opener-pending${opener.status === 'error' ? ' opener-failed' : ''}`} role="status" aria-live="polite">
             <div className="opener-rune" aria-hidden="true"><span /><span /><span /><span /></div>
             <p>{blocked ? '正在开启对话…' : opener.status === 'error' ? '这次召题没有完成' : '篝火正在召来一道新题…'}</p>

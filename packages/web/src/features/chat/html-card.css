@@ -8,7 +8,9 @@
 .html-card-actions button:focus-visible { outline: 2px solid #2a6f9d; outline-offset: 2px; }
 .html-card-frame { display: block; width: 100%; height: var(--sb-html-height, 180px); border: 0; background: #fff; }
 .html-card-expanded .html-card-frame { height: min(80vh, 960px); min-height: 260px; }
-.html-card-status, .html-card-error { margin: 0; padding: 16px; font-size: 13px; line-height: 1.6; }
+.html-card-status, .html-card-error, .html-card-warning { margin: 0; padding: 16px; font-size: 13px; line-height: 1.6; white-space: pre-line; }
+.html-card-warning { color: #795012; background: #fff7e5; overflow-wrap: anywhere; }
+.html-card-actions button:disabled { opacity: .5; cursor: not-allowed; }
 .html-card-status { color: #52697a; }
 .html-card-error { color: #9b2334; background: #fff1f2; overflow-wrap: anywhere; }
 .html-card-source { max-height: 400px; overflow: auto; margin: 0; padding: 14px; border-top: 1px solid #dce4e9; background: #f7fafc; color: #18202e; font: 12px/1.6 ui-monospace, monospace; white-space: pre; }

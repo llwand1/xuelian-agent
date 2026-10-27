@@ -19,6 +19,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { createPortal } from 'react-dom';
 import { useTermIndex } from './term-index';
 import { TermCard } from './TermCard';
+import { useQuoteBranch } from './quote-branch-context';
+import { anchorFromElement } from './quote-anchors';
 
 interface Active {
   term: string;
@@ -59,6 +61,7 @@ function placeCard(card: HTMLElement, anchor: HTMLElement): void {
 
 export function TermText({ text }: { text: string }) {
   const { ready, find, lookup, refresh, openTerms, followUp } = useTermIndex();
+  const branch = useQuoteBranch();
   /** 命中在索引就绪前恒为空 ⇒ 首屏不闪、不误标 */
   const hits = useMemo(() => (ready ? find(text) : []), [ready, find, text]);
 
@@ -204,7 +207,11 @@ export function TermText({ text }: { text: string }) {
                 onClose={closeNow}
                 onChanged={refresh}
                 {...(openTerms ? { onOpenTerms: openTerms } : {})}
-                {...(followUp ? { onFollowUp: followUp } : {})}
+                {...(active.anchor.closest('.quote-branch-window') ? {} : branch.available && active.anchor.closest('.chat-bubble.md') ? { followUpMode: 'branch' as const, onFollowUp: async (term: string, question?: string) => {
+                  const anchor = anchorFromElement(active.anchor);
+                  if (!anchor) throw new Error('这条回答尚未保存，请等回复完成后再追问');
+                  closeNow(); await branch.ask(anchor, question || `请结合原文解释“${term}”，举一个容易理解的例子。`);
+                } } : followUp ? { onFollowUp: followUp } : {})}
               />
             </div>,
             document.body,

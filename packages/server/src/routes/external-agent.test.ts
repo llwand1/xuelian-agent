@@ -1,0 +1,30 @@
+import { beforeEach, afterEach, expect, it, vi } from 'vitest';
+import express from 'express';
+import request from 'supertest';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { DEFAULT_EXTERNAL_AGENT } from '@sb/shared';
+vi.mock('../storage/crypto.js', () => ({ encryptSecret: (v: string) => v ? 'enc-fixture:' + v : '', decryptSecret: (v: string) => v.replace('enc-fixture:', '') }));
+import { openIsolated, closeDb } from '../storage/db.js';
+import { originCheck } from '../security.js';
+import { externalAgentRouter } from './external-agent.js';
+let dir: string;
+const app = express(); app.use(express.json(), originCheck); app.use('/agent', externalAgentRouter);
+beforeEach(() => { vi.stubEnv('SB_EXTERNAL_AGENT', '1'); vi.stubEnv('SB_DESKTOP', '0'); vi.stubEnv('SB_HOST', '127.0.0.1'); dir = mkdtempSync(join(tmpdir(), 'sb-agent-routes-')); openIsolated(dir); });
+afterEach(() => { closeDb(); rmSync(dir, { recursive: true, force: true }); vi.unstubAllEnvs(); });
+it('requires loopback launch, host and permitted browser origin for configuration writes', async () => {
+  await request(app).put('/agent').send(DEFAULT_EXTERNAL_AGENT).expect(403);
+  await request(app).put('/agent').set('Origin', 'http://127.0.0.1').set('Host', 'evil.example').send(DEFAULT_EXTERNAL_AGENT).expect(403);
+  vi.stubEnv('SB_HOST', '0.0.0.0');
+  expect((await request(app).get('/agent').set('Host', '127.0.0.1')).body.supported).toBe(false);
+  await request(app).put('/agent').set('Origin', 'http://127.0.0.1').set('Host', '127.0.0.1').send(DEFAULT_EXTERNAL_AGENT).expect(403);
+});
+it('returns metadata only, validates before saving and retains original configuration on a bad request', async () => {
+  const put = (body: Record<string, unknown>) => request(app).put('/agent').set('Host', '127.0.0.1').set('Origin', 'http://127.0.0.1').send(body);
+  const saved = await put({ ...DEFAULT_EXTERNAL_AGENT, enabled: true, token: 'only-in-this-request' }).expect(200);
+  expect(saved.body.tokenConfigured).toBe(true); expect(JSON.stringify(saved.body)).not.toContain('only-in-this-request');
+  await put({ ...DEFAULT_EXTERNAL_AGENT, baseUrl: 'http://example.com' }).expect(400);
+  const result = await request(app).get('/agent').set('Host', '127.0.0.1').expect(200);
+  expect(result.body.settings.enabled).toBe(true); expect(result.body.token).toBeUndefined();
+});

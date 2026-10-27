@@ -6,9 +6,14 @@
  * · 未登录 + cloud → 落地页。
  */
 import { describe, expect, it } from 'vitest';
-import { entryFor } from './entry';
+import { entryFor, isWelcomeRoute } from './entry';
 
 describe('app/entry — 启动渲染分支（AUTH-SPEC §2.9）', () => {
+  it('独立介绍地址只选择公开门面，不修改本地/线上应用鉴权规则', () => {
+    expect(isWelcomeRoute('#/welcome')).toBe(true); expect(isWelcomeRoute('#/welcome?lang=en')).toBe(true);
+    for (const hash of ['#/', '#/float', '#/welcomex', '#/pk']) expect(isWelcomeRoute(hash)).toBe(false);
+    expect(entryFor(null, 'cloud')).toBe('landing'); expect(entryFor(null, 'local')).toBe('app');
+  });
   it('已登录 → 应用壳，形态无关（cloud/local 一致）', () => {
     const user = { id: 'u-1', email: 'a@b.com', nickname: 'A', createdAt: '2026-09-20 00:00:00' };
     expect(entryFor(user, 'cloud')).toBe('app');

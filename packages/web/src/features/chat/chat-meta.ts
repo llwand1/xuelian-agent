@@ -5,6 +5,7 @@
 
 /** 工具中文名。新工具在 `server/chat/tools.ts` 注册后在此补一行。 */
 const TOOL_LABELS: Record<string, string> = {
+  external_agent: '外置 Agent',
   plugin_tools: '查看插件工具',
   plugin_call: '调用插件',
   search_web: '联网搜索',

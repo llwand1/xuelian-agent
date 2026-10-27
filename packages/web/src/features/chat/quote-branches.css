@@ -1,0 +1,32 @@
+::highlight(sb-quote-branch) { background-color: #f8dd886b; color: inherit; text-decoration: underline dotted #bc7a28 2px; }
+.quote-branch-window { --sb-ink: #293342; --sb-ink-secondary: #526070; --sb-ink-tertiary: #6b7783; --sb-surface: #f1f4f6; --sb-bg: #fffdf8; --sb-sidebar: #e9eef3; --sb-line: #d4dce2; --sb-primary: #845727; --sb-primary-weak: #f4e9d4; }
+.quote-branch-window .md-pre pre { background: #202b38; color: #e7edf5; }
+.quote-branch-hover { cursor: pointer; }
+.quote-branch-links { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; padding-top: 8px; border-top: 1px dashed #b8935155; }
+.quote-branch-links button { border: 1px dashed #bd934e; border-radius: 5px; background: #a47c191a; color: inherit; font: inherit; font-size: 12px; padding: 4px 8px; cursor: pointer; }
+.quote-branch-window { position: fixed; z-index: 1500; right: 22px; bottom: 24px; width: min(440px, calc(100vw - 24px)); height: min(620px, calc(100dvh - 40px)); min-width: 300px; min-height: 320px; max-width: calc(100vw - 16px); max-height: calc(100dvh - 16px); display: flex; flex-direction: column; resize: both; overflow: hidden; border: 1px solid #a8783c; border-radius: 14px; background: #fffdf8; color: #293342; box-shadow: 0 18px 70px #0006, 0 2px 12px #0002; font: 14px/1.6 system-ui,sans-serif; }
+.quote-branch-window.quote-branch-moved { left: var(--qb-x); top: var(--qb-y); right: auto; bottom: auto; }
+.quote-branch-title { display: flex; flex: none; align-items: center; justify-content: space-between; padding: 12px 15px; background: #f4ead8; border-bottom: 1px solid #decdb0; cursor: move; touch-action: none; user-select: none; }
+.quote-branch-title strong { display: block; font-size: 15px; color: #704514; }
+.quote-branch-title span { display: block; font-size: 11px; color: #78684d; }
+.quote-branch-title button { border: 0; background: transparent; font-size: 24px; color: #67513c; cursor: pointer; padding: 0 5px; }
+.quote-branch-quote { flex: none; margin: 12px 14px 4px; border-left: 3px solid #bd934e; padding: 7px 10px; background: #f6f0e3; color: #725a37; font-size: 12px; max-height: 100px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.quote-branch-log { flex: 1; min-height: 0; overflow: auto; padding: 8px 14px 14px; overscroll-behavior: contain; }
+.quote-branch-message { margin-top: 12px; padding: 9px 11px; border-radius: 9px; background: #f1f4f6; overflow-wrap: anywhere; }
+.quote-branch-message.user { margin-left: 25px; background: #f4e9d4; }
+.quote-branch-message small { color: #7a776f; font-size: 10px; }
+.quote-branch-message p { margin: 5px 0; white-space: pre-wrap; }
+.quote-branch-message pre { overflow: auto; max-width: 100%; background: #e6ebef; color: #263746; padding: 8px; border-radius: 6px; }
+.quote-branch-message svg { max-width: 100%; }
+.quote-branch-message .md-code-head { color: #263746; background: #e6ebef; }
+.quote-branch-hint { color: #807969; font-size: 12px; }
+.quote-branch-error { margin: 6px 14px; color: #a22e2e; font-size: 12px; overflow-wrap: anywhere; }
+.quote-branch-message .quote-branch-error { margin: 6px 0; }
+.quote-branch-composer { flex: none; padding: 10px 12px; border-top: 1px solid #e5dac5; background: #fffdf8; }
+.quote-branch-composer textarea { display: block; box-sizing: border-box; resize: vertical; min-height: 58px; max-height: 160px; width: 100%; padding: 8px 10px; border: 1px solid #d2bea0; border-radius: 8px; background: #fff; color: #293342; font: inherit; font-size: 13px; }
+.quote-branch-composer>div { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.quote-branch-composer span { font-size: 10px; color: #938571; }
+.quote-branch-composer button { border: 0; border-radius: 6px; padding: 6px 12px; background: #845727; color: white; cursor: pointer; font: inherit; font-size: 12px; }
+.quote-branch-window button:disabled { opacity: .5; cursor: not-allowed; }
+.quote-branch-window button:focus-visible, .quote-branch-links button:focus-visible { outline: 2px solid #b9873f; outline-offset: 2px; }
+@media(max-width:600px) { .quote-branch-window { right: 12px; bottom: 12px; width: calc(100vw - 24px); height: min(74dvh, 600px); min-width: 0; resize: none; } .quote-branch-title { cursor: default; } }

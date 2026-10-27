@@ -4,6 +4,7 @@ import './campfire-handoff.css';
 
 export function CampfireWelcome({ frozen, leaving, ...props }: StudyPortalControls & {
   frozen: boolean; leaving: boolean; blocked: boolean; onPick: (text: string) => void; onAsk: () => void;
+  externalAgent?: string;
 }) {
   return <div className={`chat-welcome-shell${leaving ? ' is-leaving' : ''}`} aria-hidden={frozen || undefined}
     ref={node => node?.toggleAttribute('inert', frozen)}>

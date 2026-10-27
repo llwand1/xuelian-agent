@@ -31,6 +31,19 @@ describe('HTML document boundary', () => {
       { ...good, runId: 'old' }, { ...good, event: 'tool' }, { ...good, height: Infinity }, { ...good, height: -1 }, { ...good, height: '20' }]) expect(readHtmlReport(value, 'r')).toBeNull();
     expect(readHtmlReport({ ...good, event: 'ready' }, 'r')).toEqual({ event: 'ready' });
     expect(readHtmlReport({ ...good, event: 'error', message: 'x'.repeat(500) }, 'r')).toEqual({ event: 'error', message: 'x'.repeat(240) });
+    expect(readHtmlReport({ ...good, event: 'warning', message: 'TypeError' }, 'r')).toEqual({ event: 'warning', message: 'TypeError' });
+  });
+  it('static fallback removes script capability and bootstrap; runtime diagnostics keep original source lines', () => {
+    const code = '<p>baseline</p>\n<script>throw Error("demo")</script>';
+    const staticDoc = buildHtmlSandbox(code, 'r', 'https://study.example', true);
+    expect(staticDoc).toContain("script-src 'none'");
+    expect(staticDoc).not.toContain('postMessage.bind');
+    expect(staticDoc).toContain(code);
+    const doc = buildHtmlSandbox(code, 'r', 'https://study.example');
+    const sourceLine = Number(/const sourceLine=(\d+)/.exec(doc)?.[1]);
+    expect(sourceLine).toBe(doc.slice(0, doc.indexOf(code)).split('\n').length);
+    expect(doc).toContain("report('warning'");
+    expect(doc).toContain('height!==lastHeight');
   });
 });
 

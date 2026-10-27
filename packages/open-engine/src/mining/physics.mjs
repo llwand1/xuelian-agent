@@ -1,5 +1,5 @@
 import { TILE, BLOCKS, BLOCK, WIDTH, HEIGHT } from './world.mjs';
-export const FEEL = Object.freeze({ tick: 1 / 60, speed: 270, acceleration: 540, deceleration: 1080, gravity: 2160, jumpSpeed: 450.9, fallSpeed: 900, jumpHold: .25, coyote: .09, buffer: .12, step: 24.1 });
+export const FEEL = Object.freeze({ tick: 1 / 60, speed: 270, acceleration: 900, deceleration: 1500, gravity: 2160, jumpSpeed: 450.9, fallSpeed: 900, jumpHold: .25, coyote: .09, buffer: .12, step: 24.1 });
 export function createPlayer(spawn) {
   return { x: spawn.x, y: spawn.y, w: 18, h: 38, vx: 0, vy: 0, grounded: false, coyote: 0, jumpBuffer: 0, hold: 0, dropping: 0, facing: 1, walk: 0, renderOffset: 0 };
 }

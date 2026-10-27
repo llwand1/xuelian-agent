@@ -10,3 +10,9 @@ it('keeps a focused menu; desktop screenshot/reading are actions, removed duplic
   expect(buildComposerMenuItems({...deps,desktop:false}).map(t=>t.key)).toEqual(['quiz','online','grill']);
   expect(buildComposerMenuItems({...deps,blocked:true}).filter(t=>t.kind==='action').every(t=>t.disabled)).toBe(true);
 });
+it('marks external-agent chat as text-only and disables native online/GrillMe switches', () => {
+  const items = buildComposerMenuItems({ sessionId:'s', blocked:false, quizzing:false, onQuiz:vi.fn(), online:true, setOnline:vi.fn(), mixTip:'', grillMe:false, setGrillMe:vi.fn(), externalAgent:'Codex' });
+  const online = items.find(item => item.key === 'online');
+  expect(online?.disabled).toBe(true); if (online?.kind === 'toggle') expect(online.on).toBe(false);
+  expect(items.find(item => item.key === 'grill')?.disabled).toBe(true);
+});

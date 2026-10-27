@@ -170,10 +170,10 @@ describe('对话体验：错误重试 / 发送后焦点 / 引用追问挂线', (
     expect(document.activeElement).toBe(ta);
   });
 
-  it('引用追问：选中助手正文 → 浮出小牌 → 点击后引用块进输入框并聚焦', () => {
+  it('划线追问打开隐藏小窗，不再修改主输入框', () => {
     vi.useFakeTimers();
     Range.prototype.getBoundingClientRect = () => ({ left: 0, right: 0, top: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect; // jsdom 未实现
-    const { container } = mount({ messages: [user, { role: 'assistant' as const, content: '闭包＝函数 + 词法环境。' }] });
+    const { container } = mount({ messages: [user, { id: 'saved-answer', role: 'assistant' as const, content: '闭包＝函数 + 词法环境。' }] });
     const bubble = container.querySelector('.chat-row:not(.user) .chat-bubble.md') as HTMLElement;
     const textNode = bubble.querySelector('p')?.firstChild ?? bubble.firstChild!;
     const range = document.createRange();
@@ -187,11 +187,14 @@ describe('对话体验：错误重试 / 发送后焦点 / 引用追问挂线', (
       vi.advanceTimersByTime(200);
     });
     const btn = container.querySelector('.chat-quote-btn') as HTMLButtonElement;
-    expect(btn?.textContent).toContain('引用追问');
+    expect(btn?.textContent).toContain('小窗追问');
     fireEvent.click(btn);
     const ta = container.querySelector('textarea') as HTMLTextAreaElement;
-    expect(ta.value).toBe('> 闭包\n\n');
-    expect(document.activeElement).toBe(ta);
+    expect(ta.value).toBe('');
+    const popup = document.querySelector('[role="dialog"][aria-label="小窗分支追问"]');
+    expect(popup?.textContent).toContain('隐藏分支');
+    expect(popup?.textContent).toContain('闭包');
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('分支追问内容');
     expect(container.querySelector('.chat-quote-btn')).toBeNull();
     vi.useRealTimers();
   });

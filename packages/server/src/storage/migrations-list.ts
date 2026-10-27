@@ -73,6 +73,7 @@ import { MIGRATIONS_V61 } from './migrations-list-v61.js';
 import { MIGRATIONS_V62 } from './migrations-list-v62.js';
 import { MIGRATIONS_V63 } from './migrations-list-v63.js';
 import { MIGRATIONS_V64 } from './migrations-list-v64.js';
+import { MIGRATIONS_V65 } from './migrations-list-v65.js';
 import type Database from 'better-sqlite3';
 
 export const MIGRATIONS: Array<{ version: number; statements: string[]; after?: (db: Database.Database) => void }> = [
@@ -105,4 +106,5 @@ export const MIGRATIONS: Array<{ version: number; statements: string[]; after?: 
   ...MIGRATIONS_V62,
   ...MIGRATIONS_V63,
   ...MIGRATIONS_V64,
+  ...MIGRATIONS_V65,
 ];

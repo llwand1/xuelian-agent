@@ -1,88 +1,18 @@
-.drill-stage.is-game { width: min(960px, calc(100vw - 32px)); }
-.drill-stage.is-game .drill-body { position: relative; padding: 0; }
-.mining-stage { position: relative; background: #171521; border: 2px solid #806239; color: #e8d5af; overflow: hidden; }
-.mining-canvas { display: block; width: 100%; height: clamp(250px, 43vh, 480px); image-rendering: pixelated; touch-action: none; cursor: crosshair; outline-offset: -4px; }
-.mining-hud { position: absolute; top: 12px; left: 12px; display: grid; gap: 4px; padding: 8px 12px; background: #201b2ce8; border: 1px solid #be9b54; pointer-events: none; font-size: 12px; }
-.mining-hud span { color: #b8ac95; font-size: 11px; }
-.mining-controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; border-top: 2px solid #765d3d; background: #25212b; }
-.mining-controls button, .mining-mode button, .mining-links button { color: #ead8b3; border: 1px solid #816b44; background: #342a30; padding: 6px 12px; min-height: 36px; font: inherit; cursor: pointer; }
-.mining-controls button:disabled { opacity: .5; cursor: default; }
-.mining-controls button.primary, .mining-mode button[aria-pressed="true"] { border-color: #e9c679; background: #58432d; }
-.mining-hint, .mining-save-notice { margin: 0; padding: 7px 12px; font-size: 12px; line-height: 1.5; }
-.mining-save-notice { color: #ffd58b; }
-.mining-mode { display: flex; gap: 4px; align-items: center; }
-.mining-mode button { min-height: 30px; font-size: 12px; padding: 4px 8px; }
-.mining-encounter { position: absolute; z-index: 3; top: 8px; bottom: 8px; right: 8px; width: min(440px, calc(100% - 16px)); max-height: calc(100% - 16px); overflow: auto; overscroll-behavior: contain; background: #211c29f5; border: 2px solid #caa65f; box-shadow: 5px 5px 0 #08070b99; padding: 14px; }
-.mining-encounter .drill-card { padding: 6px; }
-.mining-encounter .drill-opts { gap: 7px; }
-.mining-encounter .drill-opt { min-height: 42px; }
-.mining-encounter .drill-term { font-size: 24px; }
-.mining-encounter .drill-prompt { font-size: 17px; white-space: pre-line; }
-.mining-close-card { display: block; margin-left: auto; background: #342a30; border: 1px solid #816b44; color: #e8d5af; padding: 5px 10px; cursor: pointer; }
-.mining-links { display: flex; gap: 8px; flex-wrap: wrap; padding: 4px 16px 10px; }
-.mining-inline { width: 100%; min-width: 0; position: relative; }
-.mining-inline .drill-stage { width: 100%; max-height: none; position: static; transform: none; animation: none; }
-.mining-companions { padding: 12px 20px; color: #e8d5af; border: 1px solid #806239; margin: 0 14px 14px; }
-.mining-companions p { font-size: 13px; }
-.mining-companions select { max-width: 100%; padding: 6px; background: #25212b; color: #e8d5af; border: 1px solid #806239; }
-.mining-inline .drill-head { cursor: default; flex-wrap: wrap; }
-.mining-inline .drill-body { max-height: none; }
-body .sb-shell .mining-inline .drill-stage { position: static; inset: auto; width: 100%; max-width: 100%; max-height: none; overflow: visible; box-sizing: border-box; }
-body .sb-shell .mining-inline .drill-body { flex: 0 0 auto; max-height: none; overflow: visible; }
-.mining-page { width: 100%; max-width: 1400px; margin: 0 auto; padding: 14px; }
-.mining-page h1 { font-size: 23px; color: #ecd7aa; margin: 0 0 8px; }
-.mining-page > p { color: #b6aba0; font-size: 13px; margin: 0 0 12px; }
-.mining-page .drill-notice { min-height: 30px; }
-@media (max-width: 700px) {
-  .drill-stage.is-game { width: 100%; }
-  .is-game .drill-head { flex-wrap: wrap; gap: 6px; }
-  .mining-canvas { height: clamp(230px, 34dvh, 340px); }
-  .mining-encounter { position: relative; inset: auto; width: 100%; max-height: 44dvh; box-sizing: border-box; box-shadow: none; border-width: 2px 0 0; }
-  .mining-page { padding: 6px; }
-  .mining-controls { gap: 5px; }
-  .mining-controls button { min-height: 40px; padding: 6px 10px; }
-  .mining-hint { font-size: 11px; }
-}
-@media (prefers-reduced-motion: reduce) { .mining-stage *, .mining-encounter * { animation: none !important; } }
-.mining-battle { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 10px; }
-.mining-battle.has-question { grid-template-columns: minmax(0, 1fr) minmax(280px, 380px); align-items: start; }
-.mining-battle-top { grid-column: 1 / -1; padding: 12px; border: 1px solid #705b43; background: #221c29; color: #e8d5af; }
-.mining-vitals, .mining-deck, .mining-battle-buttons, .mining-setting-buttons { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.mining-vitals { font-size: 12px; gap: 18px; }
-.mining-vitals label { display: flex; gap: 8px; align-items: center; }
-.mining-vitals progress { width: 90px; height: 10px; accent-color: #94c99c; }
-.mining-deck { margin-top: 10px; gap: 6px; }
-.mining-deck span { border: 1px solid #645066; padding: 4px 8px; font-size: 12px; border-radius: 4px; }
-.mining-deck [aria-current] { border: 2px solid #e5c685; background: #4d3b30; }
-.mining-round-status { min-height: 1.5em; font-size: 13px; margin: 8px 0; }
-.mining-battle button { cursor: pointer; color: #ead8b3; background: #342a30; border: 1px solid #816b44; padding: 6px 10px; min-height: 32px; font: inherit; }
-.mining-battle button:disabled { cursor: default; opacity: .45; }
-.mining-battle .mining-canvas { height: clamp(260px, 42vh, 440px); }
-.mining-question-gate { border: 0; padding: 0; margin: 0; min-width: 0; }
-.mining-battle .mining-encounter { position: relative; inset: auto; width: auto; max-height: 64vh; margin: 0; box-sizing: border-box; box-shadow: none; }
-.mining-combat-event { margin: 10px 0 0; color: #afcabb; min-height: 1.5em; font-size: 12px; }
-.mining-live-strip { font-size: 11px; padding: 5px 8px; background: #201b2c; border-bottom: 1px solid #705b43; color: #e8d5af; }
-.mining-battle-log { font-size: 11px; margin-top: 6px; color: #b5bba7; }
-.mining-battle-log summary { cursor: pointer; }
-.mining-battle-log ol { margin: 6px 0 0; padding-left: 20px; line-height: 1.8; }
-.mining-combat-settings { margin-top: 10px; padding: 8px; border: 1px solid #584650; font-size: 12px; }
-.mining-combat-settings summary { cursor: pointer; color: #d6be8c; }
-.mining-combat-settings label { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; max-width: 440px; margin: 8px 0; }
-.mining-combat-settings input { padding: 5px 8px; border: 1px solid #786348; color: #ead8b3; background: #1b1721; width: 7em; min-width: 0; font: inherit; }
-.mining-combat-settings p, .mining-combat-settings small { line-height: 1.65; }
-.mining-deck-editor { display: flex; flex-wrap: wrap; list-style: none; padding: 0; gap: 6px; }
-.mining-deck-editor li { display: flex; flex-wrap: wrap; align-items: center; border: 1px solid #594952; gap: 3px; padding: 4px; }
-.mining-deck-editor b { padding: 0 4px; }
-@media (max-width: 800px) {
-  .mining-battle.has-question { grid-template-columns: minmax(0, 1fr); }
-  .mining-battle .mining-encounter { max-height: 48dvh; }
-  .mining-battle .mining-canvas { height: 260px; }
-  .mining-battle { padding: 5px; }
-  .mining-battle.has-question .mining-stage { position: sticky; top: 0; z-index: 2; }
-  .mining-battle.has-question .mining-canvas { height: 120px; }
-  .mining-battle.has-question :is(.mining-hud, .mining-hint, .mining-controls) { display: none; }
-  .mining-battle.has-question .mining-encounter { scroll-margin-top: 155px; }
-}
-@media (max-width: 700px) {
-  body .sb-shell .drill-overlay .drill-stage.is-game { max-height: calc(var(--sb-visual-viewport-height, 100dvh) * .96); }
-}
+/* Scene-first layout. Questions are a separate dock, never an overlay on the canvas. */
+.drill-stage.is-game{width:min(1000px,calc(100vw - 24px))}.drill-stage.is-game .drill-body{padding:0;position:relative;overflow:auto}.is-game .drill-head{padding:4px 8px;min-height:30px;gap:6px;cursor:default}.is-game .drill-brand small,.is-game .drill-brand-tag,.is-game .drill-stats{display:none}.is-game .drill-brand b{font-size:11px}.is-game .drill-tools{margin-left:auto}.is-game .drill-icon{font-size:10px;padding:3px 6px}.mining-mode{display:flex;gap:3px;margin-left:auto}.mining-mode button{font:inherit;font-size:11px;padding:3px 6px;color:#bfc4de;border:0;background:none;cursor:pointer}.mining-mode button[aria-pressed=true]{color:#ffdf93;text-decoration:underline;text-underline-offset:5px}
+.mining-page{width:100%;max-width:1600px;box-sizing:border-box;margin:auto;padding:6px 10px}.mining-page-heading{display:flex;gap:12px;align-items:center;height:28px}.mining-page-heading h1{font-size:14px;color:#ecd7aa;margin:0}.mining-page-heading small{font-size:10px;color:#b6aba0}.mining-page>p{font-size:12px}.mining-inline{width:100%;min-width:0;position:relative}.mining-inline .drill-stage{width:100%;max-height:none;position:static;transform:none;animation:none}.mining-inline .drill-head{cursor:default}.mining-inline .drill-body{max-height:none}body .sb-shell .mining-inline .drill-stage{position:static;inset:auto;width:100%;max-width:100%;max-height:none;overflow:visible;box-sizing:border-box}body .sb-shell .mining-inline .drill-body{flex:0 0 auto;max-height:none;overflow:visible}.mining-page .drill-notice{font-size:10px;min-height:0;padding:3px 8px}
+.mining-battle{position:relative;display:flex;flex-direction:column;gap:0;padding:0;min-width:0}.mining-world-shell{position:relative;isolation:isolate}.mining-stage{position:relative;background:#171521;overflow:hidden}.mining-canvas{display:block;width:100%;height:clamp(360px,67dvh,760px);image-rendering:pixelated;touch-action:none;cursor:crosshair;outline-offset:-3px}.mining-battle.has-question .mining-canvas{height:clamp(300px,48dvh,580px)}.drill-overlay .mining-canvas{height:clamp(280px,50dvh,540px)}.drill-overlay .has-question .mining-canvas{height:clamp(240px,37dvh,420px)}
+.mining-hotbar{position:absolute;top:10px;left:10px;display:flex;gap:3px;align-items:flex-start}.mining-hotbar button,.mining-tool{width:30px;height:30px;display:grid;place-items:center;box-sizing:border-box;color:#ebd6a8;background:#1b2548b8;border:1px solid #8194b5;box-shadow:inset 0 0 0 1px #2b3a5e,1px 2px 0 #18243a80}.mining-hotbar button{cursor:pointer}.mining-tool{border-color:#f8d689;position:relative}.mining-tool small{position:absolute;top:32px;font-size:9px;white-space:nowrap;text-shadow:1px 1px #142039}.mining-glyph{width:18px;height:18px;image-rendering:pixelated;filter:drop-shadow(1px 1px 0 #17233b)}.mining-glyph.is-shield{color:#79e3e0}
+.mining-vitals{position:absolute;right:10px;top:8px;display:flex;flex-direction:column;align-items:flex-end;gap:3px;color:#fff3dc;pointer-events:none;text-shadow:1px 1px #1b2239,0 1px #1b2239}.mining-vitals small{display:block;text-align:right;font-size:10px;line-height:14px}.mining-hearts{display:flex;gap:0}.mining-heart{width:14px;height:12px;filter:drop-shadow(0 1px 0 #18243d)}.mining-guards{display:flex;gap:2px}.mining-guards span{opacity:.25}.mining-guards .is-filled{opacity:1}.mining-guards svg{width:12px;height:12px}.mining-vitals.is-critical small{color:#ffb5a8}
+.mining-round-status{position:absolute;top:58px;right:10px;max-width:220px;pointer-events:none;text-align:right;color:#fff0c2;font-size:10px;text-shadow:1px 1px #1c2539;margin:0}.mining-combat-event{position:absolute;left:50%;top:12px;transform:translateX(-50%);max-width:45%;margin:0;font-size:11px;color:#ffebbe;text-shadow:1px 1px #17233b;pointer-events:none;animation:mining-toast 3s forwards}.mining-action-dock{position:absolute;right:12px;bottom:12px;display:flex;gap:5px;align-items:flex-end}.mining-mini-action{font:inherit;font-size:10px;min-height:28px;padding:3px 6px;color:#f5e6c4;background:#18223da3;border:1px solid #8194ac;cursor:pointer}.mining-mini-action[aria-pressed=true]{color:#ffe49c;border-color:#e4c684}.mining-cast{position:relative;display:grid;place-items:center;width:52px;height:52px;border:2px solid #e0c985;outline:1px solid #243650;background:#283d60d9;color:#fff0be;box-shadow:inset 0 0 0 2px #496783,2px 3px 0 #18223980;cursor:pointer;transition:transform .08s}.mining-cast:hover:not(:disabled){background:#415a7ae8;transform:translateY(-1px)}.mining-cast:active:not(:disabled){transform:translateY(1px);box-shadow:inset 0 0 0 2px #496783}.mining-cast>.mining-glyph{width:25px;height:25px}.mining-cast kbd{position:absolute;top:1px;left:3px;font-size:9px;color:#d6e3ec}.mining-cast>span{position:absolute;bottom:-7px;right:0;white-space:nowrap;font-size:9px;color:#fff0be;background:#24344ded;padding:1px 3px}.mining-cast:disabled{filter:saturate(.4);opacity:.65;cursor:default}.mining-cast.is-pending{border-color:#9ce3d8}.mining-recover{background:#283d60;color:#ffe5a1;border:1px solid #dabe78;padding:8px;cursor:pointer;font:inherit;font-size:12px}
+.mining-touch-controls{display:none;position:absolute;left:10px;bottom:12px;gap:4px}.mining-touch-controls button{touch-action:none;width:32px;height:34px;padding:0;background:#2535538c;border:1px solid #a0afbd;color:#f1e5c8;font:inherit;font-size:22px}.mining-save-notice{position:absolute;bottom:72px;left:10px;font-size:11px;color:#ffe2ad;max-width:70%;text-shadow:1px 1px #142039;margin:0}
+.mining-question-dock{background:#172035;border-top:1px solid #6a839b;min-width:0;outline-offset:-2px}.mining-question-dock>header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 10px;background:#1d2a42}.mining-question-dock>header small{font-size:10px;color:#9cb8ce}.mining-question-dock>header button{font:inherit;font-size:11px;color:#ffe1a3;background:none;border:0;min-height:28px;cursor:pointer}.mining-question-dock kbd{font-size:9px;opacity:.65}.mining-question-gate{border:0;padding:0;margin:0;min-width:0}.mining-encounter{position:relative;box-sizing:border-box;max-height:30dvh;overflow:auto;overscroll-behavior:contain;padding:8px 12px;color:#f0dfbd;background:#172035}.mining-encounter .drill-card{padding:0;background:none;box-shadow:none;border:0}.mining-encounter .drill-chips{gap:5px;margin-bottom:5px}.mining-encounter .drill-chip{font-size:9px;padding:1px 4px;border:0;background:#27354a;color:#b7cadd}.mining-encounter :is(.drill-term,.drill-prompt){font-size:15px;line-height:1.5;margin:4px 0 7px;white-space:pre-line}.mining-encounter .drill-opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.mining-encounter .drill-opt{padding:6px 8px;min-height:34px;border:1px solid #496078;background:#202f45;font-size:12px;box-shadow:none;line-height:1.45}.mining-encounter .drill-opt kbd{min-width:16px;width:16px;height:18px;font-size:9px}.mining-encounter .drill-actions{margin-top:6px;gap:5px}.mining-encounter .drill-btn{padding:4px 8px;min-height:28px;font-size:11px;background:#24364a;border:1px solid #547082}.mining-encounter .drill-detail{margin:4px 0;padding:7px 10px;font-size:12px;border:0;border-left:2px solid #8acb9a;background:#243b3c}.mining-encounter .drill-detail.bad{border-color:#db9985;background:#3e3035}.mining-encounter .drill-def{font-size:13px;margin:5px 0}.mining-encounter .drill-src{font-size:10px}.mining-encounter .mining-links{padding:4px 0;margin:0}.mining-encounter .ti-cells{gap:2px}.mining-encounter .ti-cell{font-size:18px}
+.mining-menu{position:absolute;z-index:5;inset:12px 12px auto auto;width:min(400px,calc(100% - 24px));max-height:calc(100% - 24px);overflow:auto;box-sizing:border-box;overscroll-behavior:contain;background:#182238f5;border:1px solid #8296ac;box-shadow:3px 4px 0 #111b2dc4;color:#e3d9bf;padding:10px;font-size:12px}.mining-menu-close{display:block;margin-left:auto;font:inherit;color:#ffe4ad;border:0;background:none;min-height:30px;cursor:pointer}.mining-menu details>summary{cursor:pointer;color:#dfc28c;padding:5px 0}.mining-menu p,.mining-menu small{line-height:1.65}.mining-combat-settings{font-size:11px}.mining-combat-settings label{display:flex;justify-content:space-between;align-items:center;gap:6px;margin:8px 0}.mining-combat-settings input{font:inherit;width:5em;min-width:0;background:#10192a;border:1px solid #687b91;color:#e5d6b5;padding:4px}.mining-deck-editor{list-style:none;display:flex;flex-wrap:wrap;padding:0;gap:4px}.mining-deck-editor li{display:flex;gap:3px;align-items:center;background:#2a3547;padding:3px}.mining-menu button:not(.mining-menu-close){font:inherit;cursor:pointer;color:#e9dcc0;background:#293a51;border:1px solid #607792;padding:4px 6px}.mining-setting-buttons{display:flex;gap:5px;flex-wrap:wrap}
+.mining-links{display:flex;gap:6px;flex-wrap:wrap;padding:3px 10px}.mining-links button{font:inherit;font-size:10px;color:#c7bc9d;background:none;border:0;padding:4px 6px;cursor:pointer}.mining-companions{padding:10px 14px;color:#e8d5af;border:1px solid #806239;margin:0 10px 10px}.mining-companions p{font-size:12px}.mining-companions select{max-width:100%;padding:5px;background:#25212b;color:#e8d5af;border:1px solid #806239}
+@keyframes mining-toast{0%,70%{opacity:1}100%{opacity:0;visibility:hidden}}
+@media(pointer:coarse){.mining-touch-controls{display:flex}}
+@media(max-width:700px){.mining-page{padding:4px}.mining-page-heading{height:24px}.mining-page-heading small{font-size:9px}.is-game .drill-head{flex-wrap:wrap}.is-game .drill-brand{display:none}.is-game .mining-mode{margin-left:0}.mining-canvas{height:60dvh;min-height:340px}.mining-battle.has-question .mining-canvas{height:42dvh;min-height:280px}.mining-hotbar{top:7px;left:7px;gap:2px}.mining-hotbar button,.mining-tool{width:26px;height:26px}.mining-vitals{top:6px;right:6px}.mining-heart{width:12px;height:11px}.mining-round-status{top:51px;right:6px;max-width:60%}.mining-combat-event{top:78px;max-width:90%;width:max-content;font-size:10px}.mining-action-dock{bottom:12px;right:8px;gap:3px}.mining-mini-action{padding:4px;font-size:9px}.mining-cast{width:46px;height:46px}.mining-encounter{max-height:31dvh;padding:7px 8px}.mining-encounter .drill-opts{grid-template-columns:1fr}.mining-encounter .drill-opt{min-height:36px}.mining-encounter :is(.drill-term,.drill-prompt){font-size:14px}.mining-touch-controls{left:6px;gap:3px}.mining-touch-controls button{width:29px}.mining-question-dock>header{padding:2px 7px}body .sb-shell .drill-overlay .drill-stage.is-game{max-height:calc(var(--sb-visual-viewport-height,100dvh)*.96)}.drill-overlay .has-question .mining-canvas{min-height:220px}}
+@media(prefers-reduced-motion:reduce){.mining-cast{transition:none}.mining-combat-event{animation:none}}
+/* Undo the ordinary drill card's 400px minimum, death-fade and ornamental frame in game mode. */
+body .sb-shell .drill-stage.is-game{padding:0;gap:0;border:1px solid #506f91;background:#121c2b;box-shadow:0 2px 0 #070c13}.drill-stage.is-game::before,.drill-stage.is-game::after{display:none}.is-game .drill-head{border:0;box-shadow:none;background:#172239;min-height:28px;padding:3px 8px}.is-game .drill-brand{display:none}.is-game .mining-mode{margin-left:0}.is-game .drill-tools{margin-left:auto}body .sb-shell .mining-encounter .drill-card{min-height:0;gap:6px;padding:0;animation:none;transform:none;opacity:1}.mining-encounter .drill-card.slain :is(.drill-term,.drill-prompt){visibility:visible}
+@media(pointer:coarse){.mining-hotbar button{min-width:32px;min-height:32px}.mining-mini-action{min-height:34px}.mining-question-dock>header button{min-height:34px}}

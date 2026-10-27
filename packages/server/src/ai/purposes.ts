@@ -26,6 +26,7 @@ export interface AiPurposeInfo {
 
 export const AI_PURPOSES = {
   'chat.turn': { label: '对话回答', role: 'explain', version: 11, upstream: 'main', timeoutMs: 180_000 },
+  'chat.quote-branch': { label: '小窗分支追问', role: 'explain', version: 1, upstream: 'main', timeoutMs: 180_000 },
   'chat.opener': { label: '篝火开场题', role: 'quiz-generator', version: 3, upstream: 'main', timeoutMs: INTERACTIVE_AI_BUDGET.totalMs },
   'chat.opener.check': { label: '开场题答案核对', role: 'solver', version: 1, upstream: 'main', timeoutMs: INTERACTIVE_AI_BUDGET.totalMs },
   'desktop.study': { label: '桌面定时备题', role: 'quiz-generator', version: 1, upstream: 'background', timeoutMs: INTERACTIVE_AI_BUDGET.totalMs },

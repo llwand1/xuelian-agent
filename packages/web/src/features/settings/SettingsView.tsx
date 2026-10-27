@@ -14,6 +14,7 @@ import { AiHealthCard } from './AiHealthCard';
 import { WaitDrillCard } from './WaitDrillCard';
 import { ReadingSizeCard } from './ReadingSizeCard';
 import { AgentTermsCard } from './AgentTermsCard';
+import { ExternalAgentCard } from './ExternalAgentCard';
 import './settings.css';
 
 const GROUPS = [
@@ -21,6 +22,7 @@ const GROUPS = [
     { id: 'providers', label: '供应商管理', hint: '添加、删除服务商，管理模型列表与回答形态' },
     { id: 'roles', label: '角色模型绑定', hint: '为每个学习环节选择服务商和模型' },
     { id: 'channel', label: '默认通道与额度', hint: '查看免费额度，恢复默认模型配置' },
+    { id: 'external-agent', label: '外置 Agent 对话', hint: '用本机 Codex 或其他兼容 Agent 回答当前对话' },
   ] },
   { id: 'learning', label: '学习与出题', pages: [
     { id: 'exam', label: '考试范围', hint: '设置应试范围与学习目标' },
@@ -124,6 +126,7 @@ export function SettingsView() {
         {selected === 'wait' && <WaitDrillCard />}
         {selected === 'plugins' && <PluginsCard />}
         {selected === 'agents' && <AgentTermsCard flash={flash} />}
+        {selected === 'external-agent' && <ExternalAgentCard />}
         {selected === 'tools' && <ToolsCard flash={flash} />}
         {selected === 'health' && <AiHealthCard flash={flash} />}
       </div>

@@ -125,7 +125,7 @@ export function DrillOverlay(p: DrillOverlayProps) {
       <div className={`drill-stage${game ? ' is-game' : ''}`} ref={stage} tabIndex={-1}>
         <header className="drill-head" title="按住这里拖动小窗">
           <div className="drill-brand">
-            <span className="drill-brand-tag">WAIT</span>
+            <span className="drill-brand-tag">{game ? 'PLAY' : 'WAIT'}</span>
             <b>{p.inline ? '挖矿与复习' : '等待时刷词'}</b>
             <small className={p.busy ? 'live' : ''}>{p.busy ? 'AI 正在回复…' : p.practice ? '练习局' : '回复到了'}</small>
           </div>
@@ -184,17 +184,17 @@ export function DrillOverlay(p: DrillOverlayProps) {
 
         </div>
 
-        <p className="drill-notice" role="status" aria-live="polite">
+        {(!game || p.notice || p.newNote) && <p className="drill-notice" role="status" aria-live="polite">
           {p.notice || p.newNote}
-        </p>
-        <footer className="drill-foot">
+        </p>}
+        {!game && <footer className="drill-foot">
           <span>{p.inline ? footHint(p.phase, p.card).replace(' · Esc 收起', '') + (game ? ' · E 开始动作轮播' : '') : footHint(p.phase, p.card)}</span>
           <span className="drill-mobile-stats">
             连击 {p.stats.combo} · 答对 {p.stats.correct} · 斩 {p.stats.slain}
             {p.stats.reviewed > 0 && ` · 打卡 ${p.stats.reviewed}`}
           </span>
           <span>还有 {p.queueLeft} 张</span>
-        </footer>
+        </footer>}
       </div>
     </div>
   );

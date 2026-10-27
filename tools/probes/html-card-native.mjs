@@ -5,7 +5,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildSync } from 'esbuild';
-import { demoHtml, attackHtml } from './html-card-fixtures.mjs';
+import { demoHtml, attackHtml, clashHtml, repairedHtml } from './html-card-fixtures.mjs';
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const evidence = resolve(process.env.SB_HTML_NATIVE_EVIDENCE ?? join(root, '.runtime', `html-card-native-${Date.now()}`));
 mkdirSync(evidence, { recursive: true });
@@ -15,12 +15,14 @@ const { buildHtmlSandbox } = await import(pathToFileURL(builder).href);
 let base; const requests = [];
 const server = createServer((req, res) => {
   if (req.url.includes('/__html_probe/')) { requests.push(req.url); res.writeHead(204).end(); return; }
-  const doc = buildHtmlSandbox(req.url === '/attack' ? attackHtml(base) : demoHtml, 'native-1', base);
+  const staticOnly = req.url === '/static';
+  const code = staticOnly ? '<h2>静态后备</h2><script>window.staticScriptRan=true;</script>' : req.url === '/runtime' ? clashHtml : req.url === '/repaired' ? repairedHtml : req.url === '/attack' ? attackHtml(base) : demoHtml;
+  const doc = buildHtmlSandbox(code, 'native-1', base, staticOnly);
   const attr = doc.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
   res.end(`<!doctype html><html><body style="margin:0;background:#eaf1f7"><h1 style="font:20px system-ui;padding:12px">StudentBuddy · WebView2 内联沙箱验证</h1>
-<script>window.fixtureReady=false;addEventListener('message',e=>{if(e.source!==document.querySelector('iframe')?.contentWindow)return;if(e.data?.type==='sb-html-card'&&e.data.event==='ready')window.fixtureReady=true;if(e.data?.type==='html-fixture-result')window.fixtureResult=e.data.result;});</script>
-<iframe title="HTML test" sandbox="allow-scripts" referrerpolicy="no-referrer" style="width:100%;height:520px;border:0" srcdoc="${attr}"></iframe></body></html>`);
+<script>window.fixtureReady=false;window.fixtureLoaded=false;addEventListener('message',e=>{if(e.source!==document.querySelector('iframe')?.contentWindow)return;if(e.data?.type==='sb-html-card'&&e.data.event==='ready')window.fixtureReady=true;if(e.data?.type==='sb-html-card'&&e.data.event==='warning')window.fixtureWarning=e.data.message;if(e.data?.type==='html-fixture-result')window.fixtureResult=e.data.result;});</script>
+<iframe title="HTML test" sandbox="${staticOnly ? '' : 'allow-scripts'}" onload="window.fixtureLoaded=true" referrerpolicy="no-referrer" style="width:100%;height:520px;border:0" srcdoc="${attr}"></iframe></body></html>`);
 });
 try {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve)); base = `http://127.0.0.1:${server.address().port}`;

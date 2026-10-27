@@ -73,6 +73,7 @@ export function DrillQuestion({ phase, card, entry, result, notice, keepState, d
           <button type="button" className="drill-btn primary" onClick={onLearned}>
             记住了，来一题 <kbd>Enter</kbd>
           </button>
+          {gameActions && <button type="button" className="drill-btn" onClick={onSlay}>跳过本轮 <kbd>Z</kbd></button>}
         </div>
       </div>
     );
@@ -87,7 +88,7 @@ export function DrillQuestion({ phase, card, entry, result, notice, keepState, d
       </div>
       <h3 className={card.kind === 'meaning' ? 'drill-term' : 'drill-prompt'}><MathText text={card.prompt}/></h3>
 
-      {card.kind !== 'spell' ? (
+      {!(gameActions && result) && (card.kind !== 'spell' ? (
         <div className="drill-opts">
           {card.options.map((o, i) => (
             <button
@@ -128,7 +129,7 @@ export function DrillQuestion({ phase, card, entry, result, notice, keepState, d
             </button>
           )}
         </form>
-      )}
+      ))}
 
       {result && (
         <div className={result.slain ? 'drill-detail cut' : result.correct ? 'drill-detail ok' : 'drill-detail bad'} role="status">
@@ -147,7 +148,7 @@ export function DrillQuestion({ phase, card, entry, result, notice, keepState, d
             </button>
             {(!isNew || gameActions) && (
               <button type="button" className="drill-btn slay" onClick={onSlay}>
-                {gameActions ? '斩 · 跳过动作' : '斩'} <kbd>Z</kbd>
+                {gameActions ? '跳过本轮' : '斩'} <kbd>Z</kbd>
               </button>
             )}
           </>

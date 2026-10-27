@@ -5,6 +5,8 @@ import { HtmlSandboxFrame } from './HtmlSandboxFrame';
 import { htmlSourceError, type HtmlMode } from './html-sandbox';
 import { isHtmlRunning, startHtmlRun, stopHtmlRun, subscribeHtmlRuns } from './html-runs';
 import { READ_MESSAGE } from './useScrollAnchor';
+import { inspectHtml } from './html-preflight';
+import { useHtmlRepair } from './HtmlRepair';
 import './html-card.css';
 
 export function HtmlCard({ code, closed, streaming, mode }: {
@@ -18,13 +20,20 @@ export function HtmlCard({ code, closed, streaming, mode }: {
   const [epoch, setEpoch] = useState(0);
   const [runSource, setRunSource] = useState('');
   const [error, setError] = useState('');
+  const [warning, setWarning] = useState('');
+  const [staticOnly, setStaticOnly] = useState(false);
+  const repair = useHtmlRepair();
   const [showSrc, setShowSrc] = useState(false);
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout>>();
   const active = useSyncExternalStore(subscribeHtmlRuns, () => isHtmlRunning(id), () => false);
   const invalid = useMemo(() => htmlSourceError(code), [code]);
-  const permitted = mode !== 'disabled' && !streaming && closed && !invalid;
+  const canRender = mode !== 'disabled' && !streaming && closed && !invalid;
+  const issues = useMemo(() => canRender ? inspectHtml(code) : [], [code, canRender]);
+  const syntaxError = issues.filter(i => i.severity === 'error').map(i => i.message).join('\n');
+  const diagnostics = [syntaxError, ...issues.filter(i => i.severity === 'warning').map(i => i.message), error, warning].filter(Boolean).join('\n');
+  const permitted = canRender && (!syntaxError || staticOnly);
   const running = permitted && active && runSource === code;
   const title = pickTitle(code, 'HTML 互动卡片');
   const readCard = (action: () => void) => {
@@ -37,10 +46,13 @@ export function HtmlCard({ code, closed, streaming, mode }: {
     keepHeader.current = false;
     root.current?.querySelector<HTMLElement>('header')?.scrollIntoView?.({ block: 'start', behavior: 'auto' });
   }, [epoch, running, expanded, showSrc]);
-  const start = () => {
-    setError(''); setRunSource(code); setEpoch(n => n + 1); startHtmlRun(id);
+  const start = (asStatic = false) => {
+    setError(''); setWarning(''); setStaticOnly(asStatic); setRunSource(code); setEpoch(n => n + 1); startHtmlRun(id);
   };
-  useEffect(() => () => stopHtmlRun(id), [code, id]);
+  useEffect(() => {
+    setError(''); setWarning(''); setStaticOnly(false);
+    return () => stopHtmlRun(id);
+  }, [code, id]);
   useEffect(() => {
     if (!root.current || typeof IntersectionObserver === 'undefined') return;
     const observer = new IntersectionObserver(([entry]) => {
@@ -52,7 +64,7 @@ export function HtmlCard({ code, closed, streaming, mode }: {
     return () => observer.disconnect();
   }, [id]);
   useEffect(() => {
-    if (!permitted) { stopHtmlRun(id); return; }
+    if (!canRender || syntaxError) { stopHtmlRun(id); return; }
     let cancelled = false;
     // Deferral cancels StrictMode's discarded effect; cleanup must not consume the one-shot autoplay.
     queueMicrotask(() => {
@@ -63,7 +75,7 @@ export function HtmlCard({ code, closed, streaming, mode }: {
       }
     });
     return () => { cancelled = true; };
-  }, [code, mode, permitted, visible, id]);
+  }, [code, mode, canRender, syntaxError, visible, id]);
   useEffect(() => {
     const hide = () => { if (document.hidden) stopHtmlRun(id); };
     document.addEventListener('visibilitychange', hide);
@@ -86,14 +98,17 @@ export function HtmlCard({ code, closed, streaming, mode }: {
     <header className="html-card-head">
       <span className="html-card-badge">HTML · 沙箱</span><strong className="html-card-title">{title}</strong>
       <span className="html-card-actions">
-        {permitted && <button type="button" onClick={() => readCard(running ? () => stopHtmlRun(id) : start)}>{running ? '停止' : epoch ? '重播' : '运行卡片'}</button>}
+        {canRender && (!syntaxError || running) && <button type="button" onClick={() => readCard(running ? () => stopHtmlRun(id) : () => start())}>{running ? '停止' : epoch ? '重播' : '运行卡片'}</button>}
         {running && <button type="button" aria-pressed={expanded} onClick={() => readCard(() => setExpanded(v => !v))}>{expanded ? '收起' : '展开'}</button>}
+        {canRender && diagnostics && !staticOnly && <button type="button" onClick={() => readCard(() => start(true))}>仅看静态</button>}
+        {canRender && diagnostics && <button type="button" disabled={!repair.available} onClick={() => { stopHtmlRun(id); repair.repair(code, diagnostics); }}>让 AI 修复</button>}
         <button type="button" onClick={() => void copy()}>{copied ? '已复制' : '复制'}</button>
         <button type="button" aria-expanded={showSrc} onClick={() => readCard(() => setShowSrc(v => !v))}>{showSrc ? '隐藏源码' : '源码'}</button>
       </span>
     </header>
-    {error && <p className="html-card-error" role="alert">{error}</p>}
-    {running ? <HtmlSandboxFrame key={`${id}-${epoch}`} code={code} title={title} runId={`${id}-${epoch}`} onError={fail} />
+    {(error || syntaxError) && <p className="html-card-error" role="alert">{error || syntaxError}</p>}
+    {(warning || issues.some(i => i.severity === 'warning')) && <p className="html-card-warning" role="status">{warning || issues.filter(i => i.severity === 'warning').map(i => i.message).join('\n')}</p>}
+    {running ? <><HtmlSandboxFrame key={`${id}-${epoch}`} code={code} title={title} runId={`${id}-${epoch}`} onError={fail} onWarning={setWarning} staticOnly={staticOnly} />{staticOnly && <p className="html-card-status">静态查看：脚本已禁用，交互和脚本生成内容不会运行。</p>}</>
       : <p className="html-card-status" role="status">{status}</p>}
     {showSrc && <pre className="html-card-source"><code>{code}</code></pre>}
   </section>;

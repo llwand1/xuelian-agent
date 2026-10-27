@@ -5,6 +5,7 @@ export interface ComposerMenuDeps {
   online: boolean; setOnline: (v: boolean) => void; mixTip: string;
   grillMe: boolean; setGrillMe: (v: boolean) => void;
   desktop?: boolean; onReader?: () => void; onCapture?: () => void;
+  externalAgent?: string;
 }
 export function buildComposerMenuItems(d: ComposerMenuDeps): ComposerMenuItem[] {
   const items: ComposerMenuItem[] = [
@@ -12,9 +13,9 @@ export function buildComposerMenuItems(d: ComposerMenuDeps): ComposerMenuItem[] 
       title: d.mixTip ? `基于当前对话一键出题，按配比出：${d.mixTip}（设置页可改）` : '基于当前对话一键出题（输入框文字作为主题）',
       disabled: !d.sessionId || d.quizzing || d.blocked, onClick: d.onQuiz },
     { kind: 'toggle', key: 'online', label: '联网搜索', title: '出题前联网检索资料；无结果时退回模型自身知识',
-      disabled: d.quizzing, on: d.online, onChange: d.setOnline },
+      disabled: d.quizzing || !!d.externalAgent, on: d.externalAgent ? false : d.online, onChange: d.setOnline },
     { kind: 'toggle', key: 'grill', label: 'GrillMe 追问', title: '围绕学习范围按需选择路线，回答后预判下一步',
-      on: d.grillMe, onChange: d.setGrillMe },
+      disabled: !!d.externalAgent && !d.grillMe, on: d.grillMe, onChange: d.setGrillMe },
   ];
   if (d.desktop) items.push(
     { kind: 'action', key: 'reader', label: '网页共读', icon: <span aria-hidden>▤</span>, title: '打开共读浏览器，选好网页后点击开始，无需配置',

@@ -1,4 +1,6 @@
 /** Synthetic, self-contained learning cards shared by browser and native regression. */
+export const clashHtml = '<h2>变量覆盖回归</h2><p id="baseline">核心静态内容仍可阅读</p><div id="bars"><i>25</i><i>12</i></div><script>(function(){var target=document.getElementById("bars");function animate(){target.querySelectorAll("i").forEach(el=>el.style.color="green");}setTimeout(animate,50);var target=10;})();</script>';
+export const repairedHtml = clashHtml.replace('var target=document', 'const barsEl=document').replace('target.querySelectorAll', 'barsEl.querySelectorAll').replace('var target=10', 'const targetValue=10');
 export const demoHtml = `<!doctype html><html><head><title>弹簧振子 · 就地实验</title>
 <style>
 body{background:#f8fbff;font-family:system-ui,sans-serif;padding:20px;color:#173147}

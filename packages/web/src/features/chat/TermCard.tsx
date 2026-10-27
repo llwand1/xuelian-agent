@@ -39,6 +39,7 @@ export function TermCard({
   say,
   onOpenTerms,
   onFollowUp,
+  followUpMode = 'session',
   onClose,
   onChanged,
 }: {
@@ -59,6 +60,7 @@ export function TermCard({
    *   多绕一层就多一个失败点（别名可能在词条整理时被合并掉）。
    */
   onFollowUp?: (term: string, question?: string) => Promise<void>;
+  followUpMode?: 'session' | 'branch';
   /** 关闭（仅完整卡有 × ） */
   onClose?: () => void;
   /** 词条状态变更后的回调（刷新索引，让卡片与列表跟上） */
@@ -220,10 +222,10 @@ export function TermCard({
                 type="button"
                 className="term-card-btn primary"
                 disabled={fuBusy}
-                title="另开一个对话专门深挖这个词条（会把原对话的摘要带过去）"
+                title={followUpMode === 'branch' ? '在当前回答的小窗隐藏分支中追问，不写入主线' : '另开一个对话专门深挖这个词条（会把原对话的摘要带过去）'}
                 onClick={() => void askFollowUp()}
               >
-                {fuBusy ? '开新对话…' : '向 AI 追问'}
+                {fuBusy ? followUpMode === 'branch' ? '打开小窗…' : '开新对话…' : followUpMode === 'branch' ? '小窗追问' : '向 AI 追问'}
               </button>
             </div>
           )}

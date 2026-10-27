@@ -1,11 +1,12 @@
 # 学练agent-应试学习,学习ai,题库搜索,练习反馈
 
+> 2026-10-22 本机已安装 0.2.209：矿境改为角落心形生命与固定施法键，题卡在画布下方、可随时继续探索，编排和日志按需展开；优化移动和差异化像素特效。该批尚未发布网站/公共通道，详见 [场景优先 QA](docs/MINING-FEEL-QA.md)。
 > 2026-10-24 发布更新：网站 v0.2.188、Windows 桌面 0.2.210。对话可就地运行 HTML 动画与交互卡片，不新开浏览器窗口；支持停止、重播、展开和查看源码。[运行边界与验证](docs/HTML-CARDS-SPEC.md)。
 
 > 2026-10-21 发布更新：网站 v0.2.187、Windows 桌面 0.2.208。横版「知识矿境」替换旧俯视知识大陆，常规/游戏刷词共用词条、判分与复习记录；新增可调刷怪节奏、平 A / 防御动作轮播与每日题量。桌面另含悬浮球引路灯、安静学习来信及实时视频截图。知境保持独立，新怪物提醒下线，对战转为彩蛋。[知识矿境契约](docs/KNOWLEDGE-MINES-SPEC.md) · [动作轮播 QA](docs/MINING-COMBAT-QA.md) · [每日任务 QA](docs/DAILY-STUDY-TASK-QA.md) · [引路灯/视频 QA](docs/FLOAT-GUIDE-VIDEO-QA.md)。
 
 ![release](https://img.shields.io/github/v/release/llwand1/xuelian-agent)
-![version](https://img.shields.io/badge/version-0.2.188-orange)
+![version](https://img.shields.io/badge/version-0.2.189-orange)
 
 **StudentBuddy：开源 AI 学习 Agent，把资料、练习、思考、反馈和复习接在一起。**
 
@@ -229,13 +230,13 @@ TinyFish 内置接入支持官方 API Key 认证、搜索/页面提取与异步�
 <summary>开发者信息</summary>
 
 ![node](https://img.shields.io/badge/node-%E2%89%A522.11-blue)
-![tests](https://img.shields.io/badge/tests-485%20files%20%2F%204991%20cases-brightgreen)
-![api](https://img.shields.io/badge/REST%20routes-254-0ea5e9)
-![contracts](https://img.shields.io/badge/shared%20contracts-320%20types-8a63f6)
-![deps](https://img.shields.io/badge/external%20runtime%20deps-8-blue)
+![tests](https://img.shields.io/badge/tests-498%20files%20%2F%205080%20cases-brightgreen)
+![api](https://img.shields.io/badge/REST%20routes-262-0ea5e9)
+![contracts](https://img.shields.io/badge/shared%20contracts-329%20types-8a63f6)
+![deps](https://img.shields.io/badge/external%20runtime%20deps-11-blue)
 ![stack](https://img.shields.io/badge/stack-React%2018%20%C2%B7%20Express%20%C2%B7%20SQLite-8a63f6)
 
-当前测试基线 **485 文件 / 4991 例**。Windows 安装包见[桌面更新通道](https://github.com/llwand1/xuelian-agent/releases/tag/desktop-stable)；在线体验**已上线到 v0.2.188**。
+当前测试基线 **498 文件 / 5080 例**。Windows 安装包见[桌面更新通道](https://github.com/llwand1/xuelian-agent/releases/tag/desktop-stable)；在线体验**已上线到 v0.2.189**。
 
 代码结构、开发约定与复验方式见 [工程文档](docs/ENGINEERING.md)。
 

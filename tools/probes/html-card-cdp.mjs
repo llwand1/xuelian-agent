@@ -7,7 +7,7 @@ import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { demoHtml, attackHtml } from './html-card-fixtures.mjs';
+import { demoHtml, attackHtml, clashHtml, repairedHtml } from './html-card-fixtures.mjs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const evidence = resolve(process.env.SB_HTML_EVIDENCE ?? join(root, '.runtime', `html-card-${Date.now()}`));
@@ -21,7 +21,8 @@ const model = createServer((req, res) => {
   req.on('end', () => {
     const parsed = JSON.parse(body || '{}');
     if (!parsed.stream) { res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify({ choices: [{ message: { content: '{}' }, finish_reason: 'stop' }] })); return; }
-    const code = fixture === 'attack' ? attackHtml(base) : fixture === 'error' ? '<title>错误卡片</title><script>throw Error("fixture")</script>' : demoHtml;
+    const repairing = parsed.messages?.some(m => m.role === 'user' && String(m.content).startsWith('请修复下面这一张 HTML 卡片'));
+    const code = fixture === 'clash' ? (repairing ? repairedHtml : clashHtml) : fixture === 'syntax' ? '<h2>语法错误静态后备</h2><script>const x=;</script>' : fixture === 'attack' ? attackHtml(base) : fixture === 'error' ? '<title>错误卡片</title><p id="baseline">脚本失败但静态内容保留</p><script>throw Error("fixture")</script>' : demoHtml;
     const answer = `下面是一个可直接操作的实验。\n\n\`\`\`html\n${code}\n\`\`\`\n\n`;
     res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' });
     const token = content => res.write(`data: ${JSON.stringify({ choices: [{ index: 0, delta: { content }, finish_reason: null }] })}\n\n`);
@@ -65,7 +66,7 @@ try {
     check('closed stable HTML still does not run during streaming', await page.locator('.streaming iframe').count() === 0);
     check('local deterministic upstream is held before done', typeof release === 'function');
     release();
-    // Manual card reading intentionally suspends follow-latest; scroll the next card into view.
+    await page.locator('.streaming .html-card').waitFor({ state: 'detached' });
     await page.locator('.html-card').last().scrollIntoViewIfNeeded();
   };
   await send('演示弹簧振子');
@@ -83,10 +84,6 @@ try {
   await frame.locator('#amplitude').fill('70');
   check('range changes amplitude, not object size', await frame.locator('#value').textContent() === '70'
     && await frame.locator('.bob').evaluate(el => getComputedStyle(el).getPropertyValue('--amplitude').trim() === '70px' && getComputedStyle(el).width === '36px'));
-  await page.locator('.html-card').last().getByRole('button', { name: '展开', exact: true }).click();
-  const header = await page.locator('.html-card-head').last().boundingBox();
-  check('manual expand keeps header readable and state intact', header.y >= 0 && header.y + header.height <= 1000 && await frame.locator('#state').textContent() === '已暂停' && await frame.locator('#value').textContent() === '70', header);
-  await page.locator('.html-card').last().getByRole('button', { name: '收起', exact: true }).click();
   const bounds = await frameElement.boundingBox(); check('auto height is bounded and usable', bounds.height >= 250 && bounds.height <= 720, bounds);
   if (await page.locator('.guide-pop').isVisible()) await page.locator('.guide-pop').press('Escape');
   await page.screenshot({ path: join(evidence, 'desktop.png'), fullPage: true });
@@ -118,9 +115,33 @@ try {
   check('no new browser windows', browser.contexts().every(c => c.pages().length === 1));
   check('forged desktop message did not mutate host', await page.evaluate(() => !document.body.dataset.leaked));
   fixture = 'error'; await send('验证运行错误');
-  await page.locator('.html-card-error').last().waitFor();
-  check('runtime exception becomes local readable fallback', (await page.locator('.html-card-error').last().textContent()).includes('运行失败'));
-  check('normal flow has no unexpected host errors', errors.every(e => e.includes('fixture')), errors);
+  await page.locator('.html-card-warning').last().waitFor();
+  check('runtime exception reports actual error and HTML line', (await page.locator('.html-card-warning').last().textContent()).includes('fixture') && (await page.locator('.html-card-warning').last().textContent()).includes('HTML 第'));
+  check('runtime error preserves readable iframe content', await page.frameLocator('.html-card-frame').last().locator('#baseline').textContent() === '脚本失败但静态内容保留');
+  await page.locator('.html-card').last().getByRole('button', { name: '停止', exact: true }).click();
+  fixture = 'clash'; await send('验证重复变量覆盖');
+  await page.locator('.html-card-warning').last().filter({ hasText: 'querySelectorAll' }).waitFor();
+  check('repeated variable failure is diagnosed without unmounting content', await page.frameLocator('.html-card-frame').last().locator('#baseline').textContent() === '核心静态内容仍可阅读');
+  await page.locator('.html-card').last().getByRole('button', { name: '让 AI 修复', exact: true }).click();
+  await page.locator('.streaming .html-card').waitFor();
+  check('one-click repair uses the normal chat stream', typeof release === 'function'); release();
+  await page.locator('.streaming .html-card').waitFor({ state: 'detached' });
+  await page.locator('.html-card').last().scrollIntoViewIfNeeded();
+  await page.locator('.html-card').last().getByRole('button', { name: '停止', exact: true }).waitFor();
+  await page.waitForTimeout(200);
+  const repaired = page.locator('.html-card').last();
+  check('repaired source executes cleanly and keeps the original data', await repaired.locator('.html-card-warning,.html-card-error').count() === 0 && await page.frameLocator('.html-card-frame').last().locator('i').first().evaluate(el => el.style.color) === 'green');
+  const updatedMessages = await json('GET', `/api/sessions/${session.id}/messages`);
+  check('repair preserves original source/history and appends corrected card', updatedMessages.some(m => m.content.includes(clashHtml)) && updatedMessages.some(m => m.content.includes(repairedHtml)));
+  await page.screenshot({ path: join(evidence, 'repair.png'), fullPage: true });
+  await repaired.getByRole('button', { name: '停止', exact: true }).click();
+  fixture = 'syntax'; await send('验证语法检查和静态后备');
+  const syntax = page.locator('.html-card').last();
+  await syntax.locator('.html-card-error').waitFor();
+  check('syntax errors are caught before execution', await syntax.locator('iframe').count() === 0 && (await syntax.locator('.html-card-error').textContent()).includes('语法错误'));
+  await syntax.getByRole('button', { name: '仅看静态', exact: true }).click();
+  check('static fallback removes all script permission', await syntax.locator('iframe').getAttribute('sandbox') === '' && await page.frameLocator('.html-card-frame').last().locator('h2').textContent() === '语法错误静态后备');
+  check('normal flow has no unexpected host errors', errors.every(e => e.includes('fixture') || e.includes('target.querySelectorAll')), errors);
 } catch (error) {
   errors.push(error.stack); console.error(error);
   if (page) await page.screenshot({ path: join(evidence, 'failure.png'), fullPage: true }).catch(() => {});

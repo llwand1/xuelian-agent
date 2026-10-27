@@ -32,7 +32,7 @@ function setup() {
         </div>
         <div className="chat-row">
           <div className="chat-bubble md">
-            <p>闭包＝函数 + 词法环境。</p>
+            <div className="quote-anchor-content" data-message-id="answer-1"><p>闭包＝函数 + 词法环境。</p></div>
           </div>
         </div>
       </div>
@@ -61,12 +61,12 @@ describe('QuoteAsk', () => {
     const p = container.querySelector('.chat-bubble.md p')!.firstChild!;
     select(p, 0, 5);
     const btn = container.querySelector('.chat-quote-btn') as HTMLButtonElement;
-    expect(btn?.textContent).toBe('↩ 引用追问');
+    expect(btn?.textContent).toBe('↗ 小窗追问');
     // 定位走 CSS 变量（门禁禁内联 style）：横向取选区中点、纵向贴选区底边
     expect(btn.style.getPropertyValue('--qa-x')).toBe('200px');
     expect(btn.style.getPropertyValue('--qa-y')).toBe('60px');
     fireEvent.click(btn);
-    expect(onQuote).toHaveBeenCalledWith('闭包＝函数');
+    expect(onQuote).toHaveBeenCalledWith(expect.objectContaining({ messageId: 'answer-1', quote: '闭包＝函数', start: 0, end: 5 }));
     expect(container.querySelector('.chat-quote-btn')).toBeNull();
   });
 
@@ -77,10 +77,12 @@ describe('QuoteAsk', () => {
     expect(container.querySelector('.chat-quote-btn')).toBeNull();
   });
 
-  it('单个字符 / 塌缩选区 ⇒ 不浮牌；点别处 ⇒ 收起；消息流滚动 ⇒ 收起', () => {
+  it('单个术语字符也能追问；塌缩选区不浮牌；点别处/滚动收起', () => {
     const { container, rootRef } = setup();
     const p = container.querySelector('.chat-bubble.md p')!.firstChild!;
     select(p, 0, 1);
+    expect(container.querySelector('.chat-quote-btn')).toBeTruthy();
+    select(p, 0, 0);
     expect(container.querySelector('.chat-quote-btn')).toBeNull();
     select(p, 0, 4);
     expect(container.querySelector('.chat-quote-btn')).toBeTruthy();

@@ -5,6 +5,9 @@ dist/
 coverage/
 test-results/
 .runtime/
+packages/web/public/studentbuddy-codex-bridge.zip
+packages/web/public/studentbuddy-opencode-bridge.zip
+packages/web/public/studentbuddy-qoder-bridge.zip
 .vite/
 *.log
 
