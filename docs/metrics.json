@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T13:12:41.267Z",
+  "generatedAt": "2026-10-24T11:47:40.137Z",
   "code": {
     "rows": [
       {
@@ -13,22 +13,22 @@
         "pkg": "server",
         "srcFiles": 363,
         "testFiles": 243,
-        "srcLines": 44560,
-        "testLines": 40633
+        "srcLines": 44561,
+        "testLines": 40638
       },
       {
         "pkg": "web",
-        "srcFiles": 437,
-        "testFiles": 190,
-        "srcLines": 45906,
-        "testLines": 21281
+        "srcFiles": 440,
+        "testFiles": 192,
+        "srcLines": 46061,
+        "testLines": 21526
       }
     ],
-    "srcFiles": 881,
-    "testFiles": 483,
-    "srcLines": 101171,
-    "testLines": 67753,
-    "tsxTestFiles": 104
+    "srcFiles": 884,
+    "testFiles": 485,
+    "srcLines": 101327,
+    "testLines": 68003,
+    "tsxTestFiles": 105
   },
   "routes": {
     "total": 254,
@@ -82,25 +82,25 @@
     ]
   },
   "docs": {
-    "specs": 73,
-    "all": 99,
-    "probes": 19
+    "specs": 74,
+    "all": 100,
+    "probes": 22
   },
   "repo": {
-    "head": "49b25b7",
+    "head": "7a737fc",
     "headDate": "2026-10-21",
-    "commitsLast14d": 39,
-    "branch": "chore/release-web187-desktop208",
-    "dirtyFiles": 12
+    "commitsLast14d": 22,
+    "branch": "feat/inline-html-release",
+    "dirtyFiles": 39
   },
   "tests": {
     "available": true,
     "ranNow": false,
     "wallSec": 0,
     "staleDays": 0,
-    "files": 483,
-    "cases": 4972,
-    "passed": 4969,
+    "files": 485,
+    "cases": 4991,
+    "passed": 4988,
     "skipped": 3,
     "failed": 0,
     "success": true
@@ -111,14 +111,14 @@
   "readmeDrift": [
     {
       "label": "badge 测试文件",
-      "claimed": "483",
-      "measured": "483",
+      "claimed": "485",
+      "measured": "485",
       "ok": true
     },
     {
       "label": "badge 测试用例",
-      "claimed": "4972",
-      "measured": "4972",
+      "claimed": "4991",
+      "measured": "4991",
       "ok": true
     },
     {
@@ -147,20 +147,20 @@
     },
     {
       "label": "badge 版本",
-      "claimed": "0.2.187",
-      "measured": "0.2.187",
+      "claimed": "0.2.188",
+      "measured": "0.2.188",
       "ok": true
     },
     {
       "label": "线上现况版本",
-      "claimed": "v0.2.187",
-      "measured": "v0.2.187",
+      "claimed": "v0.2.188",
+      "measured": "v0.2.188",
       "ok": true
     },
     {
       "label": "正文基线句",
-      "claimed": "483 文件 / 4972 例",
-      "measured": "483 文件 / 4972 例",
+      "claimed": "485 文件 / 4991 例",
+      "measured": "485 文件 / 4991 例",
       "ok": true
     }
   ],
