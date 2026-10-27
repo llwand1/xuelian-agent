@@ -36,6 +36,8 @@ jobs:
       - run: npm run build
       - run: npm run check
       - run: npm run test:open-engine
+      - name: Verify external Agent bridges
+        run: node --test tools/external-agent/bridge.test.mjs tools/external-agent/opencode.test.mjs tools/external-agent/qoder.test.mjs
       - run: node --test tools/metrics-contracts.test.mjs
       # README/docs 里的定量数字必须与代码实测一致（漂移即红）——数字不许手抄，见 docs/metrics.md
       - run: node tools/metrics.mjs --tests --check

@@ -23,37 +23,37 @@ node tools/metrics.mjs --check            # README/首屏手抄数字与实测�
 
 <!-- metrics:begin —— 以下由 tools/metrics.mjs --write-docs 回填，勿手改 -->
 
-> 采集：2026-10-24 19:47:40（本机时区）｜ 基准 `7a737fc` ｜ 复现：`node tools/metrics.mjs --tests --coverage`
+> 采集：2026-10-27 19:24:51（本机时区）｜ 基准 `0ac188d` ｜ 复现：`node tools/metrics.mjs --tests --coverage`
 
 ## 工程规模（源码 / 测试行数，按包）
 
 | 包 | 源码文件 | 源码行 | 测试文件 | 测试行 | 测试/源码 |
 |---|---|---|---|---|---|
-| shared | 81 | 10,705 | 50 | 5,839 | 55% |
-| server | 363 | 44,561 | 243 | 40,638 | 91% |
-| web | 440 | 46,061 | 192 | 21,526 | 47% |
-| **合计** | **884** | **101,327** | **485** | **68,003** | **67%** |
+| shared | 83 | 10,773 | 50 | 5,839 | 54% |
+| server | 371 | 45,076 | 248 | 40,948 | 91% |
+| web | 457 | 46,970 | 200 | 22,029 | 47% |
+| **合计** | **911** | **102,819** | **498** | **68,816** | **67%** |
 
 ## 接口与契约
 
-- REST 路由注册：**254**（get 101 / post 110 / delete 18 / put 23 / patch 2）· 另 /api 挂载点 47 个
-- shared 契约类型：**320**（export interface 224 + export type 96）
-- 外部运行时依赖：**8** 个 —— better-sqlite3, cors, express, katex, mermaid, pino, react, react-dom
-- 迁移水位：代码侧 **v64**（64 个 version 条目，非连续号 0 处）
+- REST 路由注册：**262**（get 104 / post 114 / delete 18 / put 24 / patch 2）· 另 /api 挂载点 49 个
+- shared 契约类型：**329**（export interface 232 + export type 97）
+- 外部运行时依赖：**11** 个 —— acorn, better-sqlite3, cors, eslint-scope, express, katex, mermaid, parse5, pino, react, react-dom
+- 迁移水位：代码侧 **v65**（65 个 version 条目，非连续号 0 处）
 
 ## 测试基线（vitest 实跑）
 
-- **485 文件 / 4991 例**（4988 passed + 3 skipped + 0 failed）⇒ 全绿
-- ⚠️ 本次未重跑 vitest，读的是 今日的 test-results 产物——要新鲜数字加 `--tests`
-- jsdom 交互测试文件（`.test.tsx`）105 个
+- **498 文件 / 5080 例**（5077 passed + 3 skipped + 0 failed）⇒ 全绿
+- 本次本机实跑（Node v22.23.2）全量耗时 76.4s
+- jsdom 交互测试文件（`.test.tsx`）110 个
 
 ## 覆盖率（v8，按包加权 covered/total，非百分比平均）
 
 - ⬜ 无覆盖率产物（跑 `node tools/metrics.mjs --tests --coverage` 生成，**不编数**）
 
 ## 文档与仓库
-- docs/：SPEC 契约 74 份 · md 共 100 份 · 真机探针 22 个
-- git：feat/inline-html-release @ `7a737fc`（2026-10-21）· 近 14 天 22 commits · 工作区未提交 39 文件
+- docs/：SPEC 契约 75 份 · md 共 105 份 · 真机探针 24 个
+- git：feat/external-agent-hero-release @ `0ac188d`（2026-10-27）· 近 14 天 10 commits · 工作区未提交 22 文件
 
 <!-- metrics:end -->
 

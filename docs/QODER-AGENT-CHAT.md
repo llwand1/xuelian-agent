@@ -1,5 +1,7 @@
 # Qoder / Qoder CN 外置文字 Agent
 
+> 2026-10-27 发布批次：网站 v0.2.189 / Windows 0.2.211。下文较早的本机验收日期与“未发布”叙述为当时验证记录；当前能力边界以本节及正式版本说明为准。外置 Agent 只在本机版显式启用，网站不访问本机 Agent。
+
 复用既有外置 Agent 协议，而不是控制 Qoder 桌面输入框。需要 Node.js 22+ 和官方 Qoder CLI / Qoder CN CLI。
 
 ## 登录与启动
